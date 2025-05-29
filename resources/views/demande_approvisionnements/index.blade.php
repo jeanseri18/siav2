@@ -10,7 +10,7 @@
 
 @section('content')
 
-<div class="container app-fade-in">
+<div class=" app-fade-in">
     <div class="app-card" style="background: var(--primary); color: var(--white); margin-bottom: var(--spacing-lg);">
         <div class="app-card-body">
             <h2 class="app-fw-bold app-mb-3">Gestion des Demandes d'Approvisionnement</h2>

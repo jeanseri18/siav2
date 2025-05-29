@@ -46,6 +46,7 @@
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
+                                    <div class="app-form-text">Date à laquelle la demande est créée</div>
                                 </div>
                             </div>
                             
@@ -62,6 +63,7 @@
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
+                                    <div class="app-form-text">Date limite pour recevoir les cotations</div>
                                 </div>
                             </div>
                             
@@ -72,7 +74,7 @@
                                     </label>
                                     <select class="app-form-select @error('demande_achat_id') is-invalid @enderror" 
                                         id="demande_achat_id" name="demande_achat_id">
-                                        <option value="">Sélectionner une demande</option>
+                                        <option value="">-- Sélectionner une demande --</option>
                                         @foreach($demandesAchat as $demande)
                                             <option value="{{ $demande->id }}" 
                                                 {{ old('demande_achat_id', $demandeCotation->demande_achat_id) == $demande->id ? 'selected' : '' }}>
@@ -85,7 +87,7 @@
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
-                                    <div class="app-form-text">Sélectionner une demande d'achat existante (optionnel)</div>
+                                    <div class="app-form-text">Demande d'achat liée (optionnel)</div>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +97,7 @@
                                 <i class="fas fa-align-left me-2"></i>Description
                             </label>
                             <textarea class="app-form-control @error('description') is-invalid @enderror" 
-                                id="description" name="description" rows="2">{{ old('description', $demandeCotation->description) }}</textarea>
+                                id="description" name="description" rows="2" placeholder="Description de la demande...">{{ old('description', $demandeCotation->description) }}</textarea>
                             @error('description')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -109,7 +111,7 @@
                                 <i class="fas fa-gavel me-2"></i>Conditions générales
                             </label>
                             <textarea class="app-form-control @error('conditions_generales') is-invalid @enderror" 
-                                id="conditions_generales" name="conditions_generales" rows="3">{{ old('conditions_generales', $demandeCotation->conditions_generales) }}</textarea>
+                                id="conditions_generales" name="conditions_generales" rows="3" placeholder="Conditions générales...">{{ old('conditions_generales', $demandeCotation->conditions_generales) }}</textarea>
                             @error('conditions_generales')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -118,7 +120,7 @@
                             <div class="app-form-text">Conditions générales à communiquer aux fournisseurs</div>
                         </div>
                         
-                        <div class="app-card app-mt-4">
+                        <div class="app-card mt-4">
                             <div class="app-card-header">
                                 <h3 class="app-card-title">
                                     <i class="fas fa-truck me-2"></i>Fournisseurs <span class="text-danger">*</span>
@@ -147,27 +149,32 @@
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
-                                <div class="app-form-text app-mt-2">Sélectionner un ou plusieurs fournisseurs à consulter</div>
+                                <div class="app-form-text mt-2">Sélectionner un ou plusieurs fournisseurs à consulter</div>
                             </div>
                         </div>
                         
-                        <div class="app-card app-mt-4">
+                        <div class="app-card mt-4">
                             <div class="app-card-header">
                                 <h3 class="app-card-title">
                                     <i class="fas fa-box me-2"></i>Articles
                                 </h3>
+                                <div class="app-card-actions">
+                                    <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="addArticle()">
+                                        <i class="fas fa-plus me-2"></i> Ajouter une ligne
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="app-card-body app-table-responsive">
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th>Article</th>
-                                            <th>Désignation <span class="text-danger">*</span></th>
-                                            <th>Quantité <span class="text-danger">*</span></th>
-                                            <th>Unité <span class="text-danger">*</span></th>
-                                            <th>Spécifications</th>
-                                            <th style="width: 80px;">Actions</th>
+                                            <th style="width: 25%;">Article</th>
+                                            <th style="width: 25%;">Désignation <span class="text-danger">*</span></th>
+                                            <th style="width: 15%;">Quantité <span class="text-danger">*</span></th>
+                                            <th style="width: 15%;">Unité <span class="text-danger">*</span></th>
+                                            <th style="width: 15%;">Spécifications</th>
+                                            <th style="width: 5%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -175,7 +182,7 @@
                                         <tr>
                                             <td>
                                                 <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
-                                                    <option value="">Sélectionner un article</option>
+                                                    <option value="">-- Sélectionner un article --</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
                                                             data-designation="{{ $article->nom }}"
@@ -187,7 +194,7 @@
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control designation" 
-                                                    name="designation[]" value="{{ $ligne->designation }}" required>
+                                                    name="designation[]" value="{{ $ligne->designation }}" required placeholder="Désignation...">
                                             </td>
                                             <td>
                                                 <input type="number" class="app-form-control" 
@@ -195,11 +202,11 @@
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control unite-mesure" 
-                                                    name="unite_mesure[]" value="{{ $ligne->unite_mesure }}" required>
+                                                    name="unite_mesure[]" value="{{ $ligne->unite_mesure }}" required placeholder="Unité...">
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control" 
-                                                    name="specifications[]" value="{{ $ligne->specifications }}">
+                                                    name="specifications[]" value="{{ $ligne->specifications }}" placeholder="Spécifications...">
                                             </td>
                                             <td>
                                                 <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
@@ -211,17 +218,14 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="app-card-footer">
-                                <button type="button" class="app-btn app-btn-info app-btn-icon" onclick="addArticle()">
-                                    <i class="fas fa-plus me-2"></i> Ajouter une ligne
-                                </button>
-                            </div>
                         </div>
                         
-                        <div class="app-card-footer app-mt-4 app-text-center">
-                            <button type="submit" class="app-btn app-btn-primary app-btn-lg">
-                                <i class="fas fa-save me-2"></i> Mettre à jour
+                        <div class="app-card-footer mt-4">
+                            <a href="{{ route('demande-cotations.show', $demandeCotation) }}" class="app-btn app-btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="app-btn app-btn-primary">
+                                <i class="fas fa-save me-2"></i>Mettre à jour
                             </button>
                         </div>
                     </form>
@@ -236,7 +240,7 @@
     <tr>
         <td>
             <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
-                <option value="">Sélectionner un article</option>
+                <option value="">-- Sélectionner un article --</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
                         data-designation="{{ $article->nom }}">
@@ -247,7 +251,7 @@
         </td>
         <td>
             <input type="text" class="app-form-control designation" 
-                name="designation[]" required>
+                name="designation[]" required placeholder="Désignation...">
         </td>
         <td>
             <input type="number" class="app-form-control" 
@@ -255,18 +259,17 @@
         </td>
         <td>
             <input type="text" class="app-form-control unite-mesure" 
-                name="unite_mesure[]" value="Unité" required>
+                name="unite_mesure[]" value="Unité" required placeholder="Unité...">
         </td>
         <td>
             <input type="text" class="app-form-control" 
-                name="specifications[]">
+                name="specifications[]" placeholder="Spécifications...">
         </td>
         <td>
-      <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
+            <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
     </tr>
 </template>
 

@@ -1,92 +1,189 @@
+{{-- Page Index - Liste des Bons de Commande --}}
 @extends('layouts.app')
+
+@section('title', 'Gestion des Bons de Commande')
+@section('page-title', 'Gestion des Bons de Commande')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Bons de Commande</li>
+@endsection
 
 @section('content')
 
-<div class="container">
-    <div class="card text-white" style="background:#033765; padding: 20px; margin-bottom: 20px;">
-        <font style="font-size: 30px;">Gestion des Bons de Commande</font>
-        <div class="row">
-            <div class="col-md-4" style="padding:5px">
-                <a href="{{ route('bon-commandes.index') }}" class="btn btn-sm" 
-                    style="background:#0A8CFF; padding: 5px 10px; color:white; width: 200px;">Liste des Bons</a>
+<div class=" app-fade-in">
+    
+    <!-- Statistiques rapides -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
+                    <h3 class="app-card-title">{{ $bonCommandes->count() }}</h3>
+                    <p class="text-muted mb-0">Total des bons</p>
+                </div>
             </div>
-            <div class="col-md-4" style="padding:5px">
-                <a href="{{ route('bon-commandes.create') }}" class="btn btn-sm" 
-                    style="background:#0A8CFF; padding: 5px 10px; color:white; width: 200px;">Nouveau Bon</a>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-clock fa-2x text-warning mb-3"></i>
+                    <h3 class="app-card-title">{{ $bonCommandes->where('statut', 'en attente')->count() }}</h3>
+                    <p class="text-muted mb-0">En attente</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-check-circle fa-2x text-info mb-3"></i>
+                    <h3 class="app-card-title">{{ $bonCommandes->where('statut', 'confirmée')->count() }}</h3>
+                    <p class="text-muted mb-0">Confirmées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-truck fa-2x text-success mb-3"></i>
+                    <h3 class="app-card-title">{{ $bonCommandes->where('statut', 'livrée')->count() }}</h3>
+                    <p class="text-muted mb-0">Livrées</p>
+                </div>
             </div>
         </div>
     </div>
+    <div class="app-card">
+        <div class="app-card-header">
+            <h2 class="app-card-title">
+                <i class="fas fa-file-invoice me-2"></i>Liste des Bons de Commande
+            </h2>
+            <div class="app-card-actions">
+                <a href="{{ route('bon-commandes.create') }}" class="app-btn app-btn-primary app-btn-icon">
+                    <i class="fas fa-plus"></i> Nouveau Bon
+                </a>
+            </div>
+        </div>
 
-    <div class="card custom-card">
-        <div class="card-body">
-            <h3>Liste des Bons de Commande</h3>
-            
-            <table id="bonCommandeTable" class="table table-bordered table-striped">
-                <thead class="table-primary">
+        @if(session('success'))
+        <div class="app-alert app-alert-success">
+            <div class="app-alert-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="app-alert-content">
+                <div class="app-alert-text">{{ session('success') }}</div>
+            </div>
+            <button type="button" class="app-alert-close" onclick="this.parentElement.style.display='none';">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        @endif
+
+        <div class="app-card-body app-table-responsive">
+            <table id="bonCommandeTable" class="app-table display">
+                <thead>
                     <tr>
                         <th>Référence</th>
                         <th>Date</th>
                         <th>Fournisseur</th>
                         <th>Montant</th>
                         <th>Statut</th>
-                        <th>Actions</th>
+                        <th style="width: 200px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($bonCommandes as $bonCommande)
-                        <tr>
-                            <td>{{ $bonCommande->reference }}</td>
-                            <td>{{ $bonCommande->date_commande->format('d/m/Y') }}</td>
-                            <td>{{ $bonCommande->fournisseur ? $bonCommande->fournisseur->nom_raison_sociale : 'N/A' }}</td>
-                            <td>{{ number_format($bonCommande->montant_total, 0, ',', ' ') }} CFA</td>
-                            <td>
+                    <tr>
+                        <td>
+                            <div class="app-d-flex app-align-items-center app-gap-2">
+                                <div class="item-icon">
+                                    <i class="fas fa-file-invoice text-primary"></i>
+                                </div>
+                                <span class="app-fw-bold">{{ $bonCommande->reference }}</span>
+                            </div>
+                        </td>
+                        <td>{{ $bonCommande->date_commande->format('d/m/Y') }}</td>
+                        <td>
+                            <div class="app-d-flex app-align-items-center app-gap-2">
+                                <div class="item-icon">
+                                    <i class="fas fa-building text-info"></i>
+                                </div>
+                                <span>{{ $bonCommande->fournisseur ? $bonCommande->fournisseur->nom_raison_sociale : 'N/A' }}</span>
+                            </div>
+                        </td>
+                        <td class="app-fw-bold text-success">
+                            <i class="fas fa-coins me-1"></i>
+                            {{ number_format($bonCommande->montant_total, 0, ',', ' ') }} FCFA
+                        </td>
+                        <td>
+                            @php
+                                $statutClass = '';
+                                $statutIcon = '';
+                                switch($bonCommande->statut) {
+                                    case 'en attente':
+                                        $statutClass = 'warning';
+                                        $statutIcon = 'clock';
+                                        break;
+                                    case 'confirmée':
+                                        $statutClass = 'info';
+                                        $statutIcon = 'check-circle';
+                                        break;
+                                    case 'livrée':
+                                        $statutClass = 'success';
+                                        $statutIcon = 'truck';
+                                        break;
+                                    case 'annulée':
+                                        $statutClass = 'danger';
+                                        $statutIcon = 'times-circle';
+                                        break;
+                                    default:
+                                        $statutClass = 'secondary';
+                                        $statutIcon = 'question-circle';
+                                }
+                            @endphp
+                            <span class="app-badge app-badge-{{ $statutClass }} app-badge-pill">
+                                <i class="fas fa-{{ $statutIcon }} me-1"></i> 
+                                {{ ucfirst($bonCommande->statut) }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="app-d-flex app-gap-2">
+                                <a href="{{ route('bon-commandes.show', $bonCommande) }}" 
+                                   class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
                                 @if($bonCommande->statut == 'en attente')
-                                    <span class="badge bg-warning">En attente</span>
-                                @elseif($bonCommande->statut == 'confirmée')
-                                    <span class="badge bg-info">Confirmée</span>
-                                @elseif($bonCommande->statut == 'livrée')
-                                    <span class="badge bg-success">Livrée</span>
-                                @elseif($bonCommande->statut == 'annulée')
-                                    <span class="badge bg-danger">Annulée</span>
+                                <a href="{{ route('bon-commandes.edit', $bonCommande) }}" 
+                                   class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <form action="{{ route('bon-commandes.destroy', $bonCommande) }}" method="POST" class="delete-form">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
                                 @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('bon-commandes.show', $bonCommande) }}" class="btn btn-info btn-sm">Voir</a>
+                                
                                 @if($bonCommande->statut == 'en attente')
-                                    <a href="{{ route('bon-commandes.edit', $bonCommande) }}" class="btn btn-warning btn-sm">Modifier</a>
-                                    <form action="{{ route('bon-commandes.destroy', $bonCommande) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce bon de commande?')">Supprimer</button>
-                                    </form>
+                                <form action="{{ route('bon-commandes.confirm', $bonCommande) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Confirmer">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
                                 @endif
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
     </div>
-</div>
 
-<style>
-    .custom-card {
-        border: 1px solid #033765;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .custom-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    }
-    
-    .table-bordered th, .table-bordered td {
-        border: 1px solid #ddd;
-    }
-</style>
-@endsection
+</div>
 
 @push('styles')
 <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
@@ -98,16 +195,39 @@
 <script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.js"></script>
 <script>
     $(document).ready(function () {
+        // Configuration DataTable
         $('#bonCommandeTable').DataTable({
             responsive: true,
-            dom: 'Bfrtip',
+            dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
             buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+                {
+                    extend: 'collection',
+                    text: '<i class="fas fa-file-export"></i> Exporter',
+                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                },
+                {
+                    extend: 'colvis',
+                    text: '<i class="fas fa-columns"></i> Colonnes'
+                }
             ],
             language: {
                 url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+            },
+            order: [[1, 'desc']] // Trier par date décroissante
+        });
+        
+        // Amélioration visuelle des boutons DataTables
+        $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
+        
+        // Confirmation de suppression
+        $('.delete-btn').click(function(e) {
+            e.preventDefault();
+            
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce bon de commande ?')) {
+                $(this).closest('form').submit();
             }
         });
     });
 </script>
 @endpush
+@endsection
