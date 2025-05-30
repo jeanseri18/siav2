@@ -317,7 +317,7 @@
 /* Projet Actuel */
 .project-current-wrapper {
     margin: 2rem auto;
-    max-width: 1200px;
+    max-width: 2600px;
     padding: 0 1rem;
 }
 

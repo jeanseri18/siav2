@@ -10,7 +10,46 @@
 
 @section('content')
 
-<div class="container app-fade-in">
+<div class=" app-fade-in">
+    <!-- Statistiques rapides -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
+                    <h3 class="app-card-title">{{ $demandes->count() }}</h3>
+                    <p class="text-muted mb-0">Total des demandes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-spinner fa-2x text-warning mb-3"></i>
+                    <h3 class="app-card-title">{{ $demandes->where('statut', 'en cours')->count() }}</h3>
+                    <p class="text-muted mb-0">En cours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                    <h3 class="app-card-title">{{ $demandes->where('statut', 'terminée')->count() }}</h3>
+                    <p class="text-muted mb-0">Terminées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="app-card text-center">
+                <div class="app-card-body">
+                    <i class="fas fa-calendar-times fa-2x text-danger mb-3"></i>
+                    <h3 class="app-card-title">{{ $demandes->filter(function($d) { return $d->date_expiration->isPast(); })->count() }}</h3>
+                    <p class="text-muted mb-0">Expirées</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
@@ -163,45 +202,7 @@
         </div>
     </div>
 
-    <!-- Statistiques rapides -->
-    <div class="row mt-4">
-        <div class="col-md-3">
-            <div class="app-card text-center">
-                <div class="app-card-body">
-                    <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
-                    <h3 class="app-card-title">{{ $demandes->count() }}</h3>
-                    <p class="text-muted mb-0">Total des demandes</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="app-card text-center">
-                <div class="app-card-body">
-                    <i class="fas fa-spinner fa-2x text-warning mb-3"></i>
-                    <h3 class="app-card-title">{{ $demandes->where('statut', 'en cours')->count() }}</h3>
-                    <p class="text-muted mb-0">En cours</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="app-card text-center">
-                <div class="app-card-body">
-                    <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                    <h3 class="app-card-title">{{ $demandes->where('statut', 'terminée')->count() }}</h3>
-                    <p class="text-muted mb-0">Terminées</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="app-card text-center">
-                <div class="app-card-body">
-                    <i class="fas fa-calendar-times fa-2x text-danger mb-3"></i>
-                    <h3 class="app-card-title">{{ $demandes->filter(function($d) { return $d->date_expiration->isPast(); })->count() }}</h3>
-                    <p class="text-muted mb-0">Expirées</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 </div>
 
 @push('styles')

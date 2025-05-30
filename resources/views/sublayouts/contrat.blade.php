@@ -17,12 +17,12 @@
                 <i class="fas fa-file-contract"></i>
             </div>
             <div class="contract-details">
-                <h2 class="contract-title">Contrat</h2>
-                <div class="contract-meta">
-                    <span class="contract-name">Nom du Contrat</span>
-                    <span class="contract-ref">REF-2024-001</span>
-                </div>
-            </div>
+    <h2 class="contract-title">Contrat</h2>
+    <div class="contract-meta">
+        <span class="contract-name">{{ session('contrat_nom') }}</span>
+        <span class="contract-ref">{{ session('ref_contrat') }}</span>
+    </div>
+</div>
             <div class="contract-status">
                 <span class="status-badge active">Actif</span>
             </div>
@@ -40,22 +40,22 @@
                 <i class="fas fa-calculator"></i>
                 <span>BPU</span>
             </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>DQE</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>Déboursé</span>
-            </a>
-            <a href="{{ route('stock_contrat.index') }}" class="nav-item">
+<a href="{{ route('dqe.index') }}" class="nav-item">
+    <i class="fas fa-chart-bar"></i>
+    <span>DQE</span>
+</a>
+
+<a href="{{ route('debourses.index') }}" class="nav-item">
+    <i class="fas fa-money-bill-wave"></i>
+    <span>Déboursé</span>
+</a>  <a href="{{ route('stock_contrat.index') }}" class="nav-item">
                 <i class="fas fa-boxes"></i>
                 <span>Stock</span>
             </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-tools"></i>
-                <span>Frais de Chantier</span>
-            </a>
+     <a href="{{ route('frais_generaux.index') }}" class="nav-item">
+    <i class="fas fa-percentage"></i>
+    <span>Frais Généraux</span>
+</a>
             <a href="#" class="nav-item">
                 <i class="fas fa-truck"></i>
                 <span>Demande de Ravitaillement</span>

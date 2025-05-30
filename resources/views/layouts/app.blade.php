@@ -1393,6 +1393,68 @@ body {
         font-size: 0.8rem;
         z-index: 999;
     }
+
+
+
+    /* Styles pour le menu déroulant du profil utilisateur */
+.user-profile-navbar.dropdown {
+    position: relative;
+}
+
+.user-profile-navbar .dropdown-menu {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    min-width: 12rem;
+}
+
+.user-profile-navbar .dropdown-menu.show {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.user-profile-navbar .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--gray-800);
+    transition: var(--transition-base);
+}
+
+.user-profile-navbar .dropdown-item:hover {
+    background-color: rgba(3, 55, 101, 0.05);
+    color: var(--primary);
+}
+
+.user-profile-navbar .dropdown-item i {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--primary);
+}
+
+.user-profile-navbar .dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid var(--gray-200);
+}
+
+/* Style pour le mode sombre */
+.dark-mode .user-profile-navbar .dropdown-menu {
+    background-color: var(--white);
+    border-color: var(--gray-200);
+}
+
+.dark-mode .user-profile-navbar .dropdown-item {
+    color: var(--gray-800);
+}
+
+.dark-mode .user-profile-navbar .dropdown-item:hover {
+    background-color: rgba(26, 118, 204, 0.1);
+}
+
+.dark-mode .user-profile-navbar .dropdown-divider {
+    border-top-color: var(--gray-200);
+}
     </style>
 </head>
 
@@ -1484,21 +1546,31 @@ body {
                 </ul>
 
                 <!-- User profile section -->
-                <div class="user-profile-navbar">
-                    @php
-                        $name = auth()->user()->name ?? 'Utilisateur';
-                        $initials = collect(explode(' ', $name))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
-                    @endphp
+              <div class="user-profile-navbar dropdown">
+    @php
+        $name = auth()->user()->name ?? 'Utilisateur';
+        $initials = collect(explode(' ', $name))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
+    @endphp
 
-                    <div class="avatar-initials">
-                        {{ $initials }}
-                    </div>
+    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="avatar-initials">
+            {{ $initials }}
+        </div>
 
-                    <div class="user-info">
-                        <p class="name">{{ $name }}</p>
-                        <p class="role">{{ auth()->user()->role ?? 'Rôle non défini' }}</p>
-                    </div>
-                </div>
+        <div class="user-info">
+            <p class="name text-white">{{ $name }}</p>
+            <p class="role text-white">{{ auth()->user()->role ?? 'Rôle non défini' }}</p>
+        </div>
+    </a>
+    
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+        <li><a class="dropdown-item" href="{{ route('profile.show') }}"><i class="fas fa-user me-2"></i> Mon profil</a></li>
+        <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-edit me-2"></i> Modifier profil</a></li>
+        <li><a class="dropdown-item" href="{{ route('profile.edit-password') }}"><i class="fas fa-key me-2"></i> Changer mot de passe</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ route('logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Déconnexion</a></li>
+    </ul>
+</div>
             </div>
         </div>
     </nav>
@@ -1704,6 +1776,18 @@ body {
     
     // Vérifier les mises à jour toutes les 5 minutes
     setInterval(checkForUpdates, 300000);
+
+
+
+
+    // Ajouter ceci à la section scripts
+$(document).ready(function() {
+    // Activation des dropdowns de Bootstrap
+    var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'))
+    var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+    });
+});
     </script>
 
     @stack('scripts') {{-- Inclure les scripts spécifiques à une page --}}

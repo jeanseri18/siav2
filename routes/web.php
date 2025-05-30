@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SousCategorieController;
 use App\Http\Controllers\ProjetController;
 use App\Http\Controllers\ClientFournisseurController;
+use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\ClientController;
@@ -46,10 +47,42 @@ use App\Http\Controllers\BonCommandeController;
 use App\Http\Controllers\DemandeAchatController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\DemandeCotationController;
+use App\Http\Controllers\DQEController;
+use App\Http\Controllers\FraisGeneralController;
+use App\Http\Controllers\DebourseController;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
 
 
+// Dans routes/web.php
+// Routes pour les frais généraux
+Route::get('/contrats_frais_generaux', [FraisGeneralController::class, 'index'])->name('frais_generaux.index');
+Route::get('/contrats_frais_generaux_create/create', [FraisGeneralController::class, 'create'])->name('frais_generaux.create');
+Route::post('/contrats/frais-generaux', [FraisGeneralController::class, 'store'])->name('frais_generaux.store');
+Route::get('/frais-generaux_edit/{fraisGeneral}/edit', [FraisGeneralController::class, 'edit'])->name('frais_generaux.edit');
+Route::put('/frais-generaux/{fraisGeneral}', [FraisGeneralController::class, 'update'])->name('frais_generaux.update');
+Route::delete('/frais-generaux/{fraisGeneral}', [FraisGeneralController::class, 'destroy'])->name('frais_generaux.destroy');
+Route::post('/contrats_frais_generaux_generate', [FraisGeneralController::class, 'generate'])->name('frais_generaux.generate');
+Route::get('/frais-generaux_export/{fraisGeneral}/export', [FraisGeneralController::class, 'export'])->name('frais_generaux.export');
+// Routes pour les DQE
+Route::get('/contrats_dqe/dqe', [DQEController::class, 'index'])->name('dqe.index');
+Route::get('/contrats_dqe_create/{contrat}/dqe/create', [DQEController::class, 'create'])->name('dqe.create');
+Route::post('/contrats_dqe/{contrat}/dqe', [DQEController::class, 'store'])->name('dqe.store');
+Route::get('/dqe_edit/{dqe}/edit', [DQEController::class, 'edit'])->name('dqe.edit');
+Route::put('/dqe/{dqe}', [DQEController::class, 'update'])->name('dqe.update');
+Route::delete('/dqe/{dqe}', [DQEController::class, 'destroy'])->name('dqe.destroy');
+Route::post('/contrats_dqe_generate/{contrat}/dqe/generate', [DQEController::class, 'generateFromBPU'])->name('dqe.generate');
+
+// Routes pour les lignes de DQE
+Route::post('/dqe/{dqe}/lines', [DQEController::class, 'addLine'])->name('dqe.lines.add');
+Route::put('/dqe/{dqe}/lines/{line}', [DQEController::class, 'updateLine'])->name('dqe.lines.update');
+Route::delete('/dqe/{dqe}/lines/{line}', [DQEController::class, 'deleteLine'])->name('dqe.lines.delete');
+
+// Routes pour les déboursés
+Route::get('/contrats_debourses/debourses', [DebourseController::class, 'index'])->name('debourses.index');
+Route::post('/dqe_debourses/{dqe}/debourses/generate', [DebourseController::class, 'generate'])->name('debourses.generate');
+Route::get('/debourses/{debourse}', [DebourseController::class, 'details'])->name('debourses.details');
+Route::get('/debourses_export/{debourse}/export', [DebourseController::class, 'export'])->name('debourses.export');
 
 // Ajoutez ces routes à votre fichier de routes
 Route::get('/dashboard/realtime-stats', 'StatistiqueController@getRealtimeStats')->name('dashboard.realtime-stats');
@@ -160,7 +193,10 @@ Route::resource('bpus', BpuController::class);
 
 Route::resource('prestations', PrestationController::class);
 Route::resource('factures', FactureController::class);
-
+// Routes supplémentaires pour les factures
+Route::get('/factures_statistics', [FactureController::class, 'statistics'])->name('factures.statistics');
+Route::get('/factures_pdf/{facture}/pdf', [FactureController::class, 'generatePDF'])->name('factures.generatePDF');
+Route::put('/factures_change/{facture}/change-status', [FactureController::class, 'changeStatus'])->name('factures.changeStatus');
 Route::resource('documents', DocumentController::class)->except(['edit', 'update']);
 Route::get('/documents_contrat', [DocumentController::class, 'index_contrat'])->name('document_contrat.index');
 
@@ -371,6 +407,20 @@ Route::post('/select-bu', [AuthController::class, 'selectBU'])->name('select.bu.
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+
+
+ Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    
+    // Modifier le profil
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    // Modifier le mot de passe
+    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.edit-password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    
+    // Supprimer la photo de profil
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.delete-photo');
 Route::get('/dashboard', function () {
     return view('dashboard.index');
 })->name('dashboard')->middleware('auth');

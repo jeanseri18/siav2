@@ -11,7 +11,7 @@
 
 @section('content')
 
-<div class="container app-fade-in" id="printable-content">
+<div class=" app-fade-in" id="printable-content">
     <div class="row">
         <!-- Informations principales -->
         <div class="col-md-8">

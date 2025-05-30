@@ -11,7 +11,7 @@
 @section('content')
 @include('sublayouts.contrat')
 
-<div class="container app-fade-in">
+<div class=" app-fade-in">
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
@@ -21,6 +21,11 @@
                 <a href="{{ route('factures.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une nouvelle facture
                 </a>
+
+                   <a href="{{ route('factures.statistics') }}" class="app-btn app-btn-info app-btn-icon me-2">
+        <i class="fas fa-chart-bar"></i> Statistiques
+    </a>
+
             </div>
         </div>
         
@@ -86,19 +91,23 @@
                             </td>
                             <td>{{ \Carbon\Carbon::parse($facture->date_emission)->format('d/m/Y') }}</td>
                             <td>
-                                <div class="app-d-flex app-gap-2">
-                                    <a href="{{ route('factures.edit', $facture->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    
-                                    <form action="{{ route('factures.destroy', $facture->id) }}" method="POST" class="delete-form" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
+                              <div class="app-d-flex app-gap-2">
+        <a href="{{ route('factures.show', $facture->id) }}" class="app-btn app-btn-primary app-btn-sm app-btn-icon">
+            <i class="fas fa-eye"></i>
+        </a>
+        
+        <a href="{{ route('factures.edit', $facture->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
+            <i class="fas fa-edit"></i>
+        </a>
+        
+        <form action="{{ route('factures.destroy', $facture->id) }}" method="POST" class="delete-form" style="display:inline;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
+                <i class="fas fa-trash"></i>
+            </button>
+        </form>
+    </div>
                             </td>
                         </tr>
                     @endforeach

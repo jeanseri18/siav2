@@ -13,7 +13,7 @@
 @section('content')
 @include('sublayouts.projetdetail')
 
-<div class="container app-fade-in">
+<div class=" app-fade-in">
     <div class="row justify-content-left">
         <div class="col-md-8">
             <div class="app-card app-hover-shadow">
