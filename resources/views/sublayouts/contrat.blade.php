@@ -32,7 +32,7 @@
     <!-- Navigation des liens contrat -->
     <div class="contract-navigation">
         <div class="nav-container">
-            <a href="#" class="nav-item">
+            <a href="{{ route('contrats.show', session('contrat_id')) }}" class="nav-item">
                 <i class="fas fa-info-circle"></i>
                 <span>Détails</span>
             </a>
@@ -64,6 +64,7 @@
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Facturation</span>
             </a>
+
             <a href="{{ route('document_contrat.index') }}" class="nav-item">
                 <i class="fas fa-folder"></i>
                 <span>Documents</span>
