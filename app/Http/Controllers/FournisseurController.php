@@ -52,7 +52,18 @@ class FournisseurController extends Controller {
             // Si l'ID du bus n'est pas trouvé en session, retourner une erreur
             return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant de créer un client.']);
         }
-    
+     $lastReference = \App\Models\Reference::where('nom', 'Code fournisseur interne')
+        ->latest('created_at')
+        ->first();
+
+// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
+$newReference = $lastReference ? $lastReference->ref : 'Int_0000';  // Si aucune référence, utiliser un modèle
+$newReference = 'Int_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+// Ajouter la référence générée à la requête
+$request->merge([
+'code' => $newReference,
+]);
         // Création du client ou fournisseur en fonction des données du formulaire
         $clientData = $request->all();
         // Ajout de la catégorie et du type par défaut

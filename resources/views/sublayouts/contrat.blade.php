@@ -47,7 +47,7 @@
 
 <a href="{{ route('debourses.index') }}" class="nav-item">
     <i class="fas fa-money-bill-wave"></i>
-    <span>Déboursé</span>
+    <span>Déboursé et frais de chantier</span>
 </a>  <a href="{{ route('stock_contrat.index') }}" class="nav-item">
                 <i class="fas fa-boxes"></i>
                 <span>Stock</span>

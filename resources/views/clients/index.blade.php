@@ -41,6 +41,7 @@
             <table id="Table" class="app-table">
                 <thead>
                     <tr>
+                        <th>Code</th>
                         <th>Nom</th>
                         <th>Prénoms</th>
                         <th>Délai paiement</th>
@@ -56,6 +57,7 @@
                 <tbody>
                     @foreach ($clients as $client)
                     <tr>
+                         <td>{{ $client->code }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">

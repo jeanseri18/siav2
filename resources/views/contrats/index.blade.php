@@ -25,6 +25,7 @@
             </div>
         </div>
 
+        
         @if(session('success'))
         <div class="app-alert app-alert-success">
             <div class="app-alert-icon">

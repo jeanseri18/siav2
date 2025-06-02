@@ -25,6 +25,18 @@ class ArtisanController extends Controller
             'type' => 'required|in:artisan,travailleur',
         ]);
 
+         $lastReference = \App\Models\Reference::where('nom', 'Code Artisans')
+        ->latest('created_at')
+        ->first();
+
+// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
+$newReference = $lastReference ? $lastReference->ref : 'Ouv_0000';  // Si aucune référence, utiliser un modèle
+$newReference = 'Ouv_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+// Ajouter la référence générée à la requête
+$request->merge([
+'reference' => $newReference,
+]);
         Artisan::create($request->all());
         return redirect()->route('artisans.index')->with('success', 'Artisan ajouté avec succès.');
     }

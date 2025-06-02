@@ -160,9 +160,25 @@
         ],
         [
             'route' => 'villes.index', 
-            'icon' => 'fa-map-marker-alt', 
+            'icon' => 'fa-city', 
             'text' => 'Villes', 
             'description' => 'Gérer les villes',
+            'category' => 'locations',
+            'color' => 'warning'
+        ],
+        [
+            'route' => 'communes.index', 
+            'icon' => 'fa-building', 
+            'text' => 'Communes', 
+            'description' => 'Gérer les communes',
+            'category' => 'locations',
+            'color' => 'warning'
+        ],
+        [
+            'route' => 'quartiers.index', 
+            'icon' => 'fa-map-marked-alt', 
+            'text' => 'Quartiers', 
+            'description' => 'Gérer les quartiers',
             'category' => 'locations',
             'color' => 'warning'
         ],

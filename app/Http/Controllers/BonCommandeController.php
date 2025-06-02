@@ -47,13 +47,13 @@ class BonCommandeController extends Controller
         ]);
 
         // Générer la référence
-        $lastReference = Reference::where('nom', 'Code Bon Commande')
+        $lastReference = Reference::where('nom', 'Code bon de commande')
             ->latest('created_at')
             ->first();
         
         // Générer la nouvelle référence
-        $newReference = $lastReference ? $lastReference->ref : 'BC_0000';
-        $newReference = 'BC_' . now()->format('YmdHis');
+        $newReference = $lastReference ? $lastReference->ref : 'PO_0000';
+        $newReference = 'PO_' . now()->format('YmdHis');
 
         // Calculer le montant total
         $montantTotal = 0;

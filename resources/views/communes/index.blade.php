@@ -1,25 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Liste des Artisans')
-@section('page-title', 'Liste des Artisans')
+@section('title', 'Liste des Communes')
+@section('page-title', 'Liste des Communes')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('home') }}">Accueil</a></li>
-<li class="breadcrumb-item active">Artisans</li>
+<li class="breadcrumb-item active">Communes</li>
 @endsection
 
 @section('content')
-@include('sublayouts.until')
 
 <div class="app-fade-in">
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-hard-hat me-2"></i>Liste des Artisans
+                <i class="fas fa-building me-2"></i>Liste des Communes
             </h2>
             <div class="app-card-actions">
-                <a href="{{ route('artisans.create') }}" class="app-btn app-btn-primary app-btn-icon">
-                    <i class="fas fa-plus"></i> Ajouter un artisan
+                <a href="{{ route('communes.create') }}" class="app-btn app-btn-primary app-btn-icon">
+                    <i class="fas fa-plus"></i> Ajouter une commune
                 </a>
             </div>
         </div>
@@ -39,43 +37,40 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="Table" class="app-table display">
+            <table id="communesTable" class="app-table display">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Reference</th>
+                        <th>#</th>
                         <th>Nom</th>
-                        <th>Corps de Métier</th>
-                        <th>Type</th>
+                        <th>Ville</th>
+                        <th>Code</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($artisans as $artisan)
+                    @foreach($communes as $commune)
                     <tr>
-                        <td>{{ $artisan->id }}</td>
-                        <td>{{ $artisan->reference }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
-                                    <i class="fas fa-user-hard-hat text-primary"></i>
+                                    <i class="fas fa-building text-primary"></i>
                                 </div>
-                                <span>{{ $artisan->nom }}</span>
+                                <span>{{ $commune->nom }}</span>
                             </div>
                         </td>
-                        <td>{{ $artisan->corpMetier->nom }}</td>
                         <td>
-                            <span class="app-badge app-badge-{{ $artisan->type == 'artisan' ? 'info' : 'primary' }} app-badge-pill">
-                                <i class="fas fa-{{ $artisan->type == 'artisan' ? 'tools' : 'user-cog' }} me-1"></i> 
-                                {{ ucfirst($artisan->type) }}
+                            <span class="app-badge app-badge-info app-badge-pill">
+                                <i class="fas fa-city me-1"></i> {{ $commune->ville->nom }}
                             </span>
                         </td>
+                        <td>{{ $commune->code ?? '-' }}</td>
                         <td>
                             <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('artisans.edit', $artisan->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
+                                <a href="{{ route('communes.edit', $commune->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('artisans.destroy', $artisan->id) }}" method="POST" class="delete-form">
+                                <form action="{{ route('communes.destroy', $commune->id) }}" method="POST" class="delete-form">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
@@ -92,18 +87,11 @@
     </div>
 </div>
 
-@push('styles')
-<link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
-@endpush
-
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Configuration DataTable
-        $('#Table').DataTable({
+        $('#communesTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
             buttons: [
@@ -129,7 +117,7 @@
         $('.delete-btn').click(function(e) {
             e.preventDefault();
             
-            if (confirm('Supprimer cet artisan ?')) {
+            if (confirm('Voulez-vous supprimer cette commune ?')) {
                 $(this).closest('form').submit();
             }
         });

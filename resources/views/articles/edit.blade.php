@@ -4,7 +4,7 @@
 @section('page-title', 'Modifier un Article')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('articles.index') }}">Articles</a></li>
+<li class="breadcrumb-item"><a href="{{ route('sublayouts_article') }}">Articles</a></li>
 <li class="breadcrumb-item active">Modifier</li>
 @endsection
 

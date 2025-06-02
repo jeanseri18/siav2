@@ -40,6 +40,7 @@
             <table id="Table" class="app-table display">
                 <thead>
                     <tr>
+                        <th>Code</th>
                         <th>Nom</th>
                         <th>Prénoms</th>
                         <th>Délai de paiement</th>
@@ -56,6 +57,8 @@
                 <tbody>
                     @foreach ($fournisseurs as $fournisseur)
                     <tr>
+                                                <td>{{ $fournisseur->code }}</td>
+
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">

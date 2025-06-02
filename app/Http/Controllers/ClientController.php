@@ -62,7 +62,18 @@ class ClientController extends Controller
         $clientData['categorie'] = $request->categorie;
         $clientData['type'] = 'Client'; // Ici on assume que c'est un client par défaut
         $clientData['id_bu'] = $id_bu;
+ $lastReference = \App\Models\Reference::where('nom', 'Code client')
+        ->latest('created_at')
+        ->first();
 
+// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
+$newReference = $lastReference ? $lastReference->ref : 'Cli_0000';  // Si aucune référence, utiliser un modèle
+$newReference = 'Cli_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+// Ajouter la référence générée à la requête
+$request->merge([
+'code' => $newReference,
+]);
         // On crée le client ou le fournisseur
         ClientFournisseur::create($clientData);
 

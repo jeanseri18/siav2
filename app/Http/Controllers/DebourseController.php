@@ -41,8 +41,32 @@ public function index()
         $dqe = DQE::with('lignes.bpu')->findOrFail($dqeId);
         $contratId = $dqe->contrat_id;
 
+
+                 $lastReferenceds = \App\Models\Reference::where('nom', ' Code deboursé sec')
+        ->latest('created_at')
+        ->first();
+
+            $lastReferencedsmo = \App\Models\Reference::where('nom', 'Code deboursé sec MO')
+        ->latest('created_at')
+        ->first();
+            $lastReferencefc = \App\Models\Reference::where('nom', 'Code devis émis')
+        ->latest('created_at')
+        ->first();
+
+// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
+$newReferenceds = $lastReferenceds ? $lastReferenceds->ref : 'DS_0000';  // Si aucune référence, utiliser un modèle
+$newReferenceds = 'DS_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+$newReferencedsmo = $lastReferencedsmo ? $lastReferencedsmo->ref : 'DSM_0000';  // Si aucune référence, utiliser un modèle
+$newReferencedsmo = 'DSM_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+$newReferencefc = $lastReferencefc ? $lastReferencefc->ref : 'FD_0000';  // Si aucune référence, utiliser un modèle
+$newReferencefc = 'FD_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+
         // 1. Générer le déboursé sec
         $debourseSec = Debourse::create([
+            'reference'=>$newReferenceds,
             'contrat_id' => $contratId,
             'dqe_id' => $dqe->id,
             'type' => 'sec',
@@ -52,6 +76,7 @@ public function index()
 
         // 2. Générer le déboursé main d'œuvre
         $debourseMO = Debourse::create([
+            'reference'=>$newReferencedsmo,
             'contrat_id' => $contratId,
             'dqe_id' => $dqe->id,
             'type' => 'main_oeuvre',
@@ -61,6 +86,7 @@ public function index()
 
         // 3. Générer les frais de chantier
         $debourseFC = Debourse::create([
+            'reference'=>$newReferencefc,
             'contrat_id' => $contratId,
             'dqe_id' => $dqe->id,
             'type' => 'frais_chantier',

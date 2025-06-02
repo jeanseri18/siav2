@@ -19,4 +19,17 @@ class Ville extends Model
     {
         return $this->hasMany(Secteur::class);
     }
+
+     public function communes()
+    {
+        return $this->hasMany(Commune::class);
+    }
+
+    /**
+     * Obtenir tous les quartiers de cette ville via les communes
+     */
+    public function quartiers()
+    {
+        return $this->hasManyThrough(Quartier::class, Commune::class);
+    }
 }

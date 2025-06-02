@@ -53,7 +53,26 @@ use App\Http\Controllers\DebourseController;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
 
+use App\Http\Controllers\CommuneController;
+use App\Http\Controllers\QuartierController;
 
+// Routes pour les Communes
+Route::get('/communes', [CommuneController::class, 'index'])->name('communes.index');
+Route::get('/communes/create', [CommuneController::class, 'create'])->name('communes.create');
+Route::post('/communes', [CommuneController::class, 'store'])->name('communes.store');
+Route::get('/communes/{commune}', [CommuneController::class, 'show'])->name('communes.show');
+Route::get('/communes/{commune}/edit', [CommuneController::class, 'edit'])->name('communes.edit');
+Route::put('/communes/{commune}', [CommuneController::class, 'update'])->name('communes.update');
+Route::delete('/communes/{commune}', [CommuneController::class, 'destroy'])->name('communes.destroy');
+
+// Routes pour les Quartiers
+Route::get('/quartiers', [QuartierController::class, 'index'])->name('quartiers.index');
+Route::get('/quartiers/create', [QuartierController::class, 'create'])->name('quartiers.create');
+Route::post('/quartiers', [QuartierController::class, 'store'])->name('quartiers.store');
+Route::get('/quartiers/{quartier}', [QuartierController::class, 'show'])->name('quartiers.show');
+Route::get('/quartiers/{quartier}/edit', [QuartierController::class, 'edit'])->name('quartiers.edit');
+Route::put('/quartiers/{quartier}', [QuartierController::class, 'update'])->name('quartiers.update');
+Route::delete('/quartiers/{quartier}', [QuartierController::class, 'destroy'])->name('quartiers.destroy');
 // Dans routes/web.php
 // Routes pour les frais généraux
 Route::get('/contrats_frais_generaux', [FraisGeneralController::class, 'index'])->name('frais_generaux.index');
