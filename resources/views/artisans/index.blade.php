@@ -8,7 +8,6 @@
 @endsection
 
 @section('content')
-@include('sublayouts.until')
 
 <div class="app-fade-in">
     <div class="app-card">
