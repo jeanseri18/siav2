@@ -72,6 +72,19 @@ public function index()
         'notes' => 'nullable|string',
     ]);
 
+
+          $lastReference = \App\Models\Reference::where('nom', 'Code devis émis')
+        ->latest('created_at')
+        ->first();
+
+// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
+$newReference = $lastReference ? $lastReference->ref : 'DQE_0000';  // Si aucune référence, utiliser un modèle
+$newReference = 'DQE_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+
+// Ajouter la référence générée à la requête
+$request->merge([
+'reference' => $newReference,
+]);
     // Créer le DQE
     $dqe = DQE::create([
         'contrat_id' => $contratId,
