@@ -4,7 +4,6 @@
 @section('page-title', 'Liste des Artisans')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('home') }}">Accueil</a></li>
 <li class="breadcrumb-item active">Artisans</li>
 @endsection
 
