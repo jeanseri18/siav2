@@ -50,7 +50,13 @@
                             <tbody>
                                 @forelse($debourses as $debourse)
                                     <tr>
-                                        <td>{{ $debourse->reference ?? 'Sans référence' }}</td>
+                                        <td>
+                                            @if($debourse->reference)
+                                                <a href="{{ route('debourses.show', $debourse->id) }}" class="badge bg-primary text-decoration-none">{{ $debourse->reference }}</a>
+                                            @else
+                                                <span class="text-muted">Sans référence</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $debourse->projet->nom_projet ?? 'N/A' }}</td>
                                         <td>{{ $debourse->contrat->nom_contrat ?? 'N/A' }}</td>
                                         <td>{{ $debourse->dqe->reference ?? 'DQE sans référence' }}</td>

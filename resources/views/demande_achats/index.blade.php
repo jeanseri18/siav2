@@ -99,7 +99,7 @@
                                 <div class="item-icon">
                                     <i class="fas fa-file-invoice text-primary"></i>
                                 </div>
-                                <span class="app-fw-bold">{{ $demande->reference }}</span>
+                                <a href="{{ route('demande-achats.show', $demande) }}" class="app-fw-bold text-decoration-none">{{ $demande->reference }}</a>
                             </div>
                         </td>
                         <td>{{ $demande->date_demande->format('d/m/Y') }}</td>

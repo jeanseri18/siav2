@@ -36,8 +36,8 @@ class ProjetController extends Controller
     $bus = BU::all();
     
     // Récupérer les employés pour les sélecteurs
-    $chefsProjet = User::chefProjet()->actif()->get();
-    $conducteursTravaux = User::conducteurTravaux()->actif()->get();
+    $chefsProjet = User::chefsProjets()->actifs()->get();
+    $conducteursTravaux = User::conducteursTravaux()->actifs()->get();
 
     return view('projets.create', compact('clients', 'secteurs', 'bus', 'chefsProjet', 'conducteursTravaux'));
 }
@@ -99,8 +99,8 @@ $request->merge([
         $bus = BU::all();
         
         // Récupérer les employés pour les sélecteurs
-        $chefsProjet = User::chefProjet()->actif()->get();
-        $conducteursTravaux = User::conducteurTravaux()->actif()->get();
+        $chefsProjet = User::chefsProjets()->actifs()->get();
+        $conducteursTravaux = User::conducteursTravaux()->actifs()->get();
     
         return view('projets.edit', compact('projet', 'clients', 'secteurs', 'bus', 'chefsProjet', 'conducteursTravaux'));
     }

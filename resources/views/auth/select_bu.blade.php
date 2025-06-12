@@ -2,7 +2,7 @@
 {{-- Page de sélection BU améliorée --}}
 @extends('layouts.auth')
 
-@section('title', 'Sélection BU | Africa Travel Car')
+@section('title', 'Sélection BU | SIA')
 
 @section('content')
 <div class="container">
@@ -10,7 +10,7 @@
         <div class="col-md-5 col-lg-4">
             <div class="auth-card">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Africa Travel Car" class="logo mb-3">
+                    <img src="{{ asset('assets/logo.png') }}" alt="SIA" class="logo mb-3">
                     <h2 class="auth-title">Sélection BU</h2>
                     <p class="auth-subtitle">Choisissez votre unité de gestion</p>
                 </div>

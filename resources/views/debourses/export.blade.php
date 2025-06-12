@@ -142,7 +142,7 @@
 
     <div class="footer">
         <p>Document généré le {{ date('d/m/Y') }}</p>
-        <p>© {{ date('Y') }} - Votre Entreprise</p>
+        <p>© {{ date('Y') }} - SIA</p>
     </div>
 </body>
 </html>

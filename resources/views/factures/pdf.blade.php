@@ -133,7 +133,7 @@
             @if(isset($facture) && $facture->vente && $facture->vente->user && $facture->vente->user->bus)
                 <p><strong>{{ $facture->vente->user->bus->nom }}</strong><br>
             @else
-                <p><strong>VOTRE ENTREPRISE</strong><br>
+                <p><strong>SIA</strong><br>
             @endif
             Adresse complète de l'entreprise<br>
             Tel: +XX XX XX XX XX | Email: contact@entreprise.com<br>

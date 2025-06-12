@@ -245,4 +245,23 @@ $request->merge([
     
     return view('contrats.show', compact('contrat', 'clients', 'stats'));
 }
+
+    // Dupliquer un contrat
+    public function duplicate($id)
+    {
+        $contrat = Contrat::findOrFail($id);
+        
+        // Générer une nouvelle référence
+        $newReference = 'Ctr_' . now()->format('YmdHis');
+        
+        // Créer une copie du contrat
+        $newContrat = $contrat->replicate();
+        $newContrat->ref_contrat = $newReference;
+        $newContrat->nom_contrat = $contrat->nom_contrat . ' (Copie)';
+        $newContrat->statut = 'en cours'; // Réinitialiser le statut
+        $newContrat->save();
+        
+        return redirect()->route('contrats.show', $newContrat->id)
+            ->with('success', 'Contrat dupliqué avec succès!');
+    }
 }

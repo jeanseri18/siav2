@@ -46,7 +46,13 @@
                             <tbody>
                                 @forelse($deboursesChantier as $debourseChantier)
                                     <tr>
-                                        <td>{{ $debourseChantier->reference ?? 'Sans référence' }}</td>
+                                        <td>
+                                            @if($debourseChantier->reference)
+                                                <a href="{{ route('debourses_chantier.show', $debourseChantier->id) }}" class="badge bg-primary text-decoration-none">{{ $debourseChantier->reference }}</a>
+                                            @else
+                                                <span class="text-muted">Sans référence</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $debourseChantier->projet->nom_projet ?? 'N/A' }}</td>
                                         <td>{{ $debourseChantier->contrat->nom_contrat ?? 'N/A' }}</td>
                                         <td>{{ $debourseChantier->dqe->reference ?? 'DQE sans référence' }}</td>

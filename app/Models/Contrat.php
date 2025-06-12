@@ -53,6 +53,22 @@ public function fraisGeneraux()
     }
     
     /**
+     * Relation avec les prestations
+     */
+    public function prestations()
+    {
+        return $this->hasMany(Prestation::class, 'id_contrat');
+    }
+    
+    /**
+     * Relation avec les factures
+     */
+    public function factures()
+    {
+        return $this->hasMany(Facture::class, 'id_contrat');
+    }
+    
+    /**
      * Obtenir le dernier DQE validé
      */
     public function getLastValidatedDQE()

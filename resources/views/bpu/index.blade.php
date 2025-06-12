@@ -140,15 +140,15 @@
                     </tr>
 
                     <tr>
-                        <td>Designation</td>
+                        <td>Désignation</td>
                         <td>Quantité</td>
-                        <td>Materiaux</td>
+                        <td>Matériaux</td>
                         <td>Unité</td>
                         <td>Main d'oeuvre</td>
-                        <td>Materiel</td>
-                        <td>Deboursé sec</td>
+                        <td>Matériel</td>
+                        <td>Déboursé sec</td>
                         <td>Frais de chantier</td>
-                        <td>Frais General</td>
+                        <td>Frais Général</td>
                         <td>Prix HT</td>
                         <td>Action</td>
                     </tr>

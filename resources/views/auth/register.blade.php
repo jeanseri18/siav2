@@ -1,7 +1,7 @@
 {{-- Page d'inscription améliorée --}}
 @extends('layouts.auth')
 
-@section('title', 'Inscription |SIA')
+@section('title', 'Inscription | SIA')
 
 @section('content')
 <div class="container">
@@ -9,7 +9,7 @@
         <div class="col-md-8 col-lg-6">
             <div class="auth-card">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Africa Travel Car" class="logo mb-3">
+                    <img src="{{ asset('assets/logo.png') }}" alt="SIA" class="logo mb-3">
                     <h2 class="auth-title">Inscription</h2>
                     <p class="auth-subtitle">Créez votre compte pour commencer</p>
                 </div>

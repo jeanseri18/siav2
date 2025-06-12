@@ -56,12 +56,12 @@
 
                     <tr>
                         <th>Code</th>
-                        <th>Designation</th>
+                        <th>Désignation</th>
                         <th>Unité</th>
-                        <th>Materiaux</th>
+                        <th>Matériaux</th>
                         <th>Main d'oeuvre</th>
-                        <th>Materiel</th>
-                        <th>Deboursé sec</th>
+                        <th>Matériel</th>
+                        <th>Déboursé sec</th>
                         <th>Frais</th>
                         <th>Prix HT</th>
                         <th>Prix TTC</th>

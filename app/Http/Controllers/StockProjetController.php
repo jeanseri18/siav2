@@ -81,6 +81,19 @@ class StockProjetController extends Controller
         return redirect()->route('stock.index')->with('success', 'Produit mis à jour avec succès');
     }
 
+    public function show($id)
+    {
+        $stock = StockProjet::with(['article.categorie', 'article.sousCategorie', 'article.fournisseur', 'article.unite', 'uniteMesure', 'projet'])->findOrFail($id);
+        return view('stock_projet.show', compact('stock'));
+    }
+
+    public function destroy($id)
+    {
+        $stock = StockProjet::findOrFail($id);
+        $stock->delete();
+        return redirect()->route('stock.index')->with('success', 'Article supprimé du stock avec succès');
+    }
+
 
     public function index_contrat()
     {
@@ -146,6 +159,19 @@ class StockProjetController extends Controller
             ]);
     
             return redirect()->route('stock_contrat.index')->with('success', 'Produit mis à jour avec succès');
+        }
+
+        public function show_contrat($id)
+        {
+            $stock = StockProjet::with(['article.categorie', 'article.sousCategorie', 'article.fournisseur', 'article.unite', 'uniteMesure', 'projet'])->findOrFail($id);
+            return view('stock_contrat.show', compact('stock'));
+        }
+
+        public function destroy_contrat($id)
+        {
+            $stock = StockProjet::findOrFail($id);
+            $stock->delete();
+            return redirect()->route('stock_contrat.index')->with('success', 'Article supprimé du stock avec succès');
         }
     
 }

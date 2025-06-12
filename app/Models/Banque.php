@@ -10,6 +10,6 @@ class Banque extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'code_banque', 'iban', 'code_swift', 'domiciliation'];
+    protected $fillable = ['nom', 'code_banque', 'code_guichet', 'numero_compte', 'cle_rib', 'iban', 'code_swift', 'domiciliation', 'telephone'];
 }
 

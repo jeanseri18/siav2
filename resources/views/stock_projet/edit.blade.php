@@ -62,8 +62,8 @@
                         
                         <div class="app-form-group">
                             <label for="quantite" class="app-form-label">
-                                <i class="fas fa-sort-numeric-up me-2"></i>Quantité
-                            </label>
+                            <i class="fas fa-sort-numeric-up me-2"></i>Quantité
+                        </label>
                             <div class="input-group">
                                 <input type="number" class="app-form-control" id="quantite" name="quantite" value="{{ $stock->quantite }}" min="0" step="0.01" required>
                                 <span class="input-group-text" id="unite-display">

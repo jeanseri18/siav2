@@ -46,7 +46,7 @@
                         <th>FAMILLE</th>
                         <th>SOUS FAMILLE</th>
                         <th>REF FOURN.</th>
-                        <th>DESIGNATION ARTICLE</th>
+                        <th>DÉSIGNATION ARTICLE</th>
                         <th>TYPE</th>
                         <th>UNITE</th>
                         <th>COUT MOYEN PONDERE</th>
@@ -64,9 +64,9 @@
                     @foreach($articles as $article)
                     <tr>
                         <td>
-                            <span class="app-badge app-badge-primary app-badge-pill">
+                            <a href="{{ route('articles.show', $article) }}" class="app-badge app-badge-primary app-badge-pill text-decoration-none">
                                 {{ $article->reference }}
-                            </span>
+                            </a>
                         </td>
                         <td>{{ $article->categorie ? $article->categorie->nom : '-' }}</td>
                         <td>{{ $article->sousCategorie ? $article->sousCategorie->nom : '-' }}</td>
@@ -158,20 +158,32 @@
                             {{ $transfertOut ?? 0 }}
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-1">
-                                <a href="{{ route('articles.show', $article) }}" class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('articles.edit', $article) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('articles.destroy', $article) }}" method="POST" class="delete-form" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('articles.show', $article) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('articles.edit', $article) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('articles.destroy', $article) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

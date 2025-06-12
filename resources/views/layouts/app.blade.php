@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="@yield('title', 'Système de Gestion')">
-    <meta name="author" content="Your Company">
+    <meta name="author" content="SIA">
     <meta name="description" content="Système de gestion complet pour le suivi des projets, stocks et finances.">
     <meta name="keywords" content="gestion, projets, finance, dashboard, ERP">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name', 'Dashboard')) | Votre Entreprise</title>
+    <title>@yield('title', config('app.name', 'Dashboard')) | SIA</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">

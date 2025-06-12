@@ -63,7 +63,13 @@
                 <tbody>
                     @foreach($stocks as $stock)
                     <tr>
-                        <td>{{ $stock->article ? $stock->article->reference : '-' }}</td>
+                        <td>
+                            @if($stock->article && $stock->article->reference)
+                                <a href="{{ route('articles.show', $stock->article) }}" class="badge bg-primary text-decoration-none">{{ $stock->article->reference }}</a>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ $stock->article && $stock->article->categorie ? $stock->article->categorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->sousCategorie ? $stock->article->sousCategorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom : '-' }}</td>
@@ -142,17 +148,38 @@
                             {{ $transfertOut }}
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('stock_contrat.edit', $stock->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('stock_contrat.destroy', $stock->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('stock_contrat.show', $stock->id) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('stock_contrat.edit', $stock->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" 
+                                           onclick="populateTransfertModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
+                                            <i class="fas fa-exchange-alt me-2"></i>Transférer
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('stock_contrat.destroy', $stock->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
@@ -205,6 +232,102 @@
             }
         });
     });
+    
+    // Fonction pour peupler le modal de transfert
+    function populateTransfertModal(articleId, articleNom, quantiteDisponible) {
+        document.getElementById('transfertArticleId').value = articleId;
+        document.getElementById('transfertArticleNom').value = articleNom;
+        document.getElementById('quantiteDisponible').textContent = quantiteDisponible;
+        document.getElementById('transfertQuantite').max = quantiteDisponible;
+    }
 </script>
 @endpush
+
+{{-- Modal de transfert --}}
+<div class="modal fade" id="transfertModal" tabindex="-1" aria-labelledby="transfertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content app-modal">
+            <div class="app-modal-header">
+                <h5 class="app-modal-title" id="transfertModalLabel">
+                    <i class="fas fa-exchange-alt me-2"></i>Transférer du Stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="app-modal-body">
+                <form action="{{ route('transferts.store') }}" method="POST" class="app-form" id="transfertForm">
+                    @csrf
+                    <input type="hidden" name="article_id" id="transfertArticleId">
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-building me-2"></i>Contrat Source</label>
+                                <select name="id_projet_source" class="app-form-select" required>
+                                    <option value="">Sélectionner le contrat source</option>
+                                    @foreach(\App\Models\Contrat::all() as $contrat)
+                                    <option value="{{ $contrat->id }}" {{ session('contrat_id') == $contrat->id ? 'selected' : '' }}>
+                                        {{ $contrat->nom_contrat }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas box me-2"></i>Article</label>
+                                <input type="text" id="transfertArticleNom" class="app-form-input" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-building me-2"></i>Contrat Destination</label>
+                                <select name="id_projet_destination" class="app-form-select" required>
+                                    <option value="">Sélectionner le contrat destination</option>
+                                    @foreach(\App\Models\Contrat::all() as $contrat)
+                                    <option value="{{ $contrat->id }}">{{ $contrat->nom_contrat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-sort-numeric-up me-2"></i>Quantité à transférer</label>
+                                <input type="number" name="quantite" id="transfertQuantite" class="app-form-input" min="1" required>
+                                <small class="app-form-help">Quantité disponible: <span id="quantiteDisponible"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-calendar me-2"></i>Date de transfert</label>
+                                <input type="date" name="date_transfert" class="app-form-input" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-comment me-2"></i>Commentaires</label>
+                                <textarea name="commentaires" class="app-form-textarea" rows="2" placeholder="Commentaires optionnels..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-modal-actions">
+                        <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="submit" class="app-btn app-btn-primary">
+                            <i class="fas fa-exchange-alt me-2"></i>Transférer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

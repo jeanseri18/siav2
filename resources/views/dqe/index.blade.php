@@ -41,7 +41,13 @@
                 <tbody>
                     @forelse($dqes as $dqe)
                         <tr>
-                            <td>{{ $dqe->reference ?? 'Sans référence' }}</td>
+                            <td>
+                                @if($dqe->reference)
+                                    <a href="{{ route('dqe.show', $dqe->id) }}" class="badge bg-primary text-decoration-none">{{ $dqe->reference }}</a>
+                                @else
+                                    <span class="text-muted">Sans référence</span>
+                                @endif
+                            </td>
                             <td>{{ $dqe->created_at->format('d/m/Y') }}</td>
                             <td>{{ number_format($dqe->montant_total_ht, 2, ',', ' ') }}</td>
                             <td>{{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }}</td>

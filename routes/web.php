@@ -361,10 +361,12 @@ Route::get('articles/{article}/edit', [ArticleController::class, 'edit'])->name(
 Route::put('articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
 Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
 
-Route::prefix('stock')->group(function() {
+Route::prefix('stock')->group
+(function() {
     Route::get('/', [StockProjetController::class, 'index'])->name('stock.index');
     Route::get('/create', [StockProjetController::class, 'create'])->name('stock.create');
     Route::post('/', [StockProjetController::class, 'store'])->name('stock.store');
+    Route::get('/{id}', [StockProjetController::class, 'show'])->name('stock.show');
     Route::get('/{id}/edit', [StockProjetController::class, 'edit'])->name('stock.edit');
     Route::put('/{id}', [StockProjetController::class, 'update'])->name('stock.update');
     Route::delete('/{id}', [StockProjetController::class, 'destroy'])->name('stock.destroy');
@@ -373,6 +375,7 @@ Route::prefix('stock_contrat')->group(function() {
     Route::get('/', [StockProjetController::class, 'index_contrat'])->name('stock_contrat.index');
     Route::get('/create', [StockProjetController::class, 'create_contrat'])->name('stock_contrat.create');
     Route::post('/', [StockProjetController::class, 'store_contrat'])->name('stock_contrat.store');
+    Route::get('/{id}', [StockProjetController::class, 'show_contrat'])->name('stock_contrat.show');
     Route::get('/{id}/edit', [StockProjetController::class, 'edit_contrat'])->name('stock_contrat.edit');
     Route::put('/{id}', [StockProjetController::class, 'update_contrat'])->name('stock_contrat.update');
     Route::delete('/{id}', [StockProjetController::class, 'destroy_contrat'])->name('stock_contrat.destroy');
@@ -385,6 +388,7 @@ Route::prefix('contrats')->group(function() {
     Route::get('edit/{id}', [ContratController::class, 'edit'])->name('contrats.edit');
     Route::put('update/{id}', [ContratController::class, 'update'])->name('contrats.update');
     Route::delete('destroy/{id}', [ContratController::class, 'destroy'])->name('contrats.destroy');
+    Route::post('duplicate/{id}', [ContratController::class, 'duplicate'])->name('contrats.duplicate');
 });
 Route::get('/contrats/{id}', [ContratController::class, 'show'])->name('contrats.show');
 

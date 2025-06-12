@@ -108,8 +108,8 @@
 
                 <div class="app-form-group">
                     <label for="nom" class="app-form-label">
-                        <i class="fas fa-font me-2"></i>Designation
-                    </label>
+                                <i class="fas fa-font me-2"></i>Désignation
+                            </label>
                     <input type="text" name="nom" id="nom" class="app-form-control" required>
                     <div class="app-form-text">Nom complet ou description de l'article</div>
                 </div>

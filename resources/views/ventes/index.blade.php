@@ -56,9 +56,9 @@
                     @foreach ($ventes as $vente)
                     <tr>
                         <td>
-                            <span class="app-badge app-badge-light">
+                            <a href="{{ route('ventes.show', $vente) }}" class="app-badge app-badge-light text-decoration-none">
                                 #{{ str_pad($vente->id, 4, '0', STR_PAD_LEFT) }}
-                            </span>
+                            </a>
                         </td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
@@ -100,28 +100,37 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('ventes.show', $vente) }}" class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Détails">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                @if($vente->statut !== 'Payée')
-                                <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Valider">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </form>
-                                @endif
-                                
-                                <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-outline-primary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ventes.show', $vente) }}">
+                                            <i class="fas fa-eye me-2"></i>Détails
+                                        </a>
+                                    </li>
+                                    @if($vente->statut !== 'Payée')
+                                        <li>
+                                            <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="dropdown-item text-success" style="border: none; background: none;">
+                                                    <i class="fas fa-check me-2"></i>Valider
+                                                </button>
+                                            </form>
+                                        </li>
+                                    @endif
+                                    <li>
+                                        <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

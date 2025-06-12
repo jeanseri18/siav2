@@ -64,7 +64,13 @@
                 <tbody>
                     @foreach($stocks as $stock)
                     <tr>
-                        <td>{{ $stock->article ? $stock->article->reference : '-' }}</td>
+                        <td>
+                            @if($stock->article && $stock->article->reference)
+                                <a href="{{ route('articles.show', $stock->article) }}" class="badge bg-primary text-decoration-none">{{ $stock->article->reference }}</a>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ $stock->article && $stock->article->categorie ? $stock->article->categorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->sousCategorie ? $stock->article->sousCategorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom : '-' }}</td>
@@ -141,22 +147,37 @@
                             {{ $transfertOut }}
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('stock.edit', $stock->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <button type="button" class="app-btn app-btn-success app-btn-sm app-btn-icon" data-bs-toggle="modal" data-bs-target="#transfertModal" data-stock-id="{{ $stock->id }}" data-article-id="{{ $stock->article_id }}" data-article-name="{{ $stock->article ? $stock->article->nom : 'Article' }}">
-                                    <i class="fas fa-exchange-alt"></i>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
                                 </button>
-                                
-                                <form action="{{ route('stock.destroy', $stock->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('stock.show', $stock->id) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('stock.edit', $stock->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" data-stock-id="{{ $stock->id }}" data-article-id="{{ $stock->article_id }}" data-article-name="{{ $stock->article ? $stock->article->nom : 'Article' }}">
+                                            <i class="fas fa-exchange-alt me-2"></i>Transférer
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('stock.destroy', $stock->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
