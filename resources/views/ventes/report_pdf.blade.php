@@ -21,10 +21,21 @@
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 3px solid #007bff;
+        }
+
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+        }
+
+        .company-info {
+            text-align: right;
         }
 
         .header h1 {
@@ -252,8 +263,18 @@
 <body>
     <!-- En-tête du rapport -->
     <div class="header">
-        <h1>📊 Rapport des Ventes</h1>
-        <div class="subtitle">Généré le {{ date('d/m/Y à H:i') }}</div>
+        <div>
+            @if(isset($bus) && $bus && $bus->logo)
+                <img src="{{ public_path('storage/' . $bus->logo) }}" alt="Logo" class="logo">
+            @endif
+        </div>
+        <div class="company-info">
+            <h1>📊 Rapport des Ventes</h1>
+            <div class="subtitle">Généré le {{ date('d/m/Y à H:i') }}</div>
+            @if(isset($bus) && $bus)
+                <div>{{ $bus->nom }}</div>
+            @endif
+        </div>
     </div>
 
     <!-- Informations sur les filtres appliqués -->

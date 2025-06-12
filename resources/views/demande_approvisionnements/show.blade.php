@@ -183,12 +183,14 @@
                                 </button>
                             </div>
                             <div>
-                                <button type="button" class="app-btn app-btn-success app-btn-icon" data-bs-toggle="modal" data-bs-target="#approveModal">
-                                    <i class="fas fa-check me-2"></i> Approuver
-                                </button>
-                                <button type="button" class="app-btn app-btn-danger app-btn-icon" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="fas fa-times me-2"></i> Rejeter
-                                </button>
+                                @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'chef_chantier', 'admin', 'dg']))
+                                    <button type="button" class="app-btn app-btn-success app-btn-icon" data-bs-toggle="modal" data-bs-target="#approveModal">
+                                        <i class="fas fa-check me-2"></i> Approuver
+                                    </button>
+                                    <button type="button" class="app-btn app-btn-danger app-btn-icon" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                        <i class="fas fa-times me-2"></i> Rejeter
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>

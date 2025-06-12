@@ -13,8 +13,19 @@
             font-size: 12px;
         }
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+        }
+        .company-info {
+            text-align: right;
         }
         .header img {
             max-width: 150px;
@@ -113,9 +124,17 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('logo.png') }}" alt="Logo">
+        <div>
+            @if(isset($facture) && $facture->vente && $facture->vente->user && $facture->vente->user->bus && $facture->vente->user->bus->logo)
+                <img src="{{ public_path('storage/' . $facture->vente->user->bus->logo) }}" alt="Logo" class="logo">
+            @endif
+        </div>
         <div class="company-info">
-            <p><strong>VOTRE ENTREPRISE</strong><br>
+            @if(isset($facture) && $facture->vente && $facture->vente->user && $facture->vente->user->bus)
+                <p><strong>{{ $facture->vente->user->bus->nom }}</strong><br>
+            @else
+                <p><strong>VOTRE ENTREPRISE</strong><br>
+            @endif
             Adresse complète de l'entreprise<br>
             Tel: +XX XX XX XX XX | Email: contact@entreprise.com<br>
             RCCM: XXXXXXXXXXXX | IFU: XXXXXXXXXXXX</p>

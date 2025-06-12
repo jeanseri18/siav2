@@ -11,7 +11,9 @@ class Article extends Model
 
     protected $fillable = [
         'reference',
+        'reference_fournisseur',
         'nom',
+        'type',
         'quantite_stock',
         'prix_unitaire',
         'unite_mesure',
@@ -28,5 +30,15 @@ class Article extends Model
     public function sousCategorie()
     {
         return $this->belongsTo(SousCategorie::class);
+    }
+
+    public function fournisseur()
+    {
+        return $this->belongsTo(ClientFournisseur::class, 'reference_fournisseur');
+    }
+
+    public function unite()
+    {
+        return $this->belongsTo(UniteMesure::class, 'unite_mesure');
     }
 }

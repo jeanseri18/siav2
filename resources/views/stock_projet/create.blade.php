@@ -38,7 +38,7 @@
                             <select class="app-form-select" id="article_id" name="article_id" required>
                                 <option value="">-- Sélectionnez un article --</option>
                                 @foreach($articles as $article)
-                                    <option value="{{ $article->id }}" data-unite="{{ $article->unite ? $article->unite->nom : '' }}">
+                                    <option value="{{ $article->id }}" data-unite-id="{{ $article->unite ? $article->unite->id : '' }}" data-unite-nom="{{ $article->unite ? $article->unite->nom : '' }}">
                                         {{ $article->nom }} - {{ $article->reference }}
                                     </option>
                                 @endforeach
@@ -47,11 +47,26 @@
                         </div>
                         
                         <div class="app-form-group">
+                            <label for="unite_mesure_id" class="app-form-label">
+                                <i class="fas fa-ruler me-2"></i>Unité de mesure
+                            </label>
+                            <select class="app-form-select" id="unite_mesure_id" name="unite_mesure_id" required>
+                                <option value="">-- Sélectionnez une unité --</option>
+                                @foreach($uniteMesures as $unite)
+                                    <option value="{{ $unite->id }}">
+                                        {{ $unite->nom }} ({{ $unite->ref }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Sélectionnez l'unité de mesure pour ce produit</div>
+                        </div>
+                        
+                        <div class="app-form-group">
                             <label for="quantite" class="app-form-label">
                                 <i class="fas fa-sort-numeric-up me-2"></i>Quantité
                             </label>
                             <div class="input-group">
-                                <input type="number" class="app-form-control" id="quantite" name="quantite" min="1" required>
+                                <input type="number" class="app-form-control" id="quantite" name="quantite" min="1" step="0.01" required>
                                 <span class="input-group-text" id="unite-display">Unité</span>
                             </div>
                             <div class="app-form-text">Indiquez la quantité à ajouter</div>
@@ -93,8 +108,30 @@
         // Afficher l'unité correspondante à l'article sélectionné
         $('#article_id').change(function() {
             const selectedOption = $(this).find('option:selected');
-            const unite = selectedOption.data('unite');
-            $('#unite-display').text(unite || 'Unité');
+            const uniteId = selectedOption.data('unite-id');
+            const uniteNom = selectedOption.data('unite-nom');
+            
+            // Mettre à jour l'affichage de l'unité
+            $('#unite-display').text(uniteNom || 'Unité');
+            
+            // Pré-sélectionner l'unité de mesure si elle existe
+            if (uniteId) {
+                $('#unite_mesure_id').val(uniteId);
+            } else {
+                $('#unite_mesure_id').val('');
+            }
+        });
+        
+        // Mettre à jour l'affichage quand l'unité de mesure change
+        $('#unite_mesure_id').change(function() {
+            const selectedOption = $(this).find('option:selected');
+            const uniteText = selectedOption.text();
+            if (uniteText && uniteText !== '-- Sélectionnez une unité --') {
+                const uniteNom = uniteText.split(' (')[0]; // Extraire le nom sans la référence
+                $('#unite-display').text(uniteNom);
+            } else {
+                $('#unite-display').text('Unité');
+            }
         });
     });
 </script>

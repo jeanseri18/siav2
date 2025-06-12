@@ -210,7 +210,7 @@
                             @endif
                         </div>
                         <div>
-                            @if($demandeAchat->statut == 'en attente')
+                            @if($demandeAchat->statut == 'en attente' && in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
                                 <form action="{{ route('demande-achats.approve', $demandeAchat) }}" method="POST" style="display:inline;">
                                     @csrf
                                     <button type="submit" class="app-btn app-btn-success app-btn-icon" onclick="return confirm('Êtes-vous sûr de vouloir approuver cette demande?')">

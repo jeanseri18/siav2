@@ -23,9 +23,19 @@
             font-size: 18px;
         }
         .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #033765;
             padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+        }
+        .company-info {
+            text-align: right;
         }
         .info {
             margin-bottom: 20px;
@@ -67,8 +77,18 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ $typeLabel }}</h1>
-        <h2>Contrat : {{ $debourse->contrat->nom_contrat }}</h2>
+        <div>
+            @if($debourse->contrat && $debourse->contrat->bus && $debourse->contrat->bus->logo)
+                <img src="{{ public_path('storage/' . $debourse->contrat->bus->logo) }}" alt="Logo" class="logo">
+            @endif
+        </div>
+        <div class="company-info">
+            <h1>{{ $typeLabel }}</h1>
+            <h2>Contrat : {{ $debourse->contrat->nom_contrat }}</h2>
+            @if($debourse->contrat && $debourse->contrat->bus)
+                <div>{{ $debourse->contrat->bus->nom }}</div>
+            @endif
+        </div>
     </div>
     
     <div class="info">

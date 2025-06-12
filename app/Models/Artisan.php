@@ -9,18 +9,28 @@ class Artisan extends Model {
     use HasFactory;
 
     protected $table = 'artisan';
-    protected $fillable = ['nom', 'id_corpmetier', 'type'];
+    protected $fillable = [
+        'reference',
+        'nom',
+        'civilite',
+        'prenoms',
+        'type_piece',
+        'numero_piece',
+        'date_naissance',
+        'nationalite',
+        'fonction',
+        'localisation',
+        'rcc',
+        'rccm',
+        'boite_postale',
+        'tel1',
+        'tel2',
+        'mail'
+    ];
 
     public function contrats() {
         return $this->hasMany(Contrat::class, 'id_artisan');
     }
-
-
-    // Relation avec Corps de Métier
-    public function corpMetier() {
-        return $this->belongsTo(CorpMetier::class, 'id_corpmetier');
-    }
-
 
     public function prestations() {
         return $this->hasMany(Prestation::class, 'id_artisan');

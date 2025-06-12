@@ -2,28 +2,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Secteur;
-use App\Models\Ville;
+use App\Models\Quartier;
 use Illuminate\Http\Request;
 
 class SecteurController extends Controller
 {
     public function index()
     {
-        $secteurs = Secteur::with('ville')->get();
+        $secteurs = Secteur::with('quartier.commune.ville')->get();
         return view('secteurs.index', compact('secteurs'));
     }
 
     public function create()
     {
-        $villes = Ville::all();
-        return view('secteurs.create', compact('villes'));
+        $quartiers = Quartier::with('commune.ville')->get();
+        return view('secteurs.create', compact('quartiers'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'ville_id' => 'required'
+            'quartier_id' => 'required'
         ]);
 
         Secteur::create($request->all());
@@ -33,15 +33,15 @@ class SecteurController extends Controller
     public function edit($id)
     {
         $secteur = Secteur::findOrFail($id);
-        $villes = Ville::all();
-        return view('secteurs.edit', compact('secteur', 'villes'));
+        $quartiers = Quartier::with('commune.ville')->get();
+        return view('secteurs.edit', compact('secteur', 'quartiers'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'ville_id' => 'required'
+            'quartier_id' => 'required'
         ]);
 
         $secteur = Secteur::findOrFail($id);

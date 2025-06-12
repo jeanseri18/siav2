@@ -23,9 +23,19 @@
             font-size: 18px;
         }
         .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #033765;
             padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+        }
+        .company-info {
+            text-align: right;
         }
         .info {
             margin-bottom: 20px;
@@ -72,8 +82,18 @@
 </head>
 <body>
     <div class="header">
-        <h1>Frais Généraux</h1>
-        <h2>Contrat : {{ $fraisGeneral->contrat->nom_contrat }}</h2>
+        <div>
+            @if($fraisGeneral->contrat && $fraisGeneral->contrat->bus && $fraisGeneral->contrat->bus->logo)
+                <img src="{{ public_path('storage/' . $fraisGeneral->contrat->bus->logo) }}" alt="Logo" class="logo">
+            @endif
+        </div>
+        <div class="company-info">
+            <h1>Frais Généraux</h1>
+            <h2>{{ $fraisGeneral->contrat->ref_contrat }}</h2>
+            @if($fraisGeneral->contrat && $fraisGeneral->contrat->bus)
+                <div>{{ $fraisGeneral->contrat->bus->nom }}</div>
+            @endif
+        </div>
     </div>
     
     <div class="info">

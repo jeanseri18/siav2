@@ -12,7 +12,7 @@ class Debourse extends Model
     protected $table = 'debourses';
 
     protected $fillable = [
-        'contrat_id', 'dqe_id', 'type', 'montant_total', 'statut', 'notes'
+        'reference', 'projet_id', 'contrat_id', 'dqe_id', 'type', 'montant_total', 'statut', 'notes'
     ];
 
     /**
@@ -21,6 +21,14 @@ class Debourse extends Model
     public function contrat()
     {
         return $this->belongsTo(Contrat::class);
+    }
+    
+    /**
+     * Relation avec le projet
+     */
+    public function projet()
+    {
+        return $this->belongsTo(Projet::class);
     }
 
     /**

@@ -42,9 +42,13 @@
                     <tr>
                         <th>ID</th>
                         <th>Reference</th>
+                        <th>Civilité</th>
                         <th>Nom</th>
-                        <th>Corps de Métier</th>
-                        <th>Type</th>
+                        <th>Prénoms</th>
+                        <th>Fonction</th>
+                        <th>Localisation</th>
+                        <th>Tel1</th>
+                        <th>Mail</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
@@ -53,6 +57,7 @@
                     <tr>
                         <td>{{ $artisan->id }}</td>
                         <td>{{ $artisan->reference }}</td>
+                        <td>{{ $artisan->civilite }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -61,13 +66,16 @@
                                 <span>{{ $artisan->nom }}</span>
                             </div>
                         </td>
-                        <td>{{ $artisan->corpMetier->nom }}</td>
+                        <td>{{ $artisan->prenoms }}</td>
                         <td>
-                            <span class="app-badge app-badge-{{ $artisan->type == 'artisan' ? 'info' : 'primary' }} app-badge-pill">
-                                <i class="fas fa-{{ $artisan->type == 'artisan' ? 'tools' : 'user-cog' }} me-1"></i> 
-                                {{ ucfirst($artisan->type) }}
+                            <span class="app-badge app-badge-{{ $artisan->fonction == 'Artisan' ? 'info' : 'primary' }} app-badge-pill">
+                                <i class="fas fa-{{ $artisan->fonction == 'Artisan' ? 'tools' : 'user-cog' }} me-1"></i> 
+                                {{ $artisan->fonction }}
                             </span>
                         </td>
+                        <td>{{ $artisan->localisation }}</td>
+                        <td>{{ $artisan->tel1 }}</td>
+                        <td>{{ $artisan->mail }}</td>
                         <td>
                             <div class="app-d-flex app-gap-2">
                                 <a href="{{ route('artisans.edit', $artisan->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">

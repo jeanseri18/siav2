@@ -47,21 +47,22 @@
 
 <style>
 :root {
-    --primary-color: #033765;
-    --secondary-color: #0A8CFF;
-    --success-color: #28a745;
-    --info-color: #17a2b8;
-    --warning-color: #ffc107;
-    --accent-color: #ffffff;
-    --gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
-    --gradient-success: linear-gradient(135deg,  #033765 0%, #0A8CFF 100%);
-    --gradient-info: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    /* Variables harmonisées avec app.blade.php */
+    --primary-color: var(--primary, #033765);
+    --secondary-color: var(--primary-light, #0A8CFF);
+    --success-color: var(--success, #28a745);
+    --info-color: var(--info, #17a2b8);
+    --warning-color: var(--warning, #ffc107);
+    --accent-color: var(--white, #ffffff);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg,  var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
     --gradient-utilities: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
-    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-    --shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);
-    --shadow-hover: 0 20px 40px rgba(3, 55, 101, 0.2);
-    --border-radius: 16px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
+    --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
+    --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
+    --border-radius: var(--border-radius-lg, 1rem);
+    --transition: var(--transition-base, all 0.2s ease-in-out);
 }
 
 /* Styles communs pour toutes les sections */
@@ -170,7 +171,7 @@
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    gap: var(--spacing-lg, 1.5rem);
     position: relative;
     z-index: 1;
 }
@@ -182,7 +183,7 @@
 .dashboard-card {
     background: var(--gradient-card);
     border-radius: var(--border-radius);
-    padding: 2.5rem;
+    padding: var(--spacing-lg, 1.5rem);
     text-decoration: none;
     color: var(--primary-color);
     transition: var(--transition);
@@ -193,7 +194,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    min-height: 150px;
+    min-height: 280px;
+    max-height: 320px;
     border: 2px solid transparent;
 }
 

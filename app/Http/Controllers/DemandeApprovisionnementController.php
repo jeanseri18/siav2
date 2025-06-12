@@ -9,6 +9,7 @@ use App\Models\DemandeApprovisionnement;
 use App\Models\LigneDemandeApprovisionnement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeApprovisionnementController extends Controller
 {
@@ -160,6 +161,13 @@ class DemandeApprovisionnementController extends Controller
 
     public function approve(Request $request, DemandeApprovisionnement $demandeApprovisionnement)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'chef_chantier', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour approuver cette demande.');
+        }
+
         if ($demandeApprovisionnement->statut !== 'en attente') {
             return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
                 ->with('error', 'Cette demande ne peut pas être approuvée');
@@ -189,6 +197,13 @@ class DemandeApprovisionnementController extends Controller
 
     public function reject(Request $request, DemandeApprovisionnement $demandeApprovisionnement)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'chef_chantier', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour rejeter cette demande.');
+        }
+
         if ($demandeApprovisionnement->statut !== 'en attente') {
             return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
                 ->with('error', 'Cette demande ne peut pas être rejetée');
@@ -207,5 +222,23 @@ class DemandeApprovisionnementController extends Controller
 
        return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
             ->with('success', 'Demande d\'approvisionnement rejetée');
+    }
+
+    /**
+     * Exporter une demande d'approvisionnement en PDF
+     */
+    public function exportPDF($id)
+    {
+        $demandeApprovisionnement = DemandeApprovisionnement::with([
+            'user.bus', 
+            'projet', 
+            'approbateur', 
+            'lignes.article'
+        ])->findOrFail($id);
+        
+        $pdf = PDF::loadView('demande_approvisionnements.pdf', compact('demandeApprovisionnement'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->download('Demande_Approvisionnement_' . $demandeApprovisionnement->reference . '.pdf');
     }
 }

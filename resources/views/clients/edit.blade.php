@@ -108,8 +108,9 @@
                                 <i class="fas fa-balance-scale me-2"></i>Régime d'imposition:
                             </label>
                             <select name="regime_imposition" class="app-form-select" required>
-                                <option value="Régime A" {{ $client->regime_imposition == 'Régime A' ? 'selected' : '' }}>Régime A</option>
-                                <option value="Régime B" {{ $client->regime_imposition == 'Régime B' ? 'selected' : '' }}>Régime B</option>
+                                @foreach ($regimes as $regime)
+                                    <option value="{{ $regime->nom }}" {{ $client->regime_imposition == $regime->nom ? 'selected' : '' }}>{{ $regime->nom }} ({{ $regime->ref }}) - TVA: {{ $regime->tva }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -153,6 +154,111 @@
                             </div>
                         </div>
 
+                        <!-- Section Personnes Contacts -->
+                        <div class="app-card app-mt-4">
+                            <div class="app-card-header">
+                                <h4 class="app-card-title">
+                                    <i class="fas fa-users me-2"></i>Personnes Contacts
+                                </h4>
+                                <button type="button" class="app-btn app-btn-sm app-btn-primary" id="add-contact">
+                                    <i class="fas fa-plus me-2"></i>Ajouter un contact
+                                </button>
+                            </div>
+                            <div class="app-card-body">
+                                <div id="contacts-container">
+                                    @foreach($client->contactPersons as $index => $contact)
+                                        <div class="contact-form app-card app-mb-3" data-index="{{ $index }}">
+                                            <div class="app-card-header">
+                                                <h5 class="app-card-title">Contact {{ $index + 1 }}</h5>
+                                                <button type="button" class="app-btn app-btn-sm app-btn-danger remove-contact">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <div class="app-card-body">
+                                                <input type="hidden" name="contacts[{{ $index }}][id]" value="{{ $contact->id }}">
+                                                <div class="app-form-row">
+                                                    <div class="app-form-col-3">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Civilité:</label>
+                                                            <select name="contacts[{{ $index }}][civilite]" class="app-form-select" required>
+                                                                <option value="M." {{ $contact->civilite == 'M.' ? 'selected' : '' }}>M.</option>
+                                                                <option value="Mme" {{ $contact->civilite == 'Mme' ? 'selected' : '' }}>Mme</option>
+                                                                <option value="Mlle" {{ $contact->civilite == 'Mlle' ? 'selected' : '' }}>Mlle</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col-3">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Nom:</label>
+                                                            <input type="text" name="contacts[{{ $index }}][nom]" value="{{ $contact->nom }}" class="app-form-control" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col-3">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Prénoms:</label>
+                                                            <input type="text" name="contacts[{{ $index }}][prenoms]" value="{{ $contact->prenoms }}" class="app-form-control" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col-3">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Fonction:</label>
+                                                            <input type="text" name="contacts[{{ $index }}][fonction]" value="{{ $contact->fonction }}" class="app-form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="app-form-row">
+                                                    <div class="app-form-col">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Téléphone 1:</label>
+                                                            <input type="text" name="contacts[{{ $index }}][telephone_1]" value="{{ $contact->telephone_1 }}" class="app-form-control">
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Téléphone 2:</label>
+                                                            <input type="text" name="contacts[{{ $index }}][telephone_2]" value="{{ $contact->telephone_2 }}" class="app-form-control">
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Email:</label>
+                                                            <input type="email" name="contacts[{{ $index }}][email]" value="{{ $contact->email }}" class="app-form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="app-form-group">
+                                                    <label class="app-form-label">Adresse:</label>
+                                                    <textarea name="contacts[{{ $index }}][adresse]" class="app-form-control" rows="2">{{ $contact->adresse }}</textarea>
+                                                </div>
+                                                
+                                                <div class="app-form-row">
+                                                    <div class="app-form-col">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">
+                                                                <input type="checkbox" name="contacts[{{ $index }}][contact_principal]" value="1" class="contact-principal-checkbox" {{ $contact->contact_principal ? 'checked' : '' }}>
+                                                                Contact principal
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="app-form-col">
+                                                        <div class="app-form-group">
+                                                            <label class="app-form-label">Statut:</label>
+                                                            <select name="contacts[{{ $index }}][statut]" class="app-form-select">
+                                                                <option value="Actif" {{ $contact->statut == 'Actif' ? 'selected' : '' }}>Actif</option>
+                                                                <option value="Inactif" {{ $contact->statut == 'Inactif' ? 'selected' : '' }}>Inactif</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="app-card-footer">
                             <a href="{{ route('clients.index') }}" class="app-btn app-btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Annuler
@@ -170,6 +276,8 @@
 
 @push('scripts')
 <script>
+    let contactIndex = {{ $client->contactPersons->count() }};
+    
     $(document).ready(function() {
         // Afficher/masquer les champs en fonction de la catégorie sélectionnée
         $('#categorie').change(function() {
@@ -184,7 +292,130 @@
                 entrepriseFields.style.display = 'none';
             }
         });
+        
+        // Ajouter un contact
+        $('#add-contact').click(function() {
+            addContactForm();
+        });
+        
+        // Initialiser les événements pour les contacts existants
+        initializeContactEvents();
     });
+    
+    function addContactForm() {
+        const contactHtml = `
+            <div class="contact-form app-card app-mb-3" data-index="${contactIndex}">
+                <div class="app-card-header">
+                    <h5 class="app-card-title">Contact ${contactIndex + 1}</h5>
+                    <button type="button" class="app-btn app-btn-sm app-btn-danger remove-contact">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="app-card-body">
+                    <div class="app-form-row">
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Civilité:</label>
+                                <select name="contacts[${contactIndex}][civilite]" class="app-form-select" required>
+                                    <option value="M.">M.</option>
+                                    <option value="Mme">Mme</option>
+                                    <option value="Mlle">Mlle</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Nom:</label>
+                                <input type="text" name="contacts[${contactIndex}][nom]" class="app-form-control" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Prénoms:</label>
+                                <input type="text" name="contacts[${contactIndex}][prenoms]" class="app-form-control" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Fonction:</label>
+                                <input type="text" name="contacts[${contactIndex}][fonction]" class="app-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Téléphone 1:</label>
+                                <input type="text" name="contacts[${contactIndex}][telephone_1]" class="app-form-control">
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Téléphone 2:</label>
+                                <input type="text" name="contacts[${contactIndex}][telephone_2]" class="app-form-control">
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Email:</label>
+                                <input type="email" name="contacts[${contactIndex}][email]" class="app-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-group">
+                        <label class="app-form-label">Adresse:</label>
+                        <textarea name="contacts[${contactIndex}][adresse]" class="app-form-control" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">
+                                    <input type="checkbox" name="contacts[${contactIndex}][contact_principal]" value="1" class="contact-principal-checkbox">
+                                    Contact principal
+                                </label>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Statut:</label>
+                                <select name="contacts[${contactIndex}][statut]" class="app-form-select">
+                                    <option value="Actif" selected>Actif</option>
+                                    <option value="Inactif">Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#contacts-container').append(contactHtml);
+        contactIndex++;
+        
+        // Réinitialiser les événements
+        initializeContactEvents();
+    }
+    
+    function initializeContactEvents() {
+        // Gérer la suppression des contacts
+        $('.remove-contact').off('click').on('click', function() {
+            if ($('.contact-form').length > 1) {
+                $(this).closest('.contact-form').remove();
+            } else {
+                alert('Au moins un contact est requis.');
+            }
+        });
+        
+        // Gérer les contacts principaux (un seul à la fois)
+        $('.contact-principal-checkbox').off('change').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('.contact-principal-checkbox').not(this).prop('checked', false);
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

@@ -12,6 +12,10 @@
             <thead>
                 <tr>
                     <th>Nom</th>
+                    <th>Code Banque</th>
+                    <th>IBAN</th>
+                    <th>Code SWIFT</th>
+                    <th>Domiciliation</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -19,6 +23,10 @@
                 @foreach($banques as $banque)
                     <tr>
                         <td>{{ $banque->nom }}</td>
+                        <td>{{ $banque->code_banque }}</td>
+                        <td>{{ $banque->iban }}</td>
+                        <td>{{ $banque->code_swift }}</td>
+                        <td>{{ $banque->domiciliation }}</td>
                         <td>
                             <a href="{{ route('banques.edit', $banque) }}" class="btn btn-warning">Modifier</a>
                             <form action="{{ route('banques.destroy', $banque) }}" method="POST" class="d-inline">

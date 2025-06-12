@@ -6,14 +6,27 @@ use App\Models\Article;
 use App\Models\Categorie;
 use App\Models\UniteMesure;
 use App\Models\SousCategorie;
+use App\Models\ClientFournisseur;
+use App\Models\Projet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::with(['categorie', 'sousCategorie'])->get();
-        return view('articles.index', compact('articles'));
+        // Récupérer la BU actuelle depuis la session
+        $bu_id = session('selected_bu');
+        
+        if (!$bu_id) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner une BU avant d\'accéder à cette page.']);
+        }
+        
+        // Récupérer tous les projets de la BU
+        $projets_bu = Projet::where('bu_id', $bu_id)->pluck('id')->toArray();
+        
+        $articles = Article::with(['categorie', 'sousCategorie', 'fournisseur'])->get();
+        return view('articles.index', compact('articles', 'projets_bu'));
     }
 
     public function create()
@@ -21,8 +34,9 @@ class ArticleController extends Controller
         $categories = Categorie::all();
         $sousCategories = SousCategorie::all();
         $uniteMesures = UniteMesure::all();
+        $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->get();
         
-        return view('articles.create', compact('categories', 'sousCategories','uniteMesures'));
+        return view('articles.create', compact('categories', 'sousCategories','uniteMesures', 'fournisseurs'));
     }
 
     public function store(Request $request)
@@ -36,6 +50,8 @@ class ArticleController extends Controller
     
         $request->validate([
             'nom' => 'required',
+            'reference_fournisseur' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:255',
             'quantite_stock' => 'required|integer',
             'prix_unitaire' => 'required|numeric',
             'unite_mesure' => 'required',
@@ -74,14 +90,17 @@ $request->merge([
         $categories = Categorie::all();
         $sousCategories = SousCategorie::all();
         $uniteMesures = UniteMesure::all();
+        $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->get();
 
-        return view('articles.edit', compact('article', 'categories', 'sousCategories','uniteMesures'));
+        return view('articles.edit', compact('article', 'categories', 'sousCategories','uniteMesures', 'fournisseurs'));
     }
 
     public function update(Request $request, Article $article)
     {
         $request->validate([
             'nom' => 'required',
+            'reference_fournisseur' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:255',
             'quantite_stock' => 'required|integer',
             'prix_unitaire' => 'required|numeric',
             'unite_mesure' => 'required',

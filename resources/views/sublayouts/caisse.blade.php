@@ -62,7 +62,7 @@
 
 <!-- Modals améliorés -->
 <div id="saisirDepenseModal" class="modal-modern">
-    <div class="modal-content-modern">
+    <div class="modal-content-modern modal-lg">
         <div class="modal-header-modern">
             <h2><i class="fas fa-plus-circle"></i> Saisir Dépense</h2>
             <button class="modal-close" onclick="closeModal('saisirDepenseModal')">&times;</button>
@@ -78,56 +78,193 @@
                     <label for="motif"><i class="fas fa-comment"></i> Motif</label>
                     <input type="text" id="motif" name="motif" class="form-control-modern" placeholder="Motif de la dépense" required>
                 </div>
-                <button type="submit" class="btn-modern btn-primary-modern">
-                    <i class="fas fa-check"></i> Valider
-                </button>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route('caisse.approvisionnement') }}" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-external-link-alt"></i> Formulaire détaillé
+                    </a>
+                    <button type="submit" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-check"></i> Valider
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
 <div id="approvisionnerModal" class="modal-modern">
-    <div class="modal-content-modern">
+    <div class="modal-content-modern modal-lg">
         <div class="modal-header-modern">
             <h2><i class="fas fa-wallet"></i> Approvisionner Caisse</h2>
             <button class="modal-close" onclick="closeModal('approvisionnerModal')">&times;</button>
         </div>
         <div class="modal-body-modern">
-            <form action="{{ route('caisse.approvisionnerCaisse', $bus->id) }}" method="POST" class="modern-form">
+            <form action="{{ route('caisse.approvisionnerCaisse') }}" method="POST" class="modern-form">
                 @csrf
                 <div class="form-group">
+                    <label for="bu_id_appro"><i class="fas fa-building"></i> Business Unit (BU)</label>
+                    <select id="bu_id_appro" name="bu_id" class="form-control-modern" required>
+                        @foreach(\App\Models\BU::all() as $bu_item)
+                            <option value="{{ $bu_item->id }}" {{ session('selected_bu') == $bu_item->id ? 'selected' : '' }}>{{ $bu_item->nom }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="montant_appro"><i class="fas fa-euro-sign"></i> Montant</label>
-                    <input type="number" id="montant_appro" name="montant" class="form-control-modern" placeholder="0.00" required>
+                    <input type="number" id="montant_appro" name="montant" class="form-control-modern" placeholder="0.00" step="0.01" required>
                 </div>
                 <div class="form-group">
                     <label for="motif_appro"><i class="fas fa-comment"></i> Motif</label>
                     <input type="text" id="motif_appro" name="motif" class="form-control-modern" placeholder="Motif de l'approvisionnement" required>
                 </div>
-                <button type="submit" class="btn-modern btn-primary-modern">
-                    <i class="fas fa-check"></i> Valider
-                </button>
+                <div class="form-group">
+                    <label for="mode_paiement"><i class="fas fa-money-check"></i> Mode de paiement</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="mode_cheque" name="mode_paiement" value="cheque" onchange="togglePaiementFields()" checked>
+                            <label for="mode_cheque">Chèque</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="mode_espece" name="mode_paiement" value="espece" onchange="togglePaiementFields()">
+                            <label for="mode_espece">Espèce</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Champs pour le paiement par chèque -->
+                <div id="cheque_fields">
+                    <div class="form-group">
+                        <label for="banque"><i class="fas fa-university"></i> Banque</label>
+                        <select id="banque" name="banque_id" class="form-control-modern" required>
+                            <option value="">Sélectionner une banque</option>
+                            @foreach(\App\Models\Banque::all() as $banque)
+                                <option value="{{ $banque->id }}">{{ $banque->nom }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reference_cheque"><i class="fas fa-hashtag"></i> Référence du chèque</label>
+                        <input type="text" id="reference_cheque" name="reference_cheque" class="form-control-modern" placeholder="Numéro du chèque">
+                    </div>
+                </div>
+                
+                <!-- Champs pour le paiement en espèce -->
+                <div id="espece_fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="origine_fonds"><i class="fas fa-money-bill-wave"></i> Origine des fonds</label>
+                        <input type="text" id="origine_fonds" name="origine_fonds" class="form-control-modern" placeholder="Origine des fonds">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_appro"><i class="fas fa-calendar-alt"></i> Date</label>
+                    <input type="datetime-local" id="date_appro" name="date_appro" class="form-control-modern" value="{{ date('Y-m-d\TH:i') }}" required>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route('caisse.approvisionnement') }}" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-external-link-alt"></i> Formulaire détaillé
+                    </a>
+                    <button type="submit" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-check"></i> Valider
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
 <div id="demanderDepenseModal" class="modal-modern">
-    <div class="modal-content-modern">
+    <div class="modal-content-modern modal-lg">
         <div class="modal-header-modern">
             <h2><i class="fas fa-hand-holding-usd"></i> Demander Dépense</h2>
             <button class="modal-close" onclick="closeModal('demanderDepenseModal')">&times;</button>
         </div>
         <div class="modal-body-modern">
-            <form action="{{ route('caisse.demandeDepense', $bus->id) }}" method="POST" class="modern-form">
+            <form action="{{ route('caisse.demandeDepense') }}" method="POST" class="modern-form" id="demandeDepenseForm">
                 @csrf
                 <div class="form-group">
-                    <label for="montant_demande"><i class="fas fa-euro-sign"></i> Montant</label>
-                    <input type="number" id="montant_demande" name="montant" class="form-control-modern" placeholder="0.00" required>
+                    <label for="mois_demande"><i class="fas fa-calendar-alt"></i> Mois</label>
+                    <select id="mois_demande" name="mois" class="form-control-modern" required>
+                        <option value="Janvier">Janvier</option>
+                        <option value="Février">Février</option>
+                        <option value="Mars">Mars</option>
+                        <option value="Avril">Avril</option>
+                        <option value="Mai">Mai</option>
+                        <option value="Juin">Juin</option>
+                        <option value="Juillet">Juillet</option>
+                        <option value="Août">Août</option>
+                        <option value="Septembre">Septembre</option>
+                        <option value="Octobre">Octobre</option>
+                        <option value="Novembre">Novembre</option>
+                        <option value="Décembre">Décembre</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="motif_demande"><i class="fas fa-comment"></i> Motif</label>
-                    <input type="text" id="motif_demande" name="motif" class="form-control-modern" placeholder="Motif de la demande" required>
+                    <label for="objet_demande"><i class="fas fa-tag"></i> Objet</label>
+                    <input type="text" id="objet_demande" name="objet" class="form-control-modern" placeholder="Objet de la demande" required>
                 </div>
+                <div class="form-group">
+                    <label for="beneficiaires_demande"><i class="fas fa-users"></i> Bénéficiaires</label>
+                    <input type="text" id="beneficiaires_demande" name="beneficiaires" class="form-control-modern" placeholder="Bénéficiaires">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-list"></i> Lignes de dépense</label>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="lignes_depense_table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Désignation</th>
+                                    <th>Quantité</th>
+                                    <th>Prix unitaire</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lignes_depense_body">
+                                <tr id="ligne_template">
+                                    <td><span class="ligne-numero">1</span></td>
+                                    <td>
+                                        <input type="text" name="lignes[0][designation]" class="form-control-modern designation-input" placeholder="Désignation" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="lignes[0][quantite]" class="form-control-modern quantite-input" placeholder="Qté" value="1" min="1" required onchange="calculerTotal(this)">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="lignes[0][prix_unitaire]" class="form-control-modern prix-input" placeholder="0.00" step="0.01" required onchange="calculerTotal(this)">
+                                    </td>
+                                    <td>
+                                        <span class="ligne-total">0.00</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-modern btn-danger-modern btn-sm" onclick="supprimerLigne(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-right"><strong>Total:</strong></td>
+                                    <td colspan="2">
+                                        <span id="total_general">0.00</span>
+                                        <input type="hidden" name="montant_total" id="montant_total" value="0">
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <button type="button" class="btn-modern btn-info-modern" onclick="ajouterLigne()">
+                        <i class="fas fa-plus"></i> Ajouter une ligne
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_emission"><i class="fas fa-calendar-alt"></i> Date d'émission</label>
+                    <input type="datetime-local" id="date_emission" name="date_emission" class="form-control-modern" value="{{ date('Y-m-d\TH:i') }}" required>
+                </div>
+                
                 <button type="submit" class="btn-modern btn-primary-modern">
                     <i class="fas fa-paper-plane"></i> Envoyer la demande
                 </button>
@@ -138,15 +275,71 @@
 
 <style>
 :root {
-    --primary-color: #033765;
-    --secondary-color: #0A8CFF;
-    --accent-color: #ffffff;
-    --gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
-    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-    --shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);
-    --shadow-hover: 0 20px 40px rgba(3, 55, 101, 0.2);
-    --border-radius: 16px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Variables harmonisées avec app.blade.php */
+    --primary-color: var(--primary, #033765);
+    --secondary-color: var(--primary-light, #0A8CFF);
+    --success-color: var(--success, #28a745);
+    --warning-color: var(--warning, #ffc107);
+    --info-color: var(--info, #17a2b8);
+    --accent-color: var(--white, #ffffff);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
+    --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
+    --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
+    --border-radius: var(--border-radius-lg, 1rem);
+    --transition: var(--transition-base, all 0.2s ease-in-out);
+}
+
+/* Styles pour les groupes de boutons radio */
+.radio-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Styles pour le tableau des lignes de dépense */
+.table-responsive {
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.table th {
+    background-color: #f5f7fa;
+    font-weight: 600;
+    text-align: left;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fafc;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.875rem;
+}
+
+/* Style pour la modal large */
+.modal-lg {
+    max-width: 1000px;
+    width: 95%;
 }
 
 .dashboard-section.finances {
@@ -190,8 +383,8 @@
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg, 1.5rem);
     position: relative;
     z-index: 1;
 }
@@ -200,7 +393,7 @@
     background: var(--gradient-card);
     border: none;
     border-radius: var(--border-radius);
-    padding: 2rem;
+    padding: var(--spacing-lg, 1.5rem);
     text-decoration: none;
     color: var(--primary-color);
     transition: var(--transition);
@@ -212,6 +405,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    min-height: 280px;
+    max-height: 320px;
 }
 
 .dashboard-card::before {
@@ -271,17 +466,21 @@
     height: 100%;
     background: rgba(3, 55, 101, 0.8);
     backdrop-filter: blur(5px);
+    overflow-y: auto;
 }
 
 .modal-content-modern {
     background: white;
     margin: 5% auto;
     border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 500px;
+    width: 95%;
+    max-width: 700px;
+    max-height: 90vh;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes modalSlideIn {
@@ -334,6 +533,8 @@
 
 .modal-body-modern {
     padding: 2rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
 }
 
 .modern-form .form-group {
@@ -394,6 +595,18 @@
     box-shadow: 0 10px 20px rgba(3, 55, 101, 0.3);
 }
 
+.btn-secondary-modern {
+    background: #f8f9fa;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-secondary-modern:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(3, 55, 101, 0.15);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .dashboard-section.finances {
@@ -427,6 +640,20 @@ function closeModal(modalId) {
     document.body.style.overflow = 'auto';
 }
 
+function togglePaiementFields() {
+    const chequeModeSelected = document.getElementById('mode_cheque').checked;
+    const chequeFields = document.getElementById('cheque_fields');
+    const especeFields = document.getElementById('espece_fields');
+    
+    if (chequeModeSelected) {
+        chequeFields.style.display = 'block';
+        especeFields.style.display = 'none';
+    } else {
+        chequeFields.style.display = 'none';
+        especeFields.style.display = 'block';
+    }
+}
+
 // Fermer le modal en cliquant en dehors
 window.onclick = function(event) {
     const modals = document.querySelectorAll('.modal-modern');
@@ -438,6 +665,14 @@ window.onclick = function(event) {
     });
 }
 
+// Initialiser les champs de paiement au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    // S'assurer que les champs appropriés sont affichés selon le mode de paiement sélectionné
+    if (document.getElementById('mode_cheque')) {
+        togglePaiementFields();
+    }
+});
+
 // Fermer avec la touche Échap
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
@@ -448,6 +683,132 @@ document.addEventListener('keydown', function(event) {
                 document.body.style.overflow = 'auto';
             }
         });
+    }
+});
+
+// Fonction pour basculer entre les champs de paiement par chèque et en espèce
+function togglePaiementFields() {
+    const chequeModeSelected = document.getElementById('mode_cheque').checked;
+    const chequeFields = document.getElementById('cheque_fields');
+    const especeFields = document.getElementById('espece_fields');
+    
+    if (chequeModeSelected) {
+        chequeFields.style.display = 'block';
+        especeFields.style.display = 'none';
+        document.getElementById('reference_cheque').setAttribute('required', 'required');
+        document.getElementById('origine_fonds').removeAttribute('required');
+    } else {
+        chequeFields.style.display = 'none';
+        especeFields.style.display = 'block';
+        document.getElementById('reference_cheque').removeAttribute('required');
+        document.getElementById('origine_fonds').setAttribute('required', 'required');
+    }
+}
+
+// Compteur pour les lignes de dépense
+let ligneCounter = 0;
+
+// Fonction pour ajouter une nouvelle ligne de dépense
+function ajouterLigne() {
+    ligneCounter++;
+    const tbody = document.getElementById('lignes_depense_body');
+    const template = document.getElementById('ligne_template');
+    const newRow = template.cloneNode(true);
+    
+    // Mettre à jour l'ID et les attributs de la nouvelle ligne
+    newRow.id = 'ligne_' + ligneCounter;
+    newRow.querySelector('.ligne-numero').textContent = tbody.children.length + 1;
+    
+    // Mettre à jour les noms des champs pour qu'ils soient uniques
+    const inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => {
+        const name = input.getAttribute('name');
+        if (name) {
+            input.setAttribute('name', name.replace(/\[\d+\]/, '[' + ligneCounter + ']'));
+            input.value = '';
+        }
+    });
+    
+    // Réinitialiser les valeurs par défaut
+    newRow.querySelector('.quantite-input').value = '1';
+    newRow.querySelector('.ligne-total').textContent = '0.00';
+    
+    // Ajouter la nouvelle ligne au tableau
+    tbody.appendChild(newRow);
+    
+    // Recalculer le total général
+    calculerTotalGeneral();
+}
+
+// Fonction pour supprimer une ligne de dépense
+function supprimerLigne(button) {
+    const row = button.closest('tr');
+    const tbody = document.getElementById('lignes_depense_body');
+    
+    // Ne pas supprimer s'il ne reste qu'une seule ligne
+    if (tbody.children.length > 1) {
+        row.remove();
+        
+        // Mettre à jour les numéros de ligne
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            row.querySelector('.ligne-numero').textContent = index + 1;
+        });
+        
+        // Recalculer le total général
+        calculerTotalGeneral();
+    } else {
+        alert('Vous devez conserver au moins une ligne de dépense.');
+    }
+}
+
+// Fonction pour calculer le total d'une ligne
+function calculerTotal(input) {
+    const row = input.closest('tr');
+    const quantite = parseFloat(row.querySelector('.quantite-input').value) || 0;
+    const prix = parseFloat(row.querySelector('.prix-input').value) || 0;
+    const total = quantite * prix;
+    
+    row.querySelector('.ligne-total').textContent = total.toFixed(2);
+    
+    // Recalculer le total général
+    calculerTotalGeneral();
+}
+
+// Fonction pour calculer le total général
+function calculerTotalGeneral() {
+    let total = 0;
+    const totals = document.querySelectorAll('.ligne-total');
+    
+    totals.forEach(element => {
+        total += parseFloat(element.textContent) || 0;
+    });
+    
+    document.getElementById('total_general').textContent = total.toFixed(2);
+    document.getElementById('montant_total').value = total;
+}
+
+// Initialiser les fonctions au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser l'affichage des champs de paiement
+    togglePaiementFields();
+    
+    // Initialiser le calcul du total pour la première ligne
+    const premiereLigne = document.getElementById('ligne_template');
+    if (premiereLigne) {
+        const prixInput = premiereLigne.querySelector('.prix-input');
+        if (prixInput) {
+            prixInput.addEventListener('input', function() {
+                calculerTotal(this);
+            });
+        }
+        
+        const quantiteInput = premiereLigne.querySelector('.quantite-input');
+        if (quantiteInput) {
+            quantiteInput.addEventListener('input', function() {
+                calculerTotal(this);
+            });
+        }
     }
 });
 </script>

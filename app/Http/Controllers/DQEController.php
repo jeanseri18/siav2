@@ -8,6 +8,7 @@ use App\Models\DQE;
 use App\Models\DQELigne;
 use App\Models\CategorieRubrique;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DQEController extends Controller
 {
@@ -122,6 +123,14 @@ $request->merge([
             'notes' => 'nullable|string',
             'statut' => 'required|in:brouillon,validé,archivé',
         ]);
+
+        // Vérifier les permissions pour la validation du DQE
+        if ($request->statut === 'validé' && $dqe->statut !== 'validé') {
+            $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'admin', 'dg'];
+            if (!in_array(Auth::user()->role, $rolesAutorises)) {
+                return redirect()->back()->with('error', 'Vous n\'avez pas les permissions nécessaires pour valider ce DQE.');
+            }
+        }
 
         $dqe->update([
             'reference' => $request->reference,
@@ -254,5 +263,30 @@ $request->merge([
 
         return redirect()->route('dqe.edit', $id)
             ->with('success', 'Ligne supprimée avec succès.');
+    }
+
+    /**
+     * Créer une nouvelle section pour le DQE
+     */
+    public function createSection(Request $request, $id)
+    {
+        $request->validate([
+            'section_name' => 'required|string|max:255',
+        ]);
+
+        $dqe = DQE::findOrFail($id);
+        
+        // Vérifier si la section existe déjà
+        $existingSection = DQELigne::where('dqe_id', $dqe->id)
+            ->where('section', $request->section_name)
+            ->first();
+            
+        if ($existingSection) {
+            return redirect()->route('dqe.edit', $id)
+                ->withErrors(['section_name' => 'Cette section existe déjà.']);
+        }
+
+        return redirect()->route('dqe.edit', $id)
+            ->with('success', 'Section créée avec succès. Vous pouvez maintenant ajouter des lignes à cette section.');
     }
 }

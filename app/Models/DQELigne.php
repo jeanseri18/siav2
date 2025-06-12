@@ -12,7 +12,7 @@ class DQELigne extends Model
     protected $table = 'dqe_lignes';
 
     protected $fillable = [
-        'dqe_id', 'bpu_id', 'code', 'designation', 'quantite', 
+        'dqe_id', 'bpu_id', 'code', 'section', 'designation', 'quantite', 
         'unite', 'pu_ht', 'montant_ht'
     ];
 

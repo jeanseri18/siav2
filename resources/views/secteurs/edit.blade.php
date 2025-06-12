@@ -31,17 +31,17 @@
                 </div>
                 
                 <div class="app-form-group">
-                    <label for="ville_id" class="app-form-label">
-                        <i class="fas fa-city me-2"></i>Ville
+                    <label for="quartier_id" class="app-form-label">
+                        <i class="fas fa-map-marker-alt me-2"></i>Quartier
                     </label>
-                    <select name="ville_id" id="ville_id" class="app-form-select" required>
-                        @foreach($villes as $ville)
-                            <option value="{{ $ville->id }}" {{ $secteur->ville_id == $ville->id ? 'selected' : '' }}>
-                                {{ $ville->nom }}
+                    <select name="quartier_id" id="quartier_id" class="app-form-select" required>
+                        @foreach($quartiers as $quartier)
+                            <option value="{{ $quartier->id }}" {{ $secteur->quartier_id == $quartier->id ? 'selected' : '' }}>
+                                {{ $quartier->nom }} - {{ $quartier->commune->nom }} ({{ $quartier->commune->ville->nom }})
                             </option>
                         @endforeach
                     </select>
-                    <div class="app-form-text">Ville à laquelle appartient ce secteur</div>
+                    <div class="app-form-text">Quartier auquel appartient ce secteur</div>
                 </div>
                 
                 <div class="app-card-footer">

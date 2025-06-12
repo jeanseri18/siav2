@@ -82,6 +82,41 @@
                 
                 <div class="app-form-row">
                     <div class="app-form-col">
+                    <div class="app-form-group">
+                        <label for="reference_fournisseur" class="app-form-label">
+                            <i class="fas fa-building me-2"></i>Fournisseur
+                        </label>
+                        <select name="reference_fournisseur" id="reference_fournisseur" class="app-form-select">
+                            <option value="">-- Sélectionner un fournisseur --</option>
+                            @foreach($fournisseurs as $fournisseur)
+                                <option value="{{ $fournisseur->id }}" 
+                                    {{ (old('reference_fournisseur', $article->reference_fournisseur) == $fournisseur->id) ? 'selected' : '' }}>
+                                    {{ $fournisseur->nom_raison_sociale }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="app-form-text">Fournisseur de l'article (optionnel)</div>
+                    </div>
+                </div>
+                
+                <div class="app-form-col">
+                    <div class="app-form-group">
+                        <label for="type" class="app-form-label">
+                            <i class="fas fa-tag me-2"></i>Type
+                        </label>
+                        <select name="type" id="type" class="app-form-select">
+                            <option value="">-- Sélectionner un type --</option>
+                            <option value="Matériau" {{ old('type', $article->type) == 'Matériau' ? 'selected' : '' }}>Matériau</option>
+                            <option value="Outil" {{ old('type', $article->type) == 'Outil' ? 'selected' : '' }}>Outil</option>
+                            <option value="Matériel" {{ old('type', $article->type) == 'Matériel' ? 'selected' : '' }}>Matériel</option>
+                        </select>
+                        <div class="app-form-text">Type d'article (optionnel)</div>
+                    </div>
+                </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
                         <div class="app-form-group">
                             <label for="quantite_stock" class="app-form-label">
                                 <i class="fas fa-warehouse me-2"></i>Quantité Stock

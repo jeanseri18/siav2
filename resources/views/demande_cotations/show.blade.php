@@ -363,6 +363,7 @@
                         <i class="fas fa-edit me-2"></i>Modifier
                     </a>
                     
+                    @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
                     <form action="{{ route('demande-cotations.terminate', $demandeCotation) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-success w-100" onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande de cotation?')">
@@ -370,16 +371,17 @@
                         </button>
                     </form>
                     
-                    <button type="button" class="app-btn app-btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash me-2"></i>Supprimer
-                    </button>
-                    
                     <form action="{{ route('demande-cotations.cancel', $demandeCotation) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-outline-danger w-100" onclick="return confirm('Êtes-vous sûr de vouloir annuler cette demande de cotation?')">
                             <i class="fas fa-times me-2"></i>Annuler
                         </button>
                     </form>
+                    @endif
+                    
+                    <button type="button" class="app-btn app-btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </button>
                     @endif
                     
                     @if($demandeCotation->statut == 'terminée' && $fournisseurRetenu)

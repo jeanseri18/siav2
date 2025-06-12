@@ -17,6 +17,30 @@ class ClientFournisseur extends Model {
         return $this->belongsTo(Bu::class, 'id_bu');
     }
     
+    /**
+     * Relation avec les personnes contacts
+     */
+    public function contactPersons()
+    {
+        return $this->hasMany(ContactPerson::class, 'client_fournisseur_id');
+    }
+    
+    /**
+     * Obtenir les contacts actifs
+     */
+    public function contactsActifs()
+    {
+        return $this->hasMany(ContactPerson::class, 'client_fournisseur_id')->where('statut', 'Actif');
+    }
+    
+    /**
+     * Obtenir le contact principal
+     */
+    public function contactPrincipal()
+    {
+        return $this->hasOne(ContactPerson::class, 'client_fournisseur_id')->where('contact_principal', true);
+    }
+    
     protected static function boot() {
         parent::boot();
     

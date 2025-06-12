@@ -6,12 +6,15 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
-            <h2>Déboursés et Frais de Chantier</h2>
+            <h2>Déboursé sec et Frais de Chantier</h2>
             <h4>Contrat : {{ $contrat->nom_contrat }}</h4>
         </div>
         <div class="col-md-6 text-end">
             <a href="{{ route('dqe.index', $contrat->id) }}" class="btn btn-primary">
                 <i class="fas fa-list"></i> Gérer les DQE
+            </a>
+            <a href="{{ route('debourses_chantier.index', $contrat->id) }}" class="btn btn-info ms-2">
+                <i class="fas fa-hard-hat"></i> Déboursés Chantier
             </a>
         </div>
     </div>
@@ -33,8 +36,11 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
+                                    <th>Référence</th>
+                                    <th>Projet</th>
+                                    <th>Contrat</th>
                                     <th>DQE de référence</th>
+                                    <th>Type</th>
                                     <th>Date de génération</th>
                                     <th>Montant total</th>
                                     <th>Statut</th>
@@ -44,6 +50,10 @@
                             <tbody>
                                 @forelse($debourses as $debourse)
                                     <tr>
+                                        <td>{{ $debourse->reference ?? 'Sans référence' }}</td>
+                                        <td>{{ $debourse->projet->nom_projet ?? 'N/A' }}</td>
+                                        <td>{{ $debourse->contrat->nom_contrat ?? 'N/A' }}</td>
+                                        <td>{{ $debourse->dqe->reference ?? 'DQE sans référence' }}</td>
                                         <td>
                                             @if($debourse->type == 'sec')
                                                 <span class="badge bg-primary">Déboursé Sec</span>
@@ -53,7 +63,6 @@
                                                 <span class="badge bg-warning">Frais de Chantier</span>
                                             @endif
                                         </td>
-                                        <td>{{ $debourse->dqe->reference ?? 'DQE sans référence' }}</td>
                                         <td>{{ $debourse->created_at->format('d/m/Y') }}</td>
                                         <td>{{ number_format($debourse->montant_total, 2, ',', ' ') }}</td>
                                         <td>

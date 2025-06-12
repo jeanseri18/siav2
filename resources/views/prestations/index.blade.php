@@ -31,7 +31,8 @@
                         <th>Artisan</th>
                         <th>Contrat</th>
                         <th>Prestation</th>
-                        <th>Détail</th>
+                        <th>Montant</th>
+                        <th>Avancement</th>
                         <th>Statut</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
@@ -44,11 +45,12 @@
                                 <div class="item-icon">
                                     <i class="fas fa-hard-hat text-primary"></i>
                                 </div>
-                                <span>{{ $prestation->artisan->nom }}</span>
+                                <span>{{ $prestation->artisan ? $prestation->artisan->nom : 'Non assigné' }}</span>
                             </div>
                         </td>
                         <td>{{ $prestation->contrat->nom_contrat }}</td>
-                        <td>{{ $prestation->montant }}</td>
+                        <td>{{ $prestation->prestation_titre }}</td>
+                        <td>{{ number_format($prestation->montant, 2, ',', ' ') }} FCFA</td>
                         <td>
                             @if($prestation->taux_avancement)
                             <div class="progress" style="height: 18px;">

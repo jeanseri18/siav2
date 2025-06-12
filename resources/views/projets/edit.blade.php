@@ -108,14 +108,40 @@
                 <div class="app-form-row">
                     <div class="app-form-col">
                         <div class="app-form-group">
-                            <label for="conducteur_travaux" class="app-form-label">
-                                <i class="fas fa-hard-hat me-2"></i>Conducteur de travaux
+                            <label for="chef_projet_id" class="app-form-label">
+                                <i class="fas fa-user-tie me-2"></i>Chef de Projet
                             </label>
-                            <input type="text" id="conducteur_travaux" name="conducteur_travaux" value="{{ $projet->conducteur_travaux }}" class="app-form-control" required>
-                            <div class="app-form-text">Responsable de la conduite des travaux</div>
+                            <select id="chef_projet_id" name="chef_projet_id" class="app-form-select">
+                                <option value="">-- Sélectionnez un chef de projet --</option>
+                                @foreach($chefsProjet as $chef)
+                                    <option value="{{ $chef->id }}" {{ $projet->chef_projet_id == $chef->id ? 'selected' : '' }}>
+                                        {{ $chef->prenom }} {{ $chef->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Chef de projet responsable</div>
                         </div>
                     </div>
                     
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label for="conducteur_travaux_id" class="app-form-label">
+                                <i class="fas fa-hard-hat me-2"></i>Conducteur de travaux
+                            </label>
+                            <select id="conducteur_travaux_id" name="conducteur_travaux_id" class="app-form-select">
+                                <option value="">-- Sélectionnez un conducteur de travaux --</option>
+                                @foreach($conducteursTravaux as $conducteur)
+                                    <option value="{{ $conducteur->id }}" {{ $projet->conducteur_travaux_id == $conducteur->id ? 'selected' : '' }}>
+                                        {{ $conducteur->prenom }} {{ $conducteur->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Responsable de la conduite des travaux</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-form-row">
                     <div class="app-form-col">
                         <div class="app-form-group">
                             <label for="hastva" class="app-form-label">
@@ -127,6 +153,10 @@
                             </select>
                             <div class="app-form-text">Application de la TVA sur ce projet</div>
                         </div>
+                    </div>
+                    
+                    <div class="app-form-col">
+                        <!-- Colonne vide pour l'alignement -->
                     </div>
                 </div>
 

@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\BU;
 use App\Models\SecteurActivite;
 use App\Models\ClientFournisseur;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -33,8 +34,12 @@ class ProjetController extends Controller
                                 ->get();
     $secteurs = SecteurActivite::all();
     $bus = BU::all();
+    
+    // Récupérer les employés pour les sélecteurs
+    $chefsProjet = User::chefProjet()->actif()->get();
+    $conducteursTravaux = User::conducteurTravaux()->actif()->get();
 
-    return view('projets.create', compact('clients', 'secteurs', 'bus'));
+    return view('projets.create', compact('clients', 'secteurs', 'bus', 'chefsProjet', 'conducteursTravaux'));
 }
 
 
@@ -49,7 +54,8 @@ class ProjetController extends Controller
             'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'client' => 'required|string',
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
-            'conducteur_travaux' => 'required|string|max:255',
+            'chef_projet_id' => 'nullable|exists:users,id',
+            'conducteur_travaux_id' => 'nullable|exists:users,id',
             'hastva' => 'boolean',
             'statut' => 'required|in:en cours,terminé,annulé',
             'bu_id' => 'required|exists:bus,id'
@@ -91,8 +97,12 @@ $request->merge([
         $clients = ClientFournisseur::where('type', 'client')->where('id_bu', $id_bu)->get();
         $secteurs = SecteurActivite::all();
         $bus = BU::all();
+        
+        // Récupérer les employés pour les sélecteurs
+        $chefsProjet = User::chefProjet()->actif()->get();
+        $conducteursTravaux = User::conducteurTravaux()->actif()->get();
     
-        return view('projets.edit', compact('projet', 'clients', 'secteurs', 'bus'));
+        return view('projets.edit', compact('projet', 'clients', 'secteurs', 'bus', 'chefsProjet', 'conducteursTravaux'));
     }
     public function update(Request $request, Projet $projet)
     {
@@ -104,7 +114,8 @@ $request->merge([
             'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'client' => 'required|string',
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
-            'conducteur_travaux' => 'required|string|max:255',
+            'chef_projet_id' => 'nullable|exists:users,id',
+            'conducteur_travaux_id' => 'nullable|exists:users,id',
             'hastva' => 'boolean',
             'statut' => 'required|in:en cours,terminé,annulé',
             'bu_id' => 'required|exists:bus,id'

@@ -2,8 +2,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientFournisseur;
+use App\Models\ContactPerson;
 use App\Models\SecteurActivite;
+use App\Models\RegimeImposition;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -29,7 +32,9 @@ class ClientController extends Controller
     public function create() {
         // On récupère les secteurs d'activité pour les entreprises
         $secteurs = SecteurActivite::all();
-        return view('clients.create', compact('secteurs'));
+        // On récupère les régimes d'imposition
+        $regimes = RegimeImposition::all();
+        return view('clients.create', compact('secteurs', 'regimes'));
     }
 
     public function store(Request $request) {
@@ -38,16 +43,26 @@ class ClientController extends Controller
         // Validation des champs
         $request->validate([
             'categorie' => 'required|in:Particulier,Entreprise',
-
-            
             'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
-            'regime_imposition' => 'required|in:Régime A,Régime B',
+            'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
             'email' => 'nullable|email',
             'telephone' => 'nullable|string',
+            // Validation des contacts
+            'contacts' => 'required|array|min:1',
+            'contacts.*.civilite' => 'required|in:M.,Mme,Mlle',
+            'contacts.*.nom' => 'required|string|max:255',
+            'contacts.*.prenoms' => 'required|string|max:255',
+            'contacts.*.fonction' => 'nullable|string|max:255',
+            'contacts.*.telephone_1' => 'nullable|string|max:20',
+            'contacts.*.telephone_2' => 'nullable|string|max:20',
+            'contacts.*.email' => 'nullable|email|max:255',
+            'contacts.*.adresse' => 'nullable|string',
+            'contacts.*.statut' => 'required|in:Actif,Inactif',
+            'contacts.*.contact_principal' => 'nullable|boolean',
         ]);
         $id_bu = session('selected_bu'); // Récupération de l'ID du bus depuis la session
 
@@ -74,8 +89,39 @@ $newReference = 'Cli_' . now()->format('YmdHis'); // Utiliser un underscore et a
 $request->merge([
 'code' => $newReference,
 ]);
-        // On crée le client ou le fournisseur
-        ClientFournisseur::create($clientData);
+        // Transaction pour créer le client et ses contacts
+        DB::transaction(function () use ($clientData, $request) {
+            // On crée le client ou le fournisseur
+            $client = ClientFournisseur::create($clientData);
+            
+            // Créer les personnes contacts
+            $contacts = $request->input('contacts', []);
+            $hasMainContact = false;
+            
+            foreach ($contacts as $contactData) {
+                $contactData['client_fournisseur_id'] = $client->id;
+                $contactData['contact_principal'] = isset($contactData['contact_principal']) ? true : false;
+                
+                // S'assurer qu'il n'y a qu'un seul contact principal
+                if ($contactData['contact_principal']) {
+                    if ($hasMainContact) {
+                        $contactData['contact_principal'] = false;
+                    } else {
+                        $hasMainContact = true;
+                    }
+                }
+                
+                ContactPerson::create($contactData);
+            }
+            
+            // Si aucun contact principal n'a été défini, définir le premier comme principal
+            if (!$hasMainContact && !empty($contacts)) {
+                $firstContact = ContactPerson::where('client_fournisseur_id', $client->id)->first();
+                if ($firstContact) {
+                    $firstContact->update(['contact_principal' => true]);
+                }
+            }
+        });
 
         return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès.');
     }
@@ -83,26 +129,89 @@ $request->merge([
     public function edit(ClientFournisseur $client) {
         // On récupère les secteurs pour les entreprises
         $secteurs = SecteurActivite::all();
-        return view('clients.edit', compact('client', 'secteurs'));
+        // On récupère les régimes d'imposition
+        $regimes = RegimeImposition::all();
+        return view('clients.edit', compact('client', 'secteurs', 'regimes'));
     }
 
     public function update(Request $request, ClientFournisseur $client) {
         // Validation des champs
         $request->validate([
             'categorie' => 'required|in:Particulier,Entreprise',
-           
             'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
-            'regime_imposition' => 'required|in:Régime A,Régime B',
+            'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
             'email' => 'nullable|email',
             'telephone' => 'nullable|string',
+            // Validation des contacts
+            'contacts' => 'required|array|min:1',
+            'contacts.*.civilite' => 'required|in:M.,Mme,Mlle',
+            'contacts.*.nom' => 'required|string|max:255',
+            'contacts.*.prenoms' => 'required|string|max:255',
+            'contacts.*.fonction' => 'nullable|string|max:255',
+            'contacts.*.telephone_1' => 'nullable|string|max:20',
+            'contacts.*.telephone_2' => 'nullable|string|max:20',
+            'contacts.*.email' => 'nullable|email|max:255',
+            'contacts.*.adresse' => 'nullable|string',
+            'contacts.*.statut' => 'required|in:Actif,Inactif',
+            'contacts.*.contact_principal' => 'nullable|boolean',
         ]);
 
-        // Mise à jour du client ou fournisseur
-        $client->update($request->all());
+        // Transaction pour mettre à jour le client et ses contacts
+        DB::transaction(function () use ($request, $client) {
+            // Mise à jour du client ou fournisseur
+            $clientData = $request->except('contacts');
+            $client->update($clientData);
+            
+            // Gérer les contacts
+            $contacts = $request->input('contacts', []);
+            $contactIds = [];
+            $hasMainContact = false;
+            
+            foreach ($contacts as $contactData) {
+                $contactData['client_fournisseur_id'] = $client->id;
+                $contactData['contact_principal'] = isset($contactData['contact_principal']) ? true : false;
+                
+                // S'assurer qu'il n'y a qu'un seul contact principal
+                if ($contactData['contact_principal']) {
+                    if ($hasMainContact) {
+                        $contactData['contact_principal'] = false;
+                    } else {
+                        $hasMainContact = true;
+                    }
+                }
+                
+                if (isset($contactData['id']) && $contactData['id']) {
+                    // Mettre à jour le contact existant
+                    $contact = ContactPerson::find($contactData['id']);
+                    if ($contact) {
+                        $contact->update($contactData);
+                        $contactIds[] = $contact->id;
+                    }
+                } else {
+                    // Créer un nouveau contact
+                    unset($contactData['id']);
+                    $contact = ContactPerson::create($contactData);
+                    $contactIds[] = $contact->id;
+                }
+            }
+            
+            // Supprimer les contacts qui ne sont plus dans la liste
+            ContactPerson::where('client_fournisseur_id', $client->id)
+                        ->whereNotIn('id', $contactIds)
+                        ->delete();
+            
+            // Si aucun contact principal n'a été défini, définir le premier comme principal
+            if (!$hasMainContact && !empty($contacts)) {
+                $firstContact = ContactPerson::where('client_fournisseur_id', $client->id)->first();
+                if ($firstContact) {
+                    $firstContact->update(['contact_principal' => true]);
+                }
+            }
+        });
 
         return redirect()->route('clients.index')->with('success', 'Client mis à jour avec succès.');
     }

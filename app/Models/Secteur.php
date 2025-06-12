@@ -8,10 +8,10 @@ class Secteur extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'ville_id'];
+    protected $fillable = ['nom', 'quartier_id'];
 
-    public function ville()
+    public function quartier()
     {
-        return $this->belongsTo(Ville::class);
+        return $this->belongsTo(Quartier::class);
     }
 }

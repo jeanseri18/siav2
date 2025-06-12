@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\Reference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeCotationController extends Controller
 {
@@ -216,6 +217,13 @@ class DemandeCotationController extends Controller
 
     public function terminate(DemandeCotation $demandeCotation)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour terminer cette demande.');
+        }
+
         if ($demandeCotation->statut !== 'en cours') {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Cette demande ne peut pas être terminée');
@@ -232,6 +240,13 @@ class DemandeCotationController extends Controller
 
     public function cancel(DemandeCotation $demandeCotation)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour annuler cette demande.');
+        }
+
         if ($demandeCotation->statut !== 'en cours') {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Cette demande ne peut pas être annulée');
@@ -295,5 +310,23 @@ class DemandeCotationController extends Controller
 
         return redirect()->route('demande-cotations.show', $demandeCotation)
             ->with('success', 'Fournisseur sélectionné avec succès');
+    }
+
+    /**
+     * Exporter une demande de cotation en PDF
+     */
+    public function exportPDF($id)
+    {
+        $demandeCotation = DemandeCotation::with([
+            'user.bus', 
+            'demandeAchat.projet', 
+            'lignes.article', 
+            'fournisseurs.fournisseur'
+        ])->findOrFail($id);
+        
+        $pdf = PDF::loadView('demande_cotations.pdf', compact('demandeCotation'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->download('Demande_Cotation_' . $demandeCotation->reference . '.pdf');
     }
 }

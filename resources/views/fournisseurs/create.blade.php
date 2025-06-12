@@ -157,8 +157,10 @@
                                 <i class="fas fa-balance-scale me-2"></i>Régime d'imposition
                             </label>
                             <select name="regime_imposition" id="regime_imposition" class="app-form-select" required>
-                                <option value="Régime A">Régime A</option>
-                                <option value="Régime B">Régime B</option>
+                                <option value="">Sélectionner un régime d'imposition</option>
+                                @foreach ($regimes as $regime)
+                                    <option value="{{ $regime->nom }}">{{ $regime->nom }} ({{ $regime->ref }}) - TVA: {{ $regime->tva }}</option>
+                                @endforeach
                             </select>
                             <div class="app-form-text">Régime fiscal applicable</div>
                         </div>

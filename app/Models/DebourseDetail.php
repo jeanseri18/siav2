@@ -12,7 +12,10 @@ class DebourseDetail extends Model
     protected $table = 'debourse_details';
 
     protected $fillable = [
-        'debourse_id', 'dqe_ligne_id', 'montant'
+        'debourse_id', 'dqe_ligne_id', 'montant',
+        'cout_unitaire_materiaux', 'cout_unitaire_main_oeuvre', 'cout_unitaire_materiel',
+        'total_materiaux', 'total_main_oeuvre', 'total_materiel',
+        'is_editable'
     ];
 
     /**

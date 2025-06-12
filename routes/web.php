@@ -50,6 +50,7 @@ use App\Http\Controllers\DemandeCotationController;
 use App\Http\Controllers\DQEController;
 use App\Http\Controllers\FraisGeneralController;
 use App\Http\Controllers\DebourseController;
+use App\Http\Controllers\EmployeController;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
 
@@ -64,6 +65,12 @@ Route::get('/communes/{commune}', [CommuneController::class, 'show'])->name('com
 Route::get('/communes/{commune}/edit', [CommuneController::class, 'edit'])->name('communes.edit');
 Route::put('/communes/{commune}', [CommuneController::class, 'update'])->name('communes.update');
 Route::delete('/communes/{commune}', [CommuneController::class, 'destroy'])->name('communes.destroy');
+Route::get('users', [UserController::class, 'index'])->name('users.index');
+Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+Route::post('users', [UserController::class, 'store'])->name('users.store');
+Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
+Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
 // Routes pour les Quartiers
 Route::get('/quartiers', [QuartierController::class, 'index'])->name('quartiers.index');
@@ -73,6 +80,15 @@ Route::get('/quartiers/{quartier}', [QuartierController::class, 'show'])->name('
 Route::get('/quartiers/{quartier}/edit', [QuartierController::class, 'edit'])->name('quartiers.edit');
 Route::put('/quartiers/{quartier}', [QuartierController::class, 'update'])->name('quartiers.update');
 Route::delete('/quartiers/{quartier}', [QuartierController::class, 'destroy'])->name('quartiers.destroy');
+
+// Routes pour les Employés
+Route::get('/employes', [EmployeController::class, 'index'])->name('employes.index');
+Route::get('/employes/create', [EmployeController::class, 'create'])->name('employes.create');
+Route::post('/employes', [EmployeController::class, 'store'])->name('employes.store');
+Route::get('/employes/{employe}', [EmployeController::class, 'show'])->name('employes.show');
+Route::get('/employes/{employe}/edit', [EmployeController::class, 'edit'])->name('employes.edit');
+Route::put('/employes/{employe}', [EmployeController::class, 'update'])->name('employes.update');
+Route::delete('/employes/{employe}', [EmployeController::class, 'destroy'])->name('employes.destroy');
 // Dans routes/web.php
 // Routes pour les frais généraux
 Route::get('/contrats_frais_generaux', [FraisGeneralController::class, 'index'])->name('frais_generaux.index');
@@ -96,12 +112,25 @@ Route::post('/contrats_dqe_generate/{contrat}/dqe/generate', [DQEController::cla
 Route::post('/dqe/{dqe}/lines', [DQEController::class, 'addLine'])->name('dqe.lines.add');
 Route::put('/dqe/{dqe}/lines/{line}', [DQEController::class, 'updateLine'])->name('dqe.lines.update');
 Route::delete('/dqe/{dqe}/lines/{line}', [DQEController::class, 'deleteLine'])->name('dqe.lines.delete');
+Route::post('/dqe/{dqe}/sections', [DQEController::class, 'createSection'])->name('dqe.sections.create');
 
 // Routes pour les déboursés
 Route::get('/contrats_debourses/debourses', [DebourseController::class, 'index'])->name('debourses.index');
+// Routes pour les vues séparées de déboursés
+Route::get('/contrats_debourses/debourse-sec', [DebourseController::class, 'debourseSec'])->name('debourses.sec');
+Route::get('/contrats_debourses/debourse-main-oeuvre', [DebourseController::class, 'debourseMainOeuvre'])->name('debourses.main_oeuvre');
+Route::get('/contrats_debourses/frais-chantier', [DebourseController::class, 'fraisChantier'])->name('debourses.frais_chantier');
 Route::post('/dqe_debourses/{dqe}/debourses/generate', [DebourseController::class, 'generate'])->name('debourses.generate');
 Route::get('/debourses/{debourse}', [DebourseController::class, 'details'])->name('debourses.details');
 Route::get('/debourses_export/{debourse}/export', [DebourseController::class, 'export'])->name('debourses.export');
+Route::put('/debourses/{detail}/update-detail', [DebourseController::class, 'updateDetail'])->name('debourses.update_detail');
+
+// Routes pour les déboursés chantier
+Route::get('/contrats_debourses_chantier/{contrat}/debourses_chantier', [App\Http\Controllers\DebourseChantierController::class, 'index'])->name('debourses_chantier.index');
+Route::post('/dqe_debourses_chantier/{dqe}/debourses_chantier/generate', [App\Http\Controllers\DebourseChantierController::class, 'generate'])->name('debourses_chantier.generate');
+Route::get('/debourses_chantier/{debourseChantier}', [App\Http\Controllers\DebourseChantierController::class, 'details'])->name('debourses_chantier.details');
+Route::get('/debourses_chantier_export/{debourseChantier}/export', [App\Http\Controllers\DebourseChantierController::class, 'export'])->name('debourses_chantier.export');
+Route::put('/debourses_chantier/{detail}/update-detail', [App\Http\Controllers\DebourseChantierController::class, 'updateDetail'])->name('debourses_chantier.update_detail');
 
 // Ajoutez ces routes à votre fichier de routes
 Route::get('/dashboard/realtime-stats', 'StatistiqueController@getRealtimeStats')->name('dashboard.realtime-stats');
@@ -125,39 +154,57 @@ Route::get('demandes-achat/{demandeAchat}/articles', function(DemandeAchat $dema
 Route::resource('demande-approvisionnements', DemandeApprovisionnementController::class);
 Route::post('demande-approvisionnements/{demandeApprovisionnement}/approve', 
     [DemandeApprovisionnementController::class, 'approve'])
+    ->middleware('role:chef_projet,conducteur_travaux,chef_chantier,admin,dg')
     ->name('demande-approvisionnements.approve');
 Route::post('demande-approvisionnements/{demandeApprovisionnement}/reject', 
     [DemandeApprovisionnementController::class, 'reject'])
+    ->middleware('role:chef_projet,conducteur_travaux,chef_chantier,admin,dg')
     ->name('demande-approvisionnements.reject');
+Route::get('demande-approvisionnements/{demandeApprovisionnement}/pdf', 
+    [DemandeApprovisionnementController::class, 'exportPDF'])
+    ->name('demande-approvisionnements.pdf');
 
 // Routes pour les bons de commande
 Route::resource('bon-commandes', BonCommandeController::class);
 Route::post('bon-commandes/{bonCommande}/confirm', 
     [BonCommandeController::class, 'confirm'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('bon-commandes.confirm');
 Route::post('bon-commandes/{bonCommande}/cancel', 
     [BonCommandeController::class, 'cancel'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('bon-commandes.cancel');
 Route::post('bon-commandes/{bonCommande}/livrer', 
     [BonCommandeController::class, 'livrer'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
     ->name('bon-commandes.livrer');
+Route::get('bon-commandes/{bonCommande}/pdf', 
+    [BonCommandeController::class, 'exportPDF'])
+    ->name('bon-commandes.pdf');
 
 // Routes pour les demandes d'achat
 Route::resource('demande-achats', DemandeAchatController::class);
 Route::post('demande-achats/{demandeAchat}/approve', 
     [DemandeAchatController::class, 'approve'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('demande-achats.approve');
 Route::post('demande-achats/{demandeAchat}/reject', 
     [DemandeAchatController::class, 'reject'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('demande-achats.reject');
+Route::get('demande-achats/{demandeAchat}/pdf', 
+    [DemandeAchatController::class, 'exportPDF'])
+    ->name('demande-achats.pdf');
 
 // Routes pour les demandes de cotation
 Route::resource('demande-cotations', DemandeCotationController::class);
 Route::post('demande-cotations/{demandeCotation}/terminate', 
     [DemandeCotationController::class, 'terminate'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('demande-cotations.terminate');
 Route::post('demande-cotations/{demandeCotation}/cancel', 
     [DemandeCotationController::class, 'cancel'])
+    ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
     ->name('demande-cotations.cancel');
 Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/save-response', 
     [DemandeCotationController::class, 'saveFournisseurResponse'])
@@ -165,6 +212,9 @@ Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemand
 Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/select', 
     [DemandeCotationController::class, 'selectFournisseur'])
     ->name('demande-cotations.select-fournisseur');
+Route::get('demande-cotations/{demandeCotation}/pdf', 
+    [DemandeCotationController::class, 'exportPDF'])
+    ->name('demande-cotations.pdf');
 // Route::get('/import_index', [ImportController::class, 'index'])->name('import.index');
 // Route::post('/import', [ImportController::class, 'import'])->name('import.create');
 
@@ -286,11 +336,17 @@ Route::delete('/ventes/{vente}', [VenteController::class, 'destroy'])->name('ven
 
 Route::prefix('caisse/')->group(function () {
     Route::get('brouillard', [CaisseController::class, 'showBrouillardCaisse'])->name('caisse.brouillard');
+    Route::get('approvisionnement', [CaisseController::class, 'showApprovisionnementForm'])->name('caisse.approvisionnement');
     Route::post('saisir-depense', [CaisseController::class, 'saisirDepense'])->name('caisse.saisirDepense');
     Route::post('approvisionner', [CaisseController::class, 'approvisionnerCaisse'])->name('caisse.approvisionnerCaisse');
     Route::post('demander-depense', [CaisseController::class, 'demandeDepense'])->name('caisse.demandeDepense');
-    Route::post('valider-demande/{demandeId}', [CaisseController::class, 'validerDemandeDepense'])->name('caisse.validerDemandeDepense');
-    Route::post('annuler-demande/{demandeId}', [CaisseController::class, 'annulerDemandeDepense'])->name('caisse.annulerDemandeDepense');
+    Route::post('valider-demande/{demandeId}', [CaisseController::class, 'validerDemandeDepense'])
+    ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg')
+    ->name('caisse.validerDemandeDepense');
+Route::post('annuler-demande/{demandeId}', [CaisseController::class, 'annulerDemandeDepense'])
+    ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg')
+    ->name('caisse.annulerDemandeDepense');
+    Route::get('voir-demande-depense-pdf/{demandeId}', [CaisseController::class, 'voirDemandeDepensePDF'])->name('caisse.voirDemandeDepensePDF');
 });
 Route::get('/demande-depense', [CaisseController::class, 'listerDemandesDepenses'])->name('caisse.demande-liste');
 
@@ -394,12 +450,6 @@ Route::get('categories/create', [CategoryController::class, 'create'])->name('ca
 Route::post('categories', [CategoryController::class, 'store'])->name('categories.store'); // Sauvegarder une catégorie
 Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy'); // Supprimer une catégorie
 
-Route::get('users', [UserController::class, 'index'])->name('users.index');
-Route::get('users/create', [UserController::class, 'create'])->name('users.create');
-Route::post('users', [UserController::class, 'store'])->name('users.store');
-Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
-Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
-Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
 Route::get('secteur_activites', [SecteurActiviteController::class, 'index'])->name('secteur_activites.index'); // Lister les secteurs
 Route::get('secteur_activites/create', [SecteurActiviteController::class, 'create'])->name('secteur_activites.create'); // Afficher le formulaire de création
@@ -464,14 +514,14 @@ use App\Models\BrouillardCaisse;
 
 Route::get('/sublayouts_caisse', function () {
     $id_bu = session('selected_bu');
-
+    
     if (!$id_bu) {
         return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
     }
-
+    
     $bus = BU::find($id_bu);
     $brouillardCaisse = BrouillardCaisse::where('bus_id', $id_bu)->orderBy('created_at', 'desc')->get();
-
+    
     return view('sublayouts.caisse', compact('bus', 'brouillardCaisse'));
 })->name('sublayouts_caisse')->middleware('auth');
 

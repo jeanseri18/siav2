@@ -349,6 +349,131 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
+.app-form-col-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.app-form-col-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.app-form-col-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.app-form-col-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.app-form-col-9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.app-form-col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+/* ===== Groupes d'input ===== */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group .app-form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group .app-btn {
+    position: relative;
+    z-index: 2;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 0;
+}
+
+.input-group .app-btn:hover,
+.input-group .app-btn:focus {
+    z-index: 3;
+}
+
+/* ===== Indicateur de force du mot de passe ===== */
+.password-strength {
+    margin-top: 0.5rem;
+}
+
+.password-strength-bar {
+    height: 4px;
+    background-color: var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.password-strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: var(--border-radius-sm);
+}
+
+.password-strength-text {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+/* Classes de force du mot de passe */
+.strength-weak .password-strength-fill {
+    background-color: var(--danger);
+    width: 25%;
+}
+
+.strength-fair .password-strength-fill {
+    background-color: var(--warning);
+    width: 50%;
+}
+
+.strength-good .password-strength-fill {
+    background-color: var(--info);
+    width: 75%;
+}
+
+.strength-strong .password-strength-fill {
+    background-color: var(--success);
+    width: 100%;
+}
+
 /* ===== Boutons ===== */
 .app-btn {
     display: inline-block;
@@ -798,6 +923,16 @@ body {
     
     .app-form-row {
         flex-direction: column;
+    }
+    
+    .app-form-col-3,
+    .app-form-col-4,
+    .app-form-col-6,
+    .app-form-col-8,
+    .app-form-col-9,
+    .app-form-col-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
     
     .app-card-header {

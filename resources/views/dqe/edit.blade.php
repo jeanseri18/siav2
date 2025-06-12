@@ -17,11 +17,20 @@
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLineModal">
                 <i class="fas fa-plus-circle"></i> Ajouter une ligne
             </button>
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                <i class="fas fa-layer-group"></i> Créer une section
+            </button>
             @if($dqe->statut == 'brouillon')
                 <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-calculator"></i> Générer déboursés
+                    </button>
+                </form>
+                <form action="{{ route('debourses_chantier.generate', $dqe->id) }}" method="POST" class="d-inline ms-2">
+                    @csrf
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-hard-hat"></i> Générer déboursé chantier
                     </button>
                 </form>
             @endif
@@ -66,7 +75,9 @@
                                     <label for="statut">Statut</label>
                                     <select class="form-control" id="statut" name="statut">
                                         <option value="brouillon" {{ $dqe->statut == 'brouillon' ? 'selected' : '' }}>Brouillon</option>
-                                        <option value="validé" {{ $dqe->statut == 'validé' ? 'selected' : '' }}>Validé</option>
+                                        @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'admin', 'dg']) || $dqe->statut == 'validé')
+                                            <option value="validé" {{ $dqe->statut == 'validé' ? 'selected' : '' }}>Validé</option>
+                                        @endif
                                         <option value="archivé" {{ $dqe->statut == 'archivé' ? 'selected' : '' }}>Archivé</option>
                                     </select>
                                 </div>
@@ -83,8 +94,15 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 text-end">
-                                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                            <div class="col-md-6">
+                                <a href="{{ route('dqe.index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                                </a>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Mettre à jour
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -104,9 +122,10 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="select-all"> Section</th>
                                     <th>Désignation</th>
-                                    <th>Quantité</th>
                                     <th>Unité</th>
+                                    <th>Quantité</th>
                                     <th>Prix Unitaire HT</th>
                                     <th>Montant HT</th>
                                     <th>Actions</th>
@@ -115,14 +134,24 @@
                             <tbody>
                                 @forelse($dqe->lignes as $ligne)
                                     <tr>
-                                        <td>{{ $ligne->designation }}</td>
+                                        <td><input type="checkbox" name="selected_lines[]" value="{{ $ligne->id }}" class="line-checkbox"> {{ $ligne->section ?? 'N/A' }}</td>
+                                        <td>
+                                            @if($dqe->statut == 'brouillon')
+                                                <span class="editable-designation" data-id="{{ $ligne->id }}" data-value="{{ $ligne->designation }}" style="cursor: pointer; border-bottom: 1px dashed #007bff;" title="Cliquer pour modifier">
+                                                    {{ $ligne->designation }}
+                                                </span>
+                                            @else
+                                                {{ $ligne->designation }}
+                                            @endif
+                                        </td>
+                                        <td>{{ $ligne->unite }}</td>
                                         <td>
                                             @if($dqe->statut == 'brouillon')
                                                 <form action="{{ route('dqe.lines.update', [$dqe->id, $ligne->id]) }}" method="POST" class="d-flex">
                                                     @csrf
                                                     @method('PUT')
                                                     <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="quantite" value="{{ $ligne->quantite }}" style="width: 100px;">
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary ms-2">
+                                                    <button type="submit" class="btn btn-xs btn-outline-primary ms-1" title="Valider">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </form>
@@ -130,18 +159,27 @@
                                                 {{ $ligne->quantite }}
                                             @endif
                                         </td>
-                                        <td>{{ $ligne->unite }}</td>
                                         <td>{{ number_format($ligne->pu_ht, 2, ',', ' ') }}</td>
                                         <td>{{ number_format($ligne->montant_ht, 2, ',', ' ') }}</td>
                                         <td>
                                             @if($dqe->statut == 'brouillon')
-                                                <form action="{{ route('dqe.lines.delete', [$dqe->id, $ligne->id]) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash"></i> Supprimer
+                                                <div class="dropdown">
+                                                    <button class="btn btn-xs btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v"></i>
                                                     </button>
-                                                </form>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#" onclick="editLine({{ $ligne->id }})"><i class="fas fa-edit"></i> Modifier</a></li>
+                                                        <li><a class="dropdown-item" href="#" onclick="duplicateLine({{ $ligne->id }})"><i class="fas fa-copy"></i> Dupliquer</a></li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <form action="{{ route('dqe.lines.delete', [$dqe->id, $ligne->id]) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?');" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash"></i> Supprimer</button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             @endif
                                         </td>
                                     </tr>
@@ -152,6 +190,15 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Actions groupées -->
+                    <div class="mt-3" id="bulk-actions" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Actions groupées :</strong>
+                            <button type="button" class="btn btn-sm btn-danger ms-2" onclick="deleteSelectedLines()">Supprimer les lignes sélectionnées</button>
+                            <button type="button" class="btn btn-sm btn-warning ms-2" onclick="changeSelectedSection()">Changer la section</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -233,4 +280,170 @@
         </div>
     </div>
 </div>
+
+<!-- Modal pour créer une section -->
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSectionModalLabel">Créer une nouvelle section</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('dqe.sections.create', $dqe->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="section_name" class="form-label">Nom de la section</label>
+                        <input type="text" class="form-control" id="section_name" name="section_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="section_description" class="form-label">Description (optionnelle)</label>
+                        <textarea class="form-control" id="section_description" name="section_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer la section</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Gestion de la sélection multiple
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const lineCheckboxes = document.querySelectorAll('.line-checkbox');
+    const bulkActions = document.getElementById('bulk-actions');
+
+    // Sélectionner/désélectionner tout
+    selectAllCheckbox.addEventListener('change', function() {
+        lineCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        toggleBulkActions();
+    });
+
+    // Gérer la sélection individuelle
+    lineCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkedBoxes = document.querySelectorAll('.line-checkbox:checked');
+            selectAllCheckbox.checked = checkedBoxes.length === lineCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < lineCheckboxes.length;
+            toggleBulkActions();
+        });
+    });
+
+    function toggleBulkActions() {
+        const checkedBoxes = document.querySelectorAll('.line-checkbox:checked');
+        bulkActions.style.display = checkedBoxes.length > 0 ? 'block' : 'none';
+    }
+});
+
+// Supprimer les lignes sélectionnées
+function deleteSelectedLines() {
+    const checkedBoxes = document.querySelectorAll('.line-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Veuillez sélectionner au moins une ligne.');
+        return;
+    }
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer les ' + checkedBoxes.length + ' ligne(s) sélectionnée(s) ?')) {
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        // Ici, vous pouvez implémenter l'appel AJAX pour supprimer les lignes
+        console.log('Supprimer les lignes:', ids);
+    }
+}
+
+// Changer la section des lignes sélectionnées
+function changeSelectedSection() {
+    const checkedBoxes = document.querySelectorAll('.line-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Veuillez sélectionner au moins une ligne.');
+        return;
+    }
+    
+    const newSection = prompt('Entrez le nom de la nouvelle section:');
+    if (newSection) {
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        // Ici, vous pouvez implémenter l'appel AJAX pour changer la section
+        console.log('Changer la section pour les lignes:', ids, 'vers:', newSection);
+    }
+}
+
+// Édition en ligne des désignations
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.editable-designation').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const currentValue = this.dataset.value;
+            const lineId = this.dataset.id;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'form-control form-control-sm';
+            input.style.width = '100%';
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+            saveBtn.className = 'btn btn-xs btn-success ms-1';
+            saveBtn.type = 'button';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+            cancelBtn.className = 'btn btn-xs btn-secondary ms-1';
+            cancelBtn.type = 'button';
+            
+            const container = document.createElement('div');
+            container.className = 'd-flex align-items-center';
+            container.appendChild(input);
+            container.appendChild(saveBtn);
+            container.appendChild(cancelBtn);
+            
+            this.parentNode.replaceChild(container, this);
+            input.focus();
+            
+            const self = this;
+            
+            function restore() {
+                container.parentNode.replaceChild(self, container);
+            }
+            
+            function save() {
+                const newValue = input.value.trim();
+                if (newValue && newValue !== currentValue) {
+                    // Ici, vous pouvez implémenter l'appel AJAX pour sauvegarder
+                    self.textContent = newValue;
+                    self.dataset.value = newValue;
+                    console.log('Sauvegarder designation:', lineId, newValue);
+                }
+                restore();
+            }
+            
+            saveBtn.addEventListener('click', save);
+            cancelBtn.addEventListener('click', restore);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') save();
+                if (e.key === 'Escape') restore();
+            });
+        });
+    });
+});
+
+// Modifier une ligne
+function editLine(lineId) {
+    console.log('Modifier la ligne:', lineId);
+    // Ici, vous pouvez ouvrir un modal d'édition
+}
+
+// Dupliquer une ligne
+function duplicateLine(lineId) {
+    if (confirm('Voulez-vous dupliquer cette ligne ?')) {
+        console.log('Dupliquer la ligne:', lineId);
+        // Ici, vous pouvez implémenter l'appel AJAX pour dupliquer
+    }
+}
+</script>
+
 @endsection

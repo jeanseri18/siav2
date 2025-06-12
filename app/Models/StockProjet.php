@@ -14,10 +14,16 @@ class StockProjet extends Model
         'id_projet',
         'article_id',
         'quantite',
+        'unite_mesure_id',
     ];
 
     public function article()
     {
         return $this->belongsTo(Article::class, 'article_id');
+    }
+
+    public function uniteMesure()
+    {
+        return $this->belongsTo(UniteMesure::class, 'unite_mesure_id');
     }
 }

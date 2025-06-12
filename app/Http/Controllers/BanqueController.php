@@ -21,7 +21,11 @@ class BanqueController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|max:255|unique:banques'
+            'nom' => 'required|string|max:255|unique:banques',
+            'code_banque' => 'nullable|string|max:255',
+            'iban' => 'nullable|string|max:255',
+            'code_swift' => 'nullable|string|max:255',
+            'domiciliation' => 'nullable|string|max:255'
         ]);
 
         Banque::create($request->all());
@@ -37,7 +41,11 @@ class BanqueController extends Controller
     public function update(Request $request, Banque $banque)
     {
         $request->validate([
-            'nom' => 'required|string|max:255|unique:banques,nom,' . $banque->id
+            'nom' => 'required|string|max:255|unique:banques,nom,' . $banque->id,
+            'code_banque' => 'nullable|string|max:255',
+            'iban' => 'nullable|string|max:255',
+            'code_swift' => 'nullable|string|max:255',
+            'domiciliation' => 'nullable|string|max:255'
         ]);
 
         $banque->update($request->all());

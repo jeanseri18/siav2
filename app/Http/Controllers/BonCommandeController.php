@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\Reference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class BonCommandeController extends Controller
 {
@@ -204,8 +205,15 @@ class BonCommandeController extends Controller
             ->with('success', 'Bon de commande supprimé avec succès');
     }
 
-    public function confirm(BonCommande $bonCommande)
+    public function confirm(Request $request, BonCommande $bonCommande)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('bon-commandes.show', $bonCommande)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour confirmer ce bon de commande.');
+        }
+
         if ($bonCommande->statut !== 'en attente') {
             return redirect()->route('bon-commandes.show', $bonCommande)
                 ->with('error', 'Ce bon de commande ne peut pas être confirmé');
@@ -222,6 +230,13 @@ class BonCommandeController extends Controller
 
     public function cancel(Request $request, BonCommande $bonCommande)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('bon-commandes.show', $bonCommande)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour annuler ce bon de commande.');
+        }
+
         if ($bonCommande->statut === 'livrée') {
             return redirect()->route('bon-commandes.show', $bonCommande)
                 ->with('error', 'Impossible d\'annuler un bon de commande déjà livré');
@@ -238,6 +253,13 @@ class BonCommandeController extends Controller
 
     public function livrer(Request $request, BonCommande $bonCommande)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['magasinier', 'chef_chantier', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('bon-commandes.show', $bonCommande)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour marquer ce bon de commande comme livré.');
+        }
+
         if ($bonCommande->statut !== 'confirmée') {
             return redirect()->route('bon-commandes.show', $bonCommande)
                 ->with('error', 'Ce bon de commande ne peut pas être marqué comme livré');
@@ -268,5 +290,24 @@ class BonCommandeController extends Controller
 
         return redirect()->route('bon-commandes.show', $bonCommande)
             ->with('success', 'Bon de commande marqué comme livré avec succès');
+    }
+
+    /**
+     * Exporter un bon de commande en PDF
+     */
+    public function exportPDF($id)
+    {
+        $bonCommande = BonCommande::with([
+            'fournisseur', 
+            'user.bus', 
+            'lignes.article', 
+            'demandeApprovisionnement', 
+            'demandeAchat'
+        ])->findOrFail($id);
+        
+        $pdf = PDF::loadView('bon_commandes.pdf', compact('bonCommande'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->download('Bon_Commande_' . $bonCommande->reference . '.pdf');
     }
 }

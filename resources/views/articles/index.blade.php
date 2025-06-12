@@ -42,12 +42,22 @@
             <table id="Table" class="app-table display">
                 <thead>
                     <tr>
-                        <th>Référence</th>
-                        <th>Designation</th>
-                        <th>Quantité</th>
-                        <th>Prix Unitaire</th>
-                        <th>Unité de mesure</th>
-                        <th style="width: 200px;">Actions</th>
+                        <th>REF.</th>
+                        <th>FAMILLE</th>
+                        <th>SOUS FAMILLE</th>
+                        <th>REF FOURN.</th>
+                        <th>DESIGNATION ARTICLE</th>
+                        <th>TYPE</th>
+                        <th>UNITE</th>
+                        <th>COUT MOYEN PONDERE</th>
+                        <th>QTE DISPO</th>
+                        <th>PAY EN COURS</th>
+                        <th>RETOUR HIVE</th>
+                        <th>APPRO ARRIVE</th>
+                        <th>RETOUR APPRO</th>
+                        <th>TRANSFERT DE STOCK IN</th>
+                        <th>TRANSFERT DE STOCK OUT</th>
+                        <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,6 +68,9 @@
                                 {{ $article->reference }}
                             </span>
                         </td>
+                        <td>{{ $article->categorie ? $article->categorie->nom : '-' }}</td>
+                        <td>{{ $article->sousCategorie ? $article->sousCategorie->nom : '-' }}</td>
+                        <td>{{ $article->fournisseur ? $article->fournisseur->nom_raison_sociale : '-' }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -66,18 +79,93 @@
                                 <span>{{ $article->nom }}</span>
                             </div>
                         </td>
-                        <td class="app-fw-bold">{{ $article->quantite_stock }}</td>
-                        <td>{{ number_format($article->prix_unitaire, 0, ',', ' ') }} FCFA</td>
-                        <td>{{ $article->unite_mesure }}</td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
+                            @if($article->type)
+                                <span class="app-badge app-badge-info">{{ $article->type }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $article->unite_mesure }}</td>
+                        <td>{{ number_format($article->cout_moyen_pondere, 0, ',', ' ') }}</td>
+                        <td class="app-fw-bold">{{ $article->quantite_stock }}</td>
+                        <td class="text-center">
+                            @php
+                                // Calculer PAY EN COURS pour tous les projets de la BU
+                                $payEnCours = DB::table('ligne_demande_approvisionnement')
+                                    ->join('demande_approvisionnements', 'ligne_demande_approvisionnement.demande_id', '=', 'demande_approvisionnements.id')
+                                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
+                                    ->where('ligne_demande_approvisionnement.article_id', $article->id)
+                                    ->where('demande_approvisionnements.statut', 'approuvée')
+                                    ->sum('ligne_demande_approvisionnement.quantite_demandee');
+                            @endphp
+                            {{ $payEnCours ?? 0 }}
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Calculer RETOUR HIVE pour tous les projets de la BU
+                                $retourHive = DB::table('transfert_stock')
+                                    ->whereIn('id_projet_destination', $projets_bu)
+                                    ->where('article_id', $article->id)
+                                    ->where('type_transfert', 'retour_hive')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $retourHive ?? 0 }}
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Calculer APPRO ARRIVE pour tous les projets de la BU
+                                $approArrive = DB::table('lignes_bon_commande')
+                                    ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
+                                    ->whereIn('bon_commandes.projet_id', $projets_bu)
+                                    ->where('lignes_bon_commande.article_id', $article->id)
+                                    ->where('bon_commandes.statut', 'livrée')
+                                    ->sum('lignes_bon_commande.quantite_livree');
+                            @endphp
+                            {{ $approArrive ?? 0 }}
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Calculer RETOUR APPRO pour tous les projets de la BU
+                                $retourAppro = DB::table('retour_approvisionnement')
+                                    ->whereIn('projet_id', $projets_bu)
+                                    ->where('article_id', $article->id)
+                                    ->where('statut', 'accepté')
+                                    ->sum('quantite_retournee');
+                            @endphp
+                            {{ $retourAppro ?? 0 }}
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Calculer TRANSFERT DE STOCK IN pour tous les projets de la BU
+                                $transfertIn = DB::table('transfert_stock')
+                                    ->whereIn('id_projet_destination', $projets_bu)
+                                    ->where('article_id', $article->id)
+                                    ->where('type_transfert', 'normal')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $transfertIn ?? 0 }}
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Calculer TRANSFERT DE STOCK OUT pour tous les projets de la BU
+                                $transfertOut = DB::table('transfert_stock')
+                                    ->whereIn('id_projet_source', $projets_bu)
+                                    ->where('article_id', $article->id)
+                                    ->where('type_transfert', 'normal')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $transfertOut ?? 0 }}
+                        </td>
+                        <td>
+                            <div class="app-d-flex app-gap-1">
                                 <a href="{{ route('articles.show', $article) }}" class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('articles.edit', $article) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('articles.destroy', $article) }}" method="POST" class="delete-form">
+                                <form action="{{ route('articles.destroy', $article) }}" method="POST" class="delete-form" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">

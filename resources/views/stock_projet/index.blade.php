@@ -43,17 +43,31 @@
             <table id="stockTable" class="app-table display">
                 <thead>
                     <tr>
-                        <th>Désignation</th>
-                        <th>Référence</th>
-                        <th>Quantité</th>
+                        <th>Réf.</th>
+                        <th>Famille</th>
+                        <th>Sous Famille</th>
+                        <th>Réf Fourn.</th>
+                        <th>Désignation Article</th>
+                        <th>Type</th>
                         <th>Unité</th>
-                        <th>Statut</th>
+                        <th>Coût Moyen Pondéré</th>
+                        <th>Qté Disponible</th>
+                        <th>Paiement en Cours</th>
+                        <th>Retour Ruche</th>
+                        <th>Appro en Cours</th>
+                        <th>Retour Appro</th>
+                        <th>Transfert Stock In</th>
+                        <th>Transfert Stock Out</th>
                         <th style="width: 200px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($stocks as $stock)
                     <tr>
+                        <td>{{ $stock->article ? $stock->article->reference : '-' }}</td>
+                        <td>{{ $stock->article && $stock->article->categorie ? $stock->article->categorie->nom : '-' }}</td>
+                        <td>{{ $stock->article && $stock->article->sousCategorie ? $stock->article->sousCategorie->nom : '-' }}</td>
+                        <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom : '-' }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -62,30 +76,69 @@
                                 <span>{{ $stock->article ? $stock->article->nom : 'Article introuvable' }}</span>
                             </div>
                         </td>
-                        <td>{{ $stock->article ? $stock->article->reference : '-' }}</td>
-                        <td class="app-fw-bold">{{ $stock->quantite }}</td>
-                        <td>{{ $stock->article && $stock->article->unite ? $stock->article->unite->nom : '-' }}</td>
+                        <td>{{ $stock->article ? $stock->article->type : '-' }}</td>
+                        <td>{{ $stock->uniteMesure ? $stock->uniteMesure->nom : ($stock->article && $stock->article->unite ? $stock->article->unite->nom : '-') }}</td>
+                        <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td>
+                        <td class="app-fw-bold">{{ $stock->qte_disponible ?? $stock->quantite }}</td>
+                        <td>{{ $stock->paiement_en_cours ?? '0' }}</td>
+                        <td>{{ $stock->retour_ruche ?? '0' }}</td>
                         <td>
                             @php
-                                $quantiteMin = $stock->article ? $stock->article->quantite_min : 0;
-                                $statut = '';
-                                if ($stock->quantite <= 0) {
-                                    $statut = 'danger';
-                                    $statutText = 'Épuisé';
-                                    $statutIcon = 'exclamation-circle';
-                                } elseif ($stock->quantite <= $quantiteMin) {
-                                    $statut = 'warning';
-                                    $statutText = 'Stock faible';
-                                    $statutIcon = 'exclamation-triangle';
-                                } else {
-                                    $statut = 'success';
-                                    $statutText = 'En stock';
-                                    $statutIcon = 'check-circle';
-                                }
+                                $approEnCours = \App\Models\LigneDemandeApprovisionnement::whereHas('demandeApprovisionnement', function($query) use ($projet_id) {
+                                    $query->where('projet_id', $projet_id)
+                                          ->where('statut', 'approuvée');
+                                })
+                                ->where('article_id', $stock->article_id)
+                                ->sum('quantite_demandee');
                             @endphp
-                            <span class="app-badge app-badge-{{ $statut }} app-badge-pill">
-                                <i class="fas fa-{{ $statutIcon }} me-1"></i> {{ $statutText }}
-                            </span>
+                            {{ $approEnCours }}
+                        </td>
+                        <td>
+                            @php
+                                $retourHive = \App\Models\TransfertStock::where('id_projet_destination', $projet_id)
+                                    ->where('article_id', $stock->article_id)
+                                    ->where('type_transfert', 'retour_hive')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $retourHive }}
+                        </td>
+                        <td>
+                            @php
+                                $approArrive = \DB::table('lignes_bon_commande')
+                                    ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
+                                    ->where('bon_commandes.projet_id', $projet_id)
+                                    ->where('lignes_bon_commande.article_id', $stock->article_id)
+                                    ->where('bon_commandes.statut', 'livrée')
+                                    ->sum('lignes_bon_commande.quantite_livree');
+                            @endphp
+                            {{ $approArrive ?? '0' }}
+                        </td>
+                        <td>
+                            @php
+                                $retourAppro = \App\Models\RetourApprovisionnement::where('projet_id', $projet_id)
+                                    ->where('article_id', $stock->article_id)
+                                    ->where('statut', 'accepté')
+                                    ->sum('quantite_retournee');
+                            @endphp
+                            {{ $retourAppro }}
+                        </td>
+                        <td>
+                            @php
+                                $transfertIn = \App\Models\TransfertStock::where('id_projet_destination', $projet_id)
+                                    ->where('article_id', $stock->article_id)
+                                    ->where('type_transfert', 'normal')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $transfertIn }}
+                        </td>
+                        <td>
+                            @php
+                                $transfertOut = \App\Models\TransfertStock::where('id_projet_source', $projet_id)
+                                    ->where('article_id', $stock->article_id)
+                                    ->where('type_transfert', 'normal')
+                                    ->sum('quantite');
+                            @endphp
+                            {{ $transfertOut }}
                         </td>
                         <td>
                             <div class="app-d-flex app-gap-2">

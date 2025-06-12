@@ -42,21 +42,6 @@
                 <div class="app-form-row">
                     <div class="app-form-col">
                         <div class="app-form-group">
-                            <label for="id_artisan" class="app-form-label">
-                                <i class="fas fa-hard-hat me-2"></i>Artisan
-                            </label>
-                            <select name="id_artisan" id="id_artisan" class="app-form-select" required>
-                                <option value="">-- Sélectionnez un artisan --</option>
-                                @foreach($artisans as $artisan)
-                                    <option value="{{ $artisan->id }}">{{ $artisan->nom }}</option>
-                                @endforeach
-                            </select>
-                            <div class="app-form-text">Artisan qui réalisera la prestation</div>
-                        </div>
-                    </div>
-                    
-                    <div class="app-form-col">
-                        <div class="app-form-group">
                             <label for="id_contrat" class="app-form-label">
                                 <i class="fas fa-file-contract me-2"></i>Contrat
                             </label>
@@ -67,6 +52,21 @@
                                 @endforeach
                             </select>
                             <div class="app-form-text">Contrat associé à cette prestation</div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label for="id_artisan" class="app-form-label">
+                                <i class="fas fa-hard-hat me-2"></i>Artisan (optionnel)
+                            </label>
+                            <select name="id_artisan" id="id_artisan" class="app-form-select">
+                                <option value="">-- Sélectionnez un artisan --</option>
+                                @foreach($artisans as $artisan)
+                                    <option value="{{ $artisan->id }}">{{ $artisan->nom }}</option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Artisan assigné à cette prestation (peut être ajouté plus tard)</div>
                         </div>
                     </div>
                 </div>
@@ -89,6 +89,28 @@
                             </label>
                             <input type="string" name="detail" id="detail" class="app-form-control" required>
                             <div class="app-form-text">Description détaillée de la prestation</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label for="montant" class="app-form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>Montant
+                            </label>
+                            <input type="number" step="0.01" name="montant" id="montant" class="app-form-control">
+                            <div class="app-form-text">Montant de la prestation</div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label for="taux_avancement" class="app-form-label">
+                                <i class="fas fa-percentage me-2"></i>Taux d'avancement
+                            </label>
+                            <input type="number" min="0" max="100" name="taux_avancement" id="taux_avancement" class="app-form-control" value="0">
+                            <div class="app-form-text">Pourcentage d'avancement de la prestation (0-100)</div>
                         </div>
                     </div>
                 </div>

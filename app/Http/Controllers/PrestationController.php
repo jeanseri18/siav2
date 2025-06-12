@@ -14,18 +14,20 @@ class PrestationController extends Controller
     }
 
     public function create() {
-        $artisans = Artisan::all();
         $projet_id = session('projet_id');
         $contrats = Contrat::where('id_projet', $projet_id)->get();
-        return view('prestations.create', compact('artisans', 'contrats'));
+        $artisans = Artisan::all();
+        return view('prestations.create', compact('contrats', 'artisans'));
     }
 
     public function store(Request $request) {
         $request->validate([
-            'id_artisan' => 'required',
+            'id_artisan' => 'nullable|exists:artisan,id',
             'id_contrat' => 'required',
             'prestation_titre' => 'required',
             'detail' => 'required',
+            'montant' => 'nullable|numeric',
+            'taux_avancement' => 'nullable|integer|min:0|max:100',
         ]);
     
         // Ajouter le statut "En cours" par défaut
@@ -34,6 +36,8 @@ class PrestationController extends Controller
             'id_contrat' => $request->id_contrat,
             'prestation_titre' => $request->prestation_titre,
             'detail' => $request->detail,
+            'montant' => $request->montant,
+            'taux_avancement' => $request->taux_avancement ?? 0,
             'statut' => 'En cours', // Valeur par défaut
         ]);
     
@@ -41,18 +45,20 @@ class PrestationController extends Controller
     }
 
     public function edit(Prestation $prestation) {
-        $artisans = Artisan::all();
         $projet_id = session('projet_id');
         $contrats = Contrat::where('id_projet', $projet_id)->get();
-        return view('prestations.edit', compact('prestation', 'artisans', 'contrats'));
+        $artisans = Artisan::all();
+        return view('prestations.edit', compact('prestation', 'contrats', 'artisans'));
     }
 
     public function update(Request $request, Prestation $prestation) {
         $request->validate([
-            'id_artisan' => 'required',
+            'id_artisan' => 'nullable|exists:artisan,id',
             'id_contrat' => 'required',
             'prestation_titre' => 'required',
             'detail' => 'required',
+            'montant' => 'nullable|numeric',
+            'taux_avancement' => 'nullable|integer|min:0|max:100',
             'statut' => 'required|string'
         ]);
 

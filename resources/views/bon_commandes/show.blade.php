@@ -313,12 +313,14 @@
                         <i class="fas fa-edit me-2"></i>Modifier
                     </a>
                     
+                    @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
                     <form action="{{ route('bon-commandes.confirm', $bonCommande) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-success w-100">
                             <i class="fas fa-check me-2"></i>Confirmer
                         </button>
                     </form>
+                    @endif
                     
                     <button type="button" class="app-btn app-btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="fas fa-trash me-2"></i>Supprimer
@@ -326,18 +328,22 @@
                     @endif
                     
                     @if($bonCommande->statut == 'confirmée')
+                    @if(in_array(Auth::user()->role, ['magasinier', 'chef_chantier', 'admin', 'dg']))
                     <button type="button" class="app-btn app-btn-primary w-100" data-bs-toggle="modal" data-bs-target="#livrerModal">
                         <i class="fas fa-truck me-2"></i>Marquer comme livré
                     </button>
                     @endif
+                    @endif
                     
                     @if($bonCommande->statut != 'livrée' && $bonCommande->statut != 'annulée')
+                    @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
                     <form action="{{ route('bon-commandes.cancel', $bonCommande) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-outline-danger w-100" onclick="return confirm('Êtes-vous sûr de vouloir annuler ce bon de commande?')">
                             <i class="fas fa-times me-2"></i>Annuler
                         </button>
                     </form>
+                    @endif
                     @endif
                 </div>
             </div>

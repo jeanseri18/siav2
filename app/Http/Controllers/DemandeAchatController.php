@@ -9,6 +9,7 @@ use App\Models\Article;
 use App\Models\Reference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeAchatController extends Controller
 {
@@ -192,6 +193,13 @@ class DemandeAchatController extends Controller
 
     public function approve(Request $request, DemandeAchat $demandeAchat)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-achats.show', $demandeAchat)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour approuver cette demande.');
+        }
+
         if ($demandeAchat->statut !== 'en attente') {
             return redirect()->route('demande-achats.show', $demandeAchat)
                 ->with('error', 'Cette demande ne peut pas être approuvée');
@@ -209,6 +217,13 @@ class DemandeAchatController extends Controller
 
     public function reject(Request $request, DemandeAchat $demandeAchat)
     {
+        // Vérifier les permissions basées sur le rôle
+        $rolesAutorises = ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg'];
+        if (!in_array(Auth::user()->role, $rolesAutorises)) {
+            return redirect()->route('demande-achats.show', $demandeAchat)
+                ->with('error', 'Vous n\'avez pas les permissions nécessaires pour rejeter cette demande.');
+        }
+
         if ($demandeAchat->statut !== 'en attente') {
             return redirect()->route('demande-achats.show', $demandeAchat)
                 ->with('error', 'Cette demande ne peut pas être rejetée');
@@ -227,5 +242,23 @@ class DemandeAchatController extends Controller
 
         return redirect()->route('demande-achats.show', $demandeAchat)
             ->with('success', 'Demande d\'achat rejetée');
+    }
+
+    /**
+     * Exporter une demande d'achat en PDF
+     */
+    public function exportPDF($id)
+    {
+        $demandeAchat = DemandeAchat::with([
+            'user.bus', 
+            'projet', 
+            'approbateur', 
+            'lignes.article'
+        ])->findOrFail($id);
+        
+        $pdf = PDF::loadView('demande_achats.pdf', compact('demandeAchat'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->download('Demande_Achat_' . $demandeAchat->reference . '.pdf');
     }
 }

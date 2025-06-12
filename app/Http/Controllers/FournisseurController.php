@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\ClientFournisseur;
 use Illuminate\Http\Request;
 use App\Models\SecteurActivite;
+use App\Models\RegimeImposition;
 
 class FournisseurController extends Controller {
   
@@ -28,7 +29,8 @@ class FournisseurController extends Controller {
 
     public function create() {
         $secteurs = SecteurActivite::all();
-        return view('fournisseurs.create', compact('secteurs'));
+        $regimes = RegimeImposition::all();
+        return view('fournisseurs.create', compact('secteurs', 'regimes'));
     }
 
     public function store(Request $request) {
@@ -40,7 +42,7 @@ class FournisseurController extends Controller {
             'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
-            'regime_imposition' => 'required|in:Régime A,Régime B',
+            'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
             'email' => 'nullable|email',
@@ -77,7 +79,8 @@ $request->merge([
 
     public function edit(ClientFournisseur $fournisseur) {
         $secteurs = SecteurActivite::all();
-        return view('fournisseurs.edit', compact('fournisseur', 'secteurs'));
+        $regimes = RegimeImposition::all();
+        return view('fournisseurs.edit', compact('fournisseur', 'secteurs', 'regimes'));
     }
 
     public function update(Request $request, ClientFournisseur $fournisseur) {
@@ -85,7 +88,7 @@ $request->merge([
             'nom_raison_sociale' => 'required|string|max:255',
             'n_rccm' => 'required|string',
             'n_cc' => 'required|string',
-            'regime_imposition' => 'required|in:Régime A,Régime B',
+            'regime_imposition' => 'required|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
             'adresse_localisation' => 'required|string',

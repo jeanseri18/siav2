@@ -143,6 +143,14 @@
             'color' => 'info'
         ],
         [
+            'route' => 'employes.index', 
+            'icon' => 'fa-user-tie', 
+            'text' => 'Employés', 
+            'description' => 'Gérer les employés de l\'entreprise',
+            'category' => 'contacts',
+            'color' => 'info'
+        ],
+        [
             'route' => 'corpsmetiers.index', 
             'icon' => 'fa-hammer', 
             'text' => 'Corps de Métier', 

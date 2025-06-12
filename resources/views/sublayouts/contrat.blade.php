@@ -45,16 +45,29 @@
     <span>DQE</span>
 </a>
 
-<a href="{{ route('debourses.index') }}" class="nav-item">
-    <i class="fas fa-money-bill-wave"></i>
-    <span>Déboursé et frais de chantier</span>
-</a>  <a href="{{ route('stock_contrat.index') }}" class="nav-item">
-                <i class="fas fa-boxes"></i>
-                <span>Stock</span>
-            </a>
-     <a href="{{ route('frais_generaux.index') }}" class="nav-item">
+<a href="{{ route('debourses.sec') }}" class="nav-item">
+    <i class="fas fa-hammer"></i>
+    <span>Déboursé sec</span>
+</a>
+<a href="{{ route('debourses.main_oeuvre') }}" class="nav-item">
+    <i class="fas fa-users"></i>
+    <span>Déboursé main d'œuvre</span>
+</a>
+<a href="{{ route('debourses.frais_chantier') }}" class="nav-item">
     <i class="fas fa-percentage"></i>
-    <span>Frais Généraux</span>
+    <span>Frais de chantier</span>
+</a>
+<a href="{{ route('debourses_chantier.index', session('contrat_id')) }}" class="nav-item">
+    <i class="fas fa-hard-hat"></i>
+    <span>Déboursé chantier</span>
+</a>
+<a href="{{ route('frais_generaux.index') }}" class="nav-item">
+    <i class="fas fa-calculator"></i>
+    <span>Frais généraux</span>
+</a>
+<a href="{{ route('stock_contrat.index') }}" class="nav-item">
+    <i class="fas fa-boxes"></i>
+    <span>Stock</span>
 </a>
             <a href="#" class="nav-item">
                 <i class="fas fa-truck"></i>
@@ -82,17 +95,17 @@
 <style>
 /* SOLUTION 1: Encapsulation avec une classe conteneur */
 .contract-section {
-    /* Variables CSS locales à la section contrat uniquement */
-    --contract-primary-color: #033765;
-    --contract-secondary-color: #0A8CFF;
-    --contract-accent-color: #ffffff;
-    --contract-success-color: #28a745;
-    --contract-gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
-    --contract-gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-    --contract-shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);
-    --contract-shadow-hover: 0 15px 40px rgba(3, 55, 101, 0.2);
-    --contract-border-radius: 16px;
-    --contract-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Variables harmonisées avec app.blade.php */
+    --contract-primary-color: var(--primary, #033765);
+    --contract-secondary-color: var(--primary-light, #0A8CFF);
+    --contract-accent-color: var(--white, #ffffff);
+    --contract-success-color: var(--success, #28a745);
+    --contract-gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --contract-gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
+    --contract-shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
+    --contract-shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
+    --contract-border-radius: var(--border-radius-lg, 1rem);
+    --contract-transition: var(--transition-base, all 0.2s ease-in-out);
 }
 
 .contract-section .contract-header {
@@ -205,11 +218,11 @@
 .contract-section .nav-container {
     background: white;
     border-radius: var(--contract-border-radius);
-    padding: 1.5rem;
+    padding: var(--spacing-lg, 1.5rem);
     box-shadow: var(--contract-shadow-card);
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: var(--spacing-md, 1rem);
     justify-content: center;
 }
 
@@ -217,8 +230,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem;
+    gap: var(--spacing-sm, 0.5rem);
+    padding: var(--spacing-md, 1rem) var(--spacing-lg, 1.5rem);
     background: var(--contract-gradient-card);
     border: 2px solid transparent;
     border-radius: 12px;
@@ -229,7 +242,8 @@
     transition: var(--contract-transition);
     position: relative;
     overflow: hidden;
-    min-width: 100px;
+    min-width: 120px;
+    max-width: 160px;
     text-align: center;
 }
 

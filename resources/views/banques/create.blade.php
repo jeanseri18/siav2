@@ -10,6 +10,22 @@
                 <label for="nom" class="form-label">Nom</label>
                 <input type="text" name="nom" class="form-control" required>
             </div>
+            <div class="mb-3">
+                <label for="code_banque" class="form-label">Code Banque</label>
+                <input type="text" name="code_banque" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="iban" class="form-label">IBAN</label>
+                <input type="text" name="iban" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="code_swift" class="form-label">Code SWIFT</label>
+                <input type="text" name="code_swift" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="domiciliation" class="form-label">Domiciliation</label>
+                <input type="text" name="domiciliation" class="form-control">
+            </div>
             <button type="submit" class="btn btn-success">Ajouter</button>
         </form>
     </div>

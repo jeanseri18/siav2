@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\StockProjet;
 use App\Models\Projet;
+use App\Models\UniteMesure;
 use Illuminate\Http\Request;
  
 class StockProjetController extends Controller
@@ -17,20 +18,21 @@ class StockProjetController extends Controller
     }
 
     // Récupérer tous les stocks pour ce projet
-    $stocks = StockProjet::where('id_projet', $projet_id)->with('article')->get();
+    $stocks = StockProjet::where('id_projet', $projet_id)->with(['article.categorie', 'article.sousCategorie', 'article.fournisseur', 'article.unite', 'uniteMesure'])->get();
     $projets = Projet::all();
     $articles = Article::all();
 
     // Retourner la vue avec les stocks récupérés
-    return view('stock_projet.index', compact('stocks','projets','articles'));
+    return view('stock_projet.index', compact('stocks','projets','articles','projet_id'));
 }
 
     public function create()
     {
         // Récupérer les articles disponibles
- $projets = Projet::all();
-    $articles = Article::all();
-            return view('stock_projet.create', compact('articles','projets'));
+        $projets = Projet::all();
+        $articles = Article::with('unite')->get();
+        $uniteMesures = UniteMesure::all();
+        return view('stock_projet.create', compact('articles','projets','uniteMesures'));
     }
 
     public function store(Request $request)
@@ -38,6 +40,7 @@ class StockProjetController extends Controller
         $request->validate([
             'article_id' => 'required|exists:articles,id',
             'quantite' => 'required|integer|min:1',
+            'unite_mesure_id' => 'required|exists:unite_mesures,id',
         ]);
 
         $projet_id = session('projet_id');
@@ -46,6 +49,7 @@ class StockProjetController extends Controller
             'id_projet' => $projet_id,
             'article_id' => $request->article_id,
             'quantite' => $request->quantite,
+            'unite_mesure_id' => $request->unite_mesure_id,
         ]);
 
         return redirect()->route('stock.index')->with('success', 'Produit ajouté au stock avec succès');
@@ -53,9 +57,10 @@ class StockProjetController extends Controller
 
     public function edit($id)
     {
-        $stock = StockProjet::findOrFail($id);
-        $articles = Article::all(); // Récupérer tous les articles
-        return view('stock_projet.edit', compact('stock', 'articles'));
+        $stock = StockProjet::with(['article.unite', 'uniteMesure'])->findOrFail($id);
+        $articles = Article::with('unite')->get();
+        $uniteMesures = UniteMesure::all();
+        return view('stock_projet.edit', compact('stock', 'articles', 'uniteMesures'));
     }
 
     public function update(Request $request, $id)
@@ -63,12 +68,14 @@ class StockProjetController extends Controller
         $request->validate([
             'article_id' => 'required|exists:articles,id',
             'quantite' => 'required|integer|min:1',
+            'unite_mesure_id' => 'required|exists:unite_mesures,id',
         ]);
 
         $stock = StockProjet::findOrFail($id);
         $stock->update([
             'article_id' => $request->article_id,
             'quantite' => $request->quantite,
+            'unite_mesure_id' => $request->unite_mesure_id,
         ]);
 
         return redirect()->route('stock.index')->with('success', 'Produit mis à jour avec succès');
@@ -84,12 +91,13 @@ class StockProjetController extends Controller
         }
     
         // Récupérer tous les stocks pour ce projet
-        $stocks = StockProjet::where('id_projet', $projet_id)->with('article')->get();
+        $stocks = StockProjet::where('id_projet', $projet_id)->with(['article.categorie', 'article.sousCategorie', 'article.fournisseur', 'article.unite', 'uniteMesure'])->get();
         $projets = Projet::all();
         $articles = Article::all();
+        $contrat_id = $projet_id; // Pour la compatibilité avec la vue
     
         // Retourner la vue avec les stocks récupérés
-        return view('stock_contrat.index', compact('stocks','projets','articles'));
+        return view('stock_contrat.index', compact('stocks','projets','articles','contrat_id'));
     }
     
         public function create_contrat()

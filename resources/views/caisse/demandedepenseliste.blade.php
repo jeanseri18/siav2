@@ -54,17 +54,22 @@
                             </td>
                             <td>
                                 <div class="app-d-flex app-gap-2">
-                                    @if($demande->statut == 'en attente')
+                                    <!-- Bouton pour voir la demande en PDF (disponible pour toutes les demandes) -->
+                                    <a href="{{ route('caisse.voirDemandeDepensePDF', $demande->id) }}" target="_blank" class="app-btn app-btn-primary app-btn-sm app-btn-icon" title="Voir en PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    
+                                    @if($demande->statut == 'en attente' && in_array(Auth::user()->role, ['caissier', 'chef_projet', 'conducteur_travaux', 'admin', 'dg']))
                                         <form action="{{ route('caisse.validerDemandeDepense', $demande->id) }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon">
+                                            <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Valider la demande">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
                                         
                                         <form action="{{ route('caisse.annulerDemandeDepense', $demande->id) }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon">
+                                            <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon" title="Annuler la demande">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>

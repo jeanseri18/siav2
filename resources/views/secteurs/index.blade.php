@@ -41,6 +41,8 @@
                 <thead>
                     <tr>
                         <th>Nom du secteur</th>
+                        <th>Quartier</th>
+                        <th>Commune</th>
                         <th>Ville</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
@@ -59,9 +61,25 @@
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
-                                    <i class="fas fa-city text-info"></i>
+                                    <i class="fas fa-map-marker-alt text-info"></i>
                                 </div>
-                                <span>{{ $secteur->ville->nom }}</span>
+                                <span>{{ $secteur->quartier->nom }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="app-d-flex app-align-items-center app-gap-2">
+                                <div class="item-icon">
+                                    <i class="fas fa-building text-warning"></i>
+                                </div>
+                                <span>{{ $secteur->quartier->commune->nom }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="app-d-flex app-align-items-center app-gap-2">
+                                <div class="item-icon">
+                                    <i class="fas fa-city text-success"></i>
+                                </div>
+                                <span>{{ $secteur->quartier->commune->ville->nom }}</span>
                             </div>
                         </td>
                         <td>
