@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('head')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
 @section('content')
 @include('sublayouts.contrat')
 
@@ -55,7 +59,7 @@
                             </thead>
                             <tbody>
                                 @foreach($debourseChantier->details as $detail)
-                                    <tr>
+                                    <tr data-detail-id="{{ $detail->id }}">
                                         <td>{{ $detail->section ?? 'N/A' }}</td>
                                         <td>
                                             @if($debourseChantier->statut == 'brouillon')
@@ -127,34 +131,39 @@
 </div>
 
 <script>
+// Fonction pour attacher l'événement click aux désignations éditables
+function attachDesignationClickEvent(element) {
+    element.addEventListener('click', function() {
+        const currentValue = this.getAttribute('data-value');
+        const detailId = this.getAttribute('data-id');
+        
+        // Créer un input avec boutons
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'd-flex align-items-center';
+        inputContainer.innerHTML = `
+            <input type="text" class="form-control form-control-sm me-2" value="${currentValue}" id="input-${detailId}">
+            <button class="btn btn-xs btn-success me-1" onclick="saveDesignationChantier(${detailId}, '${currentValue}')">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-xs btn-secondary" onclick="cancelEditChantier(${detailId}, '${currentValue}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Remplacer l'élément
+        this.parentNode.replaceChild(inputContainer, this);
+        
+        // Focus sur l'input
+        document.getElementById(`input-${detailId}`).focus();
+    });
+}
+
 // Gestion de l'édition en ligne des désignations
 document.addEventListener('DOMContentLoaded', function() {
     const editableDesignations = document.querySelectorAll('.editable-designation-chantier');
     
     editableDesignations.forEach(function(element) {
-        element.addEventListener('click', function() {
-            const currentValue = this.getAttribute('data-value');
-            const detailId = this.getAttribute('data-id');
-            
-            // Créer un input avec boutons
-            const inputContainer = document.createElement('div');
-            inputContainer.className = 'd-flex align-items-center';
-            inputContainer.innerHTML = `
-                <input type="text" class="form-control form-control-sm me-2" value="${currentValue}" id="input-${detailId}">
-                <button class="btn btn-xs btn-success me-1" onclick="saveDesignationChantier(${detailId}, '${currentValue}')">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button class="btn btn-xs btn-secondary" onclick="cancelEditChantier(${detailId}, '${currentValue}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            // Remplacer l'élément
-            this.parentNode.replaceChild(inputContainer, this);
-            
-            // Focus sur l'input
-            document.getElementById(`input-${detailId}`).focus();
-        });
+        attachDesignationClickEvent(element);
     });
 });
 
@@ -162,24 +171,58 @@ function saveDesignationChantier(detailId, originalValue) {
     const input = document.getElementById(`input-${detailId}`);
     const newValue = input.value;
     
-    // Ici, vous pouvez ajouter la logique pour sauvegarder via AJAX
-    console.log('Sauvegarde de la désignation pour le détail', detailId, ':', newValue);
+    if (newValue.trim() === '') {
+        alert('La désignation ne peut pas être vide.');
+        return;
+    }
     
-    // Pour l'instant, on remet juste la valeur
-    const span = document.createElement('span');
-    span.className = 'editable-designation-chantier';
-    span.setAttribute('data-id', detailId);
-    span.setAttribute('data-value', newValue);
-    span.style.cursor = 'pointer';
-    span.style.borderBottom = '1px dashed #007bff';
-    span.title = 'Cliquer pour modifier';
-    span.textContent = newValue;
+    // Récupérer les autres valeurs de la ligne pour la mise à jour complète
+    const row = document.querySelector(`tr[data-detail-id="${detailId}"]`);
+    const quantite = row.querySelector('input[name="quantite"]').value;
+    const coutMateriaux = row.querySelector('input[name="cout_unitaire_materiaux"]').value;
+    const coutMainOeuvre = row.querySelector('input[name="cout_unitaire_main_oeuvre"]').value;
+    const coutMateriel = row.querySelector('input[name="cout_unitaire_materiel"]').value;
     
-    input.parentNode.parentNode.replaceChild(span, input.parentNode);
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    formData.append('designation', newValue);
+    formData.append('quantite', quantite);
+    formData.append('cout_unitaire_materiaux', coutMateriaux);
+    formData.append('cout_unitaire_main_oeuvre', coutMainOeuvre);
+    formData.append('cout_unitaire_materiel', coutMateriel);
     
-    // Réattacher l'événement click
-    span.addEventListener('click', function() {
-        // Répéter la logique d'édition
+    fetch(`/debourses_chantier/${detailId}/update-detail`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mettre à jour l'affichage
+            const span = document.createElement('span');
+            span.className = 'editable-designation-chantier';
+            span.setAttribute('data-id', detailId);
+            span.setAttribute('data-value', newValue);
+            span.style.cursor = 'pointer';
+            span.style.borderBottom = '1px dashed #007bff';
+            span.title = 'Cliquer pour modifier';
+            span.textContent = newValue;
+            
+            input.parentNode.parentNode.replaceChild(span, input.parentNode);
+            
+            // Réattacher l'événement click
+            attachDesignationClickEvent(span);
+            
+            // Recharger la page pour voir tous les changements
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert('Erreur lors de la sauvegarde: ' + (data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la sauvegarde');
     });
 }
 
@@ -200,19 +243,112 @@ function cancelEditChantier(detailId, originalValue) {
 
 // Fonctions pour les actions du menu déroulant
 function editLineChantier(detailId) {
-    console.log('Édition de la ligne', detailId);
-    // Ici, vous pouvez ajouter la logique pour éditer la ligne
+    // Activer l'édition en ligne pour tous les champs de cette ligne
+    const row = document.querySelector(`tr[data-detail-id="${detailId}"]`);
+    if (row) {
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.style.backgroundColor = '#fff3cd';
+            input.focus();
+        });
+        
+        // Ajouter un bouton de sauvegarde temporaire
+        const actionsCell = row.querySelector('td:last-child');
+        if (!actionsCell.querySelector('.save-btn')) {
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn btn-sm btn-success save-btn me-2';
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+            saveBtn.onclick = () => saveLineChantier(detailId);
+            actionsCell.insertBefore(saveBtn, actionsCell.firstChild);
+        }
+    }
+}
+
+function saveLineChantier(detailId) {
+    const row = document.querySelector(`tr[data-detail-id="${detailId}"]`);
+    if (!row) return;
+    
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    
+    // Récupérer les valeurs des inputs
+    const designation = row.querySelector('.editable-designation-chantier').getAttribute('data-value');
+    const quantite = row.querySelector('input[name="quantite"]').value;
+    const coutMateriaux = row.querySelector('input[name="cout_unitaire_materiaux"]').value;
+    const coutMainOeuvre = row.querySelector('input[name="cout_unitaire_main_oeuvre"]').value;
+    const coutMateriel = row.querySelector('input[name="cout_unitaire_materiel"]').value;
+    
+    formData.append('designation', designation);
+    formData.append('quantite', quantite);
+    formData.append('cout_unitaire_materiaux', coutMateriaux);
+    formData.append('cout_unitaire_main_oeuvre', coutMainOeuvre);
+    formData.append('cout_unitaire_materiel', coutMateriel);
+    
+    fetch(`/debourses_chantier/${detailId}/update-detail`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Recharger la page pour voir les changements
+        } else {
+            alert('Erreur lors de la sauvegarde: ' + (data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la sauvegarde');
+    });
 }
 
 function duplicateLineChantier(detailId) {
-    console.log('Duplication de la ligne', detailId);
-    // Ici, vous pouvez ajouter la logique pour dupliquer la ligne
+    if (confirm('Êtes-vous sûr de vouloir dupliquer cette ligne ?')) {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        
+        fetch(`/debourses_chantier/${detailId}/duplicate`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Recharger la page pour voir la nouvelle ligne
+            } else {
+                alert('Erreur lors de la duplication: ' + (data.error || data.message || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la duplication');
+        });
+    }
 }
 
 function deleteLineChantier(detailId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?')) {
-        console.log('Suppression de la ligne', detailId);
-        // Ici, vous pouvez ajouter la logique pour supprimer la ligne
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette ligne ? Cette action est irréversible.')) {
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        
+        fetch(`/debourses_chantier/${detailId}/delete`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Recharger la page pour voir les changements
+            } else {
+                alert('Erreur lors de la suppression: ' + (data.error || data.message || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        });
     }
 }
 </script>

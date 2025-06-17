@@ -43,7 +43,11 @@ class ClientController extends Controller
         // Validation des champs
         $request->validate([
             'categorie' => 'required|in:Particulier,Entreprise',
-            'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
+            'nom_raison_sociale' => 'required|string|max:255',
+            'prenoms' => 'required_if:categorie,Particulier|string|max:255',
+            'n_rccm' => 'nullable|string|max:255',
+            'n_cc' => 'nullable|string|max:255',
+            'secteur_activite' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
             'regime_imposition' => 'required|string|max:255',
@@ -52,16 +56,16 @@ class ClientController extends Controller
             'email' => 'nullable|email',
             'telephone' => 'nullable|string',
             // Validation des contacts
-            'contacts' => 'required|array|min:1',
-            'contacts.*.civilite' => 'required|in:M.,Mme,Mlle',
-            'contacts.*.nom' => 'required|string|max:255',
-            'contacts.*.prenoms' => 'required|string|max:255',
+            'contacts' => 'nullable|array',
+            'contacts.*.civilite' => 'required_with:contacts|in:M.,Mme,Mlle',
+            'contacts.*.nom' => 'required_with:contacts|string|max:255',
+            'contacts.*.prenoms' => 'required_with:contacts|string|max:255',
             'contacts.*.fonction' => 'nullable|string|max:255',
             'contacts.*.telephone_1' => 'nullable|string|max:20',
             'contacts.*.telephone_2' => 'nullable|string|max:20',
             'contacts.*.email' => 'nullable|email|max:255',
             'contacts.*.adresse' => 'nullable|string',
-            'contacts.*.statut' => 'required|in:Actif,Inactif',
+            'contacts.*.statut' => 'required_with:contacts|in:Actif,Inactif',
             'contacts.*.contact_principal' => 'nullable|boolean',
         ]);
         $id_bu = session('selected_bu'); // Récupération de l'ID du bus depuis la session
@@ -94,31 +98,38 @@ $request->merge([
             // On crée le client ou le fournisseur
             $client = ClientFournisseur::create($clientData);
             
-            // Créer les personnes contacts
+            // Créer les personnes contacts si elles sont fournies
             $contacts = $request->input('contacts', []);
-            $hasMainContact = false;
-            
-            foreach ($contacts as $contactData) {
-                $contactData['client_fournisseur_id'] = $client->id;
-                $contactData['contact_principal'] = isset($contactData['contact_principal']) ? true : false;
+            if (!empty($contacts)) {
+                $hasMainContact = false;
                 
-                // S'assurer qu'il n'y a qu'un seul contact principal
-                if ($contactData['contact_principal']) {
-                    if ($hasMainContact) {
-                        $contactData['contact_principal'] = false;
-                    } else {
-                        $hasMainContact = true;
+                foreach ($contacts as $contactData) {
+                    // Vérifier que les données essentielles sont présentes
+                    if (empty($contactData['nom']) || empty($contactData['prenoms'])) {
+                        continue;
                     }
+                    
+                    $contactData['client_fournisseur_id'] = $client->id;
+                    $contactData['contact_principal'] = isset($contactData['contact_principal']) ? true : false;
+                    
+                    // S'assurer qu'il n'y a qu'un seul contact principal
+                    if ($contactData['contact_principal']) {
+                        if ($hasMainContact) {
+                            $contactData['contact_principal'] = false;
+                        } else {
+                            $hasMainContact = true;
+                        }
+                    }
+                    
+                    ContactPerson::create($contactData);
                 }
                 
-                ContactPerson::create($contactData);
-            }
-            
-            // Si aucun contact principal n'a été défini, définir le premier comme principal
-            if (!$hasMainContact && !empty($contacts)) {
-                $firstContact = ContactPerson::where('client_fournisseur_id', $client->id)->first();
-                if ($firstContact) {
-                    $firstContact->update(['contact_principal' => true]);
+                // Si aucun contact principal n'a été défini, définir le premier comme principal
+                if (!$hasMainContact) {
+                    $firstContact = ContactPerson::where('client_fournisseur_id', $client->id)->first();
+                    if ($firstContact) {
+                        $firstContact->update(['contact_principal' => true]);
+                    }
                 }
             }
         });

@@ -70,7 +70,7 @@
                             <label for="raison_sociale" class="app-form-label">
                                 <i class="fas fa-building me-2"></i>Raison Sociale:
                             </label>
-                            <input type="text" name="raison_sociale" class="app-form-control">
+                            <input type="text" name="nom_raison_sociale" class="app-form-control">
                             
                             <label for="n_rccm" class="app-form-label app-mt-3">
                                 <i class="fas fa-file-alt me-2"></i>N° RCCM:
@@ -217,9 +217,17 @@
             if (this.value === 'Entreprise') {
                 particulierFields.style.display = 'none';
                 entrepriseFields.style.display = 'block';
+                // Rendre les champs entreprise requis
+                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', true);
+                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', false);
+                $('#particulier_fields input[name="prenoms"]').prop('required', false);
             } else {
                 particulierFields.style.display = 'block';
                 entrepriseFields.style.display = 'none';
+                // Rendre les champs particulier requis
+                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', true);
+                $('#particulier_fields input[name="prenoms"]').prop('required', true);
+                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', false);
             }
         });
         

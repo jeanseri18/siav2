@@ -22,7 +22,7 @@ class DebourseChantierController extends Controller
                 ->withErrors(['error' => 'Aucun contrat sélectionné. Veuillez d\'abord choisir un contrat.']);
         }
         
-        $contrat = Contrat::findOrFail($contratId);
+        $contrat = Contrat::with(['dqes.lignes'])->findOrFail($contratId);
         $deboursesChantier = DebourseChantier::where('contrat_id', $contratId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -55,8 +55,8 @@ class DebourseChantierController extends Controller
         // Remplir les détails pour chaque ligne du DQE
         foreach ($dqe->lignes as $ligne) {
             $bpu = $ligne->bpu;
+            $bpu->updateDerivedValues(); // S'assurer que les valeurs dérivées sont à jour
             
-            // Créer le détail du déboursé chantier
             DebourseChantierDetail::create([
                 'debourse_chantier_id' => $debourseChantier->id,
                 'dqe_ligne_id' => $ligne->id,
@@ -70,14 +70,14 @@ class DebourseChantierController extends Controller
                 'total_materiaux' => ($bpu->materiaux ?? 0) * $ligne->quantite,
                 'total_main_oeuvre' => ($bpu->main_oeuvre ?? 0) * $ligne->quantite,
                 'total_materiel' => ($bpu->materiel ?? 0) * $ligne->quantite,
-                'montant_total' => (($bpu->materiaux ?? 0) + ($bpu->main_oeuvre ?? 0) + ($bpu->materiel ?? 0)) * $ligne->quantite,
+                'montant_total' => (($bpu->materiaux ?? 0) + ($bpu->materiel ?? 0)) * $ligne->quantite, // Déboursé chantier : matériaux + matériel seulement
             ]);
         }
 
         // Mettre à jour le montant total
         $debourseChantier->updateTotal();
 
-        return redirect()->route('debourses_chantier.details', $debourseChantier->id)
+        return redirect()->route('debourses_chantier.index', $contratId)
             ->with('success', 'Déboursé chantier généré avec succès.');
     }
 
@@ -98,6 +98,11 @@ class DebourseChantierController extends Controller
     {
         $detail = DebourseChantierDetail::findOrFail($id);
         
+        // Vérifier que le déboursé est en brouillon
+        if ($detail->debourseChantier->statut !== 'brouillon') {
+            return response()->json(['error' => 'Impossible de modifier une ligne d\'un déboursé validé.'], 403);
+        }
+        
         $request->validate([
             'designation' => 'required|string|max:255',
             'quantite' => 'required|numeric|min:0',
@@ -109,17 +114,76 @@ class DebourseChantierController extends Controller
         $detail->update([
             'designation' => $request->designation,
             'quantite' => $request->quantite,
-            'cout_unitaire_materiaux' => $request->cout_unitaire_materiaux,
-            'cout_unitaire_main_oeuvre' => $request->cout_unitaire_main_oeuvre,
-            'cout_unitaire_materiel' => $request->cout_unitaire_materiel,
+            'cout_unitaire_materiaux' => $request->cout_unitaire_materiaux ?? 0,
+            'cout_unitaire_main_oeuvre' => $request->cout_unitaire_main_oeuvre ?? 0,
+            'cout_unitaire_materiel' => $request->cout_unitaire_materiel ?? 0,
         ]);
         
         // Recalculer les totaux
-        $detail->calculerMontantTotal();
+        $detail->total_materiaux = $detail->quantite * $detail->cout_unitaire_materiaux;
+        $detail->total_main_oeuvre = $detail->quantite * $detail->cout_unitaire_main_oeuvre;
+        $detail->total_materiel = $detail->quantite * $detail->cout_unitaire_materiel;
+        $detail->montant_total = $detail->total_materiaux + $detail->total_materiel; // Déboursé chantier : matériaux + matériel seulement
+        $detail->save();
+        
         $detail->debourseChantier->updateTotal();
         
-        return redirect()->route('debourses_chantier.details', $detail->debourse_chantier_id)
-            ->with('success', 'Détail mis à jour avec succès.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Détail mis à jour avec succès.',
+            'detail' => $detail
+        ]);
+    }
+
+    /**
+     * Dupliquer un détail de déboursé chantier
+     */
+    public function duplicateDetail($id)
+    {
+        $detail = DebourseChantierDetail::findOrFail($id);
+        
+        // Vérifier que le déboursé est en brouillon
+        if ($detail->debourseChantier->statut !== 'brouillon') {
+            return response()->json(['error' => 'Impossible de dupliquer une ligne d\'un déboursé validé.'], 403);
+        }
+        
+        // Créer une copie du détail
+        $newDetail = $detail->replicate();
+        $newDetail->designation = $detail->designation . ' (Copie)';
+        $newDetail->save();
+        
+        // Recalculer le total du déboursé
+        $detail->debourseChantier->updateTotal();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Ligne dupliquée avec succès.',
+            'detail' => $newDetail
+        ]);
+    }
+
+    /**
+     * Supprimer un détail de déboursé chantier
+     */
+    public function deleteDetail($id)
+    {
+        $detail = DebourseChantierDetail::findOrFail($id);
+        
+        // Vérifier que le déboursé est en brouillon
+        if ($detail->debourseChantier->statut !== 'brouillon') {
+            return response()->json(['error' => 'Impossible de supprimer une ligne d\'un déboursé validé.'], 403);
+        }
+        
+        $debourseChantier = $detail->debourseChantier;
+        $detail->delete();
+        
+        // Recalculer le total du déboursé
+        $debourseChantier->updateTotal();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Ligne supprimée avec succès.'
+        ]);
     }
 
     /**

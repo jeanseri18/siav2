@@ -21,6 +21,18 @@ class BpuController extends Controller
 
         return view('bpu.index', compact('categories', 'uniteMesures'));
     }
+
+    public function indexuntil()
+    {
+        $uniteMesures = UniteMesure::all();
+
+        $categories = CategorieRubrique::with([
+            'sousCategories.rubriques.bpus'
+        ])->get();
+
+        return view('bpu.until', compact('categories', 'uniteMesures'));
+    }
+    
     
     public function print()
     {

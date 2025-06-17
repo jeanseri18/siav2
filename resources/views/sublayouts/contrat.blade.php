@@ -49,15 +49,18 @@
     <i class="fas fa-hammer"></i>
     <span>Déboursé sec</span>
 </a>
+{{-- DÉSACTIVÉ - Lien vers déboursé main d'œuvre temporairement désactivé --}}
+{{--
 <a href="{{ route('debourses.main_oeuvre') }}" class="nav-item">
     <i class="fas fa-users"></i>
     <span>Déboursé main d'œuvre</span>
 </a>
+--}}
 <a href="{{ route('debourses.frais_chantier') }}" class="nav-item">
-    <i class="fas fa-percentage"></i>
+    <i class="fas fa-tools"></i>
     <span>Frais de chantier</span>
 </a>
-<a href="{{ route('debourses_chantier.index', session('contrat_id')) }}" class="nav-item">
+<a href="{{ route('debourses.chantier') }}" class="nav-item">
     <i class="fas fa-hard-hat"></i>
     <span>Déboursé chantier</span>
 </a>

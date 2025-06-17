@@ -50,6 +50,7 @@ use App\Http\Controllers\DemandeCotationController;
 use App\Http\Controllers\DQEController;
 use App\Http\Controllers\FraisGeneralController;
 use App\Http\Controllers\DebourseController;
+use App\Http\Controllers\DebourseChantierController;
 use App\Http\Controllers\EmployeController;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
@@ -103,6 +104,7 @@ Route::get('/frais-generaux_export/{fraisGeneral}/export', [FraisGeneralControll
 Route::get('/contrats_dqe/dqe', [DQEController::class, 'index'])->name('dqe.index');
 Route::get('/contrats_dqe_create/{contrat}/dqe/create', [DQEController::class, 'create'])->name('dqe.create');
 Route::post('/contrats_dqe/{contrat}/dqe', [DQEController::class, 'store'])->name('dqe.store');
+Route::get('/dqe/{dqe}', [DQEController::class, 'show'])->name('dqe.show');
 Route::get('/dqe_edit/{dqe}/edit', [DQEController::class, 'edit'])->name('dqe.edit');
 Route::put('/dqe/{dqe}', [DQEController::class, 'update'])->name('dqe.update');
 Route::delete('/dqe/{dqe}', [DQEController::class, 'destroy'])->name('dqe.destroy');
@@ -117,13 +119,24 @@ Route::post('/dqe/{dqe}/sections', [DQEController::class, 'createSection'])->nam
 // Routes pour les déboursés
 Route::get('/contrats_debourses/debourses', [DebourseController::class, 'index'])->name('debourses.index');
 // Routes pour les vues séparées de déboursés
-Route::get('/contrats_debourses/debourse-sec', [DebourseController::class, 'debourseSec'])->name('debourses.sec');
-Route::get('/contrats_debourses/debourse-main-oeuvre', [DebourseController::class, 'debourseMainOeuvre'])->name('debourses.main_oeuvre');
-Route::get('/contrats_debourses/frais-chantier', [DebourseController::class, 'fraisChantier'])->name('debourses.frais_chantier');
+Route::get('/contrats_debourses/debourse-sec', [DebourseController::class, 'debourse_sec'])->name('debourses.sec');
+// DÉSACTIVÉ - Route pour déboursé main d'œuvre temporairement commentée
+// Route::get('/contrats_debourses/debourse-main-oeuvre', [DebourseController::class, 'debourseMainOeuvre'])->name('debourses.main_oeuvre');
+Route::get('/contrats_debourses/frais-chantier', [DebourseController::class, 'frais_chantier'])->name('debourses.frais_chantier');
+Route::get('/contrats_debourses/debourse-chantier', [DebourseChantierController::class, 'index'])->name('debourses.chantier');
 Route::post('/dqe_debourses/{dqe}/debourses/generate', [DebourseController::class, 'generate'])->name('debourses.generate');
+
+// Nouvelles routes pour la génération spécifique de chaque type de déboursé
+Route::post('/dqe_debourses/{dqe}/debourses/generate-sec', [DebourseController::class, 'generateDebourseSec'])->name('debourses.generate_sec');
+Route::post('/dqe_debourses/{dqe}/debourses/generate-frais-chantier', [DebourseController::class, 'generateFraisChantier'])->name('debourses.generate_frais_chantier');
+Route::post('/dqe_debourses/{dqe}/debourses/generate-chantier', [DebourseChantierController::class, 'generate'])->name('debourses.generate_chantier');
+
 Route::get('/debourses/{debourse}', [DebourseController::class, 'details'])->name('debourses.details');
+Route::get('/debourses/{debourse}/show', [DebourseController::class, 'details'])->name('debourses.show');
 Route::get('/debourses_export/{debourse}/export', [DebourseController::class, 'export'])->name('debourses.export');
 Route::put('/debourses/{detail}/update-detail', [DebourseController::class, 'updateDetail'])->name('debourses.update_detail');
+Route::post('/debourses/{detail}/duplicate', [DebourseController::class, 'duplicateDetail'])->name('debourses.duplicate_detail');
+Route::delete('/debourses/{detail}/delete', [DebourseController::class, 'deleteDetail'])->name('debourses.delete_detail');
 
 // Routes pour les déboursés chantier
 Route::get('/contrats_debourses_chantier/{contrat}/debourses_chantier', [App\Http\Controllers\DebourseChantierController::class, 'index'])->name('debourses_chantier.index');
@@ -131,6 +144,8 @@ Route::post('/dqe_debourses_chantier/{dqe}/debourses_chantier/generate', [App\Ht
 Route::get('/debourses_chantier/{debourseChantier}', [App\Http\Controllers\DebourseChantierController::class, 'details'])->name('debourses_chantier.details');
 Route::get('/debourses_chantier_export/{debourseChantier}/export', [App\Http\Controllers\DebourseChantierController::class, 'export'])->name('debourses_chantier.export');
 Route::put('/debourses_chantier/{detail}/update-detail', [App\Http\Controllers\DebourseChantierController::class, 'updateDetail'])->name('debourses_chantier.update_detail');
+Route::post('/debourses_chantier/{detail}/duplicate', [App\Http\Controllers\DebourseChantierController::class, 'duplicateDetail'])->name('debourses_chantier.duplicate_detail');
+Route::delete('/debourses_chantier/{detail}/delete', [App\Http\Controllers\DebourseChantierController::class, 'deleteDetail'])->name('debourses_chantier.delete_detail');
 
 // Ajoutez ces routes à votre fichier de routes
 Route::get('/dashboard/realtime-stats', 'StatistiqueController@getRealtimeStats')->name('dashboard.realtime-stats');
@@ -229,6 +244,7 @@ Route::get('demande-cotations/{demandeCotation}/pdf',
 
 // Routes pour les BPU
 Route::get('/bpu', [BpuController::class, 'index'])->name('bpu.index');
+Route::get('/bpu/until', [BpuController::class, 'indexuntil'])->name('bpu.indexuntil');
 Route::get('/bpu/print', [BpuController::class, 'print'])->name('bpu.print');
 Route::get('/bpus/create', [BpuController::class, 'create'])->name('bpus.create');
 Route::post('/bpus', [BpuController::class, 'store'])->name('bpus.store');

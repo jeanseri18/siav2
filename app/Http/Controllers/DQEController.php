@@ -37,6 +37,18 @@ public function index()
     
     return view('dqe.index', compact('contrat', 'dqes', 'categories'));
 }
+
+    /**
+     * Afficher les détails d'un DQE
+     */
+    public function show($id)
+    {
+        $dqe = DQE::with(['lignes.bpu', 'contrat'])->findOrFail($id);
+        $contrat = $dqe->contrat;
+        
+        return view('dqe.show', compact('dqe', 'contrat'));
+    }
+
     /**
      * Afficher le formulaire de création d'un DQE
      */

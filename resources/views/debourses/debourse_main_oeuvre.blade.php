@@ -1,8 +1,26 @@
+{{-- DÉSACTIVÉ - Vue Déboursé Main d'Œuvre temporairement désactivée --}}
 @extends('layouts.app')
 
 @section('content')
 @include('sublayouts.contrat')
 
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning text-center">
+                <h4><i class="fas fa-exclamation-triangle"></i> Fonctionnalité Désactivée</h4>
+                <p>La fonctionnalité "Déboursé Main d'Œuvre" est temporairement désactivée.</p>
+                <p>Veuillez contacter l'administrateur pour plus d'informations.</p>
+                <a href="{{ route('debourses.index') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-arrow-left"></i> Retour aux déboursés
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+{{-- CONTENU ORIGINAL COMMENTÉ
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -139,4 +157,5 @@
         </div>
     </div>
 </div>
+--}}
 @endsection

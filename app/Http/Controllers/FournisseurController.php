@@ -38,11 +38,14 @@ class FournisseurController extends Controller {
         // Validation des champs
         $request->validate([
             'categorie' => 'required|in:Particulier,Entreprise',
-           
-            'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
+            'nom_raison_sociale' => 'required|string|max:255',
+            'prenoms' => 'required_if:categorie,Particulier|string|max:255',
+            'n_rccm' => 'nullable|string|max:255',
+            'n_cc' => 'nullable|string|max:255',
+            'secteur_activite' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
-            'regime_imposition' => 'required|string|max:255',
+            'regime_imposition' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
             'email' => 'nullable|email',
@@ -85,17 +88,19 @@ $request->merge([
 
     public function update(Request $request, ClientFournisseur $fournisseur) {
         $request->validate([
+            'categorie' => 'required|in:Particulier,Entreprise',
             'nom_raison_sociale' => 'required|string|max:255',
-            'n_rccm' => 'required|string',
-            'n_cc' => 'required|string',
-            'regime_imposition' => 'required|string|max:255',
+            'prenoms' => 'required_if:categorie,Particulier|string|max:255',
+            'n_rccm' => 'nullable|string|max:255',
+            'n_cc' => 'nullable|string|max:255',
+            'regime_imposition' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
-            'adresse_localisation' => 'required|string',
+            'secteur_activite' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
-            'secteur_activite' => 'required|string',
-            'email' => 'required|email',
-            'telephone' => 'required|string',
+            'adresse_localisation' => 'required|string',
+            'email' => 'nullable|email',
+            'telephone' => 'nullable|string',
         ]);
 
         $fournisseur->update($request->all());

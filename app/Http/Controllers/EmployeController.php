@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class EmployeController extends Controller
@@ -56,13 +57,20 @@ class EmployeController extends Controller
             'sexe' => 'nullable|in:M,F',
             'lieu_naissance' => 'nullable|string|max:255',
             'nationalite' => 'nullable|string|max:100',
-            'situation_matrimoniale' => 'nullable|in:célibataire,marié(e),divorcé(e),veuf/veuve',
+            'situation_matrimoniale' => 'nullable|in:celibataire,marie,divorce,veuf',
             'numero_cni' => 'nullable|string|max:50',
             'numero_passeport' => 'nullable|string|max:50',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:actif,inactif'
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+
+        // Gestion de l'upload de photo
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('profiles', 'public');
+            $validated['photo'] = $photoPath;
+        }
 
         User::create($validated);
 
@@ -112,9 +120,10 @@ class EmployeController extends Controller
             'sexe' => 'nullable|in:M,F',
             'lieu_naissance' => 'nullable|string|max:255',
             'nationalite' => 'nullable|string|max:100',
-            'situation_matrimoniale' => 'nullable|in:célibataire,marié(e),divorcé(e),veuf/veuve',
+            'situation_matrimoniale' => 'nullable|in:celibataire,marie,divorce,veuf',
             'numero_cni' => 'nullable|string|max:50',
             'numero_passeport' => 'nullable|string|max:50',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:actif,inactif'
         ]);
 
@@ -122,6 +131,18 @@ class EmployeController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
+        }
+
+        // Gestion de l'upload de photo
+        if ($request->hasFile('photo')) {
+            // Supprimer l'ancienne photo si elle existe
+            if ($employe->photo && Storage::disk('public')->exists($employe->photo)) {
+                Storage::disk('public')->delete($employe->photo);
+            }
+
+            // Stocker la nouvelle photo
+            $photoPath = $request->file('photo')->store('profiles', 'public');
+            $validated['photo'] = $photoPath;
         }
 
         $employe->update($validated);

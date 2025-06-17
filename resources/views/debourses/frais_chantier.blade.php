@@ -112,7 +112,7 @@
                                             <td>{{ $dqe->lignes->count() }}</td>
                                             <td>
                                                 @if($dqe->lignes->count() > 0)
-                                                    <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
+                                                    <form action="{{ route('debourses.generate_frais_chantier', $dqe->id) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="btn btn-sm btn-success">
                                                             <i class="fas fa-plus"></i> Générer frais de chantier

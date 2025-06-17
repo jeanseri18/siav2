@@ -111,7 +111,7 @@
             'color' => 'primary'
         ],
         [
-            'route' => 'until', 
+            'route' => 'contrats.index', 
             'icon' => 'fa-file-contract', 
             'text' => 'Contrats', 
             'description' => 'Gérer les contrats',
@@ -255,7 +255,7 @@
             'color' => 'danger'
         ],
         [
-            'route' => 'bpu.index', 
+            'route' => 'bpu.indexuntil', 
             'icon' => 'fa-file-invoice-dollar', 
             'text' => 'Bordereau de prix unitaire', 
             'description' => 'Gérer les prix unitaires',

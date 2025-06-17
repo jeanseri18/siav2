@@ -14,6 +14,28 @@ use Illuminate\Support\Facades\Session;
 
 class ContratController extends Controller
 {
+    // Afficher la liste des contrats
+    public function index()
+    {
+        // Récupérer l'ID du projet depuis la session
+        $projet_id = session('projet_id');
+        
+        if (!$projet_id) {
+            return redirect()->route('projets.index')->with('error', 'Aucun projet sélectionné');
+        }
+        
+        // Récupérer les contrats du projet sélectionné
+        $contrats = Contrat::where('id_projet', $projet_id)
+                          ->with(['client', 'projet'])
+                          ->get();
+        
+        // Récupérer tous les projets et articles pour le sublayout projetdetail
+        $projets = Projet::all();
+        $articles = Article::all();
+        
+        return view('contrats.index', compact('contrats', 'projets', 'articles'));
+    }
+
     // Afficher le formulaire de création d'un contrat
     public function create()
     {
@@ -82,15 +104,7 @@ $newReference = 'Ctr_' . now()->format('YmdHis'); // Utiliser un underscore et a
         return redirect()->route('contrats.index')->with('success', 'Contrat créé avec succès!');
     }
 
-    // Afficher les contrats
-    public function index()
-    {
-        $projet_id = session('projet_id');
-        $contrats = Contrat::where('id_projet', $projet_id)->get();
-        $projets = Projet::all();
-        $articles = Article::all();
-        return view('contrats.index', compact('contrats','projets','articles'));
-    }
+
 
     // Afficher le formulaire d'édition d'un contrat
     public function edit($id)

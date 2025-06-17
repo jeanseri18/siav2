@@ -42,7 +42,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contrat_id')->constrained('contrats')->onDelete('cascade');
             $table->foreignId('dqe_id')->constrained('dqes')->onDelete('cascade');
-            $table->enum('type', ['sec', 'main_oeuvre', 'frais_chantier']);
+            $table->enum('type', ['sec', 'main_oeuvre', 'frais_chantier', 'chantier'])->default('sec');
             $table->decimal('montant_total', 15, 2);
             $table->string('statut')->default('brouillon');
             $table->text('notes')->nullable();

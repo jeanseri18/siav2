@@ -127,7 +127,7 @@
                         <td>{{ number_format($detail->dqeLigne->bpu->materiel, 2, ',', ' ') }}</td>
                     @elseif($debourse->type == 'main_oeuvre')
                         <td>{{ number_format($detail->dqeLigne->bpu->main_oeuvre, 2, ',', ' ') }}</td>
-@else
+                    @else
                         <td>{{ number_format($detail->dqeLigne->bpu->frais_chantier, 2, ',', ' ') }}</td>
                     @endif
                     <td>{{ number_format($detail->montant, 2, ',', ' ') }}</td>

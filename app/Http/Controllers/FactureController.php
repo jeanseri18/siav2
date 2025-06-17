@@ -203,18 +203,18 @@ class FactureController extends Controller
     public function statistics()
     {
         // Montant total des factures par statut
-        $statsByStatus = Facture::select('statut', DB::raw('SUM(montant_total) as total'))
+        $statsByStatus = Facture::select('statut', \Illuminate\Support\Facades\DB::raw('SUM(montant_total) as total'))
                               ->groupBy('statut')
                               ->get();
         
         // Montant total des factures par mois pour l'année en cours
-        $statsByMonth = Facture::select(DB::raw('MONTH(date_emission) as month'), DB::raw('SUM(montant_total) as total'))
+        $statsByMonth = Facture::select(\Illuminate\Support\Facades\DB::raw('MONTH(date_emission) as month'), \Illuminate\Support\Facades\DB::raw('SUM(montant_total) as total'))
                              ->whereYear('date_emission', date('Y'))
-                             ->groupBy(DB::raw('MONTH(date_emission)'))
+                             ->groupBy(\Illuminate\Support\Facades\DB::raw('MONTH(date_emission)'))
                              ->get();
         
         // Montant total des factures par contrat
-        $statsByContrat = Facture::select('id_contrat', DB::raw('SUM(montant_total) as total'))
+        $statsByContrat = Facture::select('id_contrat', \Illuminate\Support\Facades\DB::raw('SUM(montant_total) as total'))
                               ->whereNotNull('id_contrat')
                               ->groupBy('id_contrat')
                               ->with('contrat')

@@ -66,12 +66,46 @@
                                         <i class="fas fa-edit"></i> Éditer
                                     </a>
                                     @if($dqe->statut != 'archivé')
-                                        <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-success ms-1">
-                                                <i class="fas fa-calculator"></i> Générer déboursés
+                                        <div class="btn-group ms-1" role="group">
+                                            <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                                <i class="fas fa-calculator"></i> Générer
                                             </button>
-                                        </form>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <form action="{{ route('debourses.generate_sec', $dqe->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-cube"></i> Déboursé sec
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ route('debourses.generate_frais_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-tools"></i> Frais de chantier
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ route('debourses.generate_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-hard-hat"></i> Déboursé chantier
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-calculator"></i> Tous les déboursés
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     @endif
                                     <form action="{{ route('dqe.destroy', $dqe->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce DQE ?');">
                                         @csrf

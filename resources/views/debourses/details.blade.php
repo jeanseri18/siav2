@@ -1,8 +1,29 @@
 @extends('layouts.app')
 
+@section('head')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
 @section('content')
 @include('sublayouts.contrat')
 
+{{-- Vérification si le déboursé main d'œuvre est désactivé --}}
+@if($debourse->type == 'main_oeuvre')
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning text-center">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Fonctionnalité Désactivée</h4>
+                    <p>La fonctionnalité "Déboursé Main d'Œuvre" est temporairement désactivée.</p>
+                    <p>Impossible d'afficher les détails de ce déboursé.</p>
+                    <a href="{{ route('debourses.index') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left"></i> Retour aux déboursés
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+@else
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -41,7 +62,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Détails du déboursé</h5>
-                    <span class="badge bg-primary fs-5">Montant total : {{ number_format($debourse->montant_total, 2, ',', ' ') }}</span>
+                    <span class="badge bg-primary fs-5">Montant total : <span class="total-amount">{{ number_format($debourse->montant_total, 2, ',', ' ') }}</span></span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -72,6 +93,11 @@
                             <tbody>
                                 @foreach($debourse->details as $detail)
                                     <tr>
+                                        @if($debourse->statut == 'brouillon')
+                                            <form action="{{ route('debourses.update_detail', $detail->id) }}" method="POST" class="detail-form" data-detail-id="{{ $detail->id }}">
+                                                @csrf
+                                                @method('PUT')
+                                        @endif
                                         <td>
                                             @if($debourse->statut == 'brouillon')
                                                 <span class="editable-designation-debourse" data-id="{{ $detail->id }}" data-value="{{ $detail->dqeLigne->designation }}" style="cursor: pointer; border-bottom: 1px dashed #007bff;" title="Cliquer pour modifier">
@@ -116,17 +142,19 @@
                                             <td>{{ number_format($detail->total_materiel ?? ($detail->dqeLigne->quantite * ($detail->cout_unitaire_materiel ?? $detail->dqeLigne->bpu->materiel)), 2, ',', ' ') }}</td>
                                         @elseif($debourse->type == 'main_oeuvre')
                                             <td>{{ number_format($detail->dqeLigne->bpu->main_oeuvre, 2, ',', ' ') }}</td>
-                                            <td>{{ number_format($detail->montant, 2, ',', ' ') }}</td>
+                                            <td class="montant-cell">{{ number_format($detail->montant, 2, ',', ' ') }}</td>
                                         @else
                                             <td>{{ number_format($detail->dqeLigne->bpu->frais_chantier, 2, ',', ' ') }}</td>
-                                            <td>{{ number_format($detail->montant, 2, ',', ' ') }}</td>
+                                            <td class="montant-cell">{{ number_format($detail->montant, 2, ',', ' ') }}</td>
                                         @endif
-                                        <td>{{ number_format($detail->montant, 2, ',', ' ') }}</td>
+                                        <td class="montant-cell">{{ number_format($detail->montant, 2, ',', ' ') }}</td>
                                         <td>
                                             @if($debourse->statut == 'brouillon')
-                                                <button type="submit" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-save"></i>
-                                                </button>
+                                                <div class="btn-group" role="group">
+                                                    <button type="submit" class="btn btn-sm btn-primary" title="Sauvegarder">
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+                                                </div>
                                                 </form>
                                             @endif
                                         </td>
@@ -142,8 +170,50 @@
 </div>
 
 <script>
+// Configuration CSRF pour les requêtes AJAX
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+});
+
 // Édition en ligne des désignations pour les déboursés
 document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des formulaires de détail
+    document.querySelectorAll('.detail-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const detailId = this.dataset.detailId;
+            
+            $.ajax({
+                url: this.action,
+                method: 'PUT',
+                data: Object.fromEntries(formData),
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        // Mettre à jour le total si fourni
+                        if (response.total_debourse) {
+                            $('.total-amount').text(response.total_debourse);
+                        }
+                        // Mettre à jour le montant de la ligne
+                        if (response.detail_montant) {
+                            form.closest('tr').querySelector('.montant-cell').textContent = response.detail_montant;
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    const error = xhr.responseJSON?.error || 'Erreur lors de la sauvegarde';
+                    showAlert('error', error);
+                    console.error('Erreur AJAX:', xhr);
+                }
+            });
+        });
+    });
+    
+    // Édition en ligne des désignations
     document.querySelectorAll('.editable-designation-debourse').forEach(function(element) {
         element.addEventListener('click', function() {
             const currentValue = this.dataset.value;
@@ -183,10 +253,30 @@ document.addEventListener('DOMContentLoaded', function() {
             function save() {
                 const newValue = input.value.trim();
                 if (newValue && newValue !== currentValue) {
-                    // Ici, vous pouvez implémenter l'appel AJAX pour sauvegarder
-                    self.textContent = newValue;
-                    self.dataset.value = newValue;
-                    console.log('Sauvegarder designation déboursé:', detailId, newValue);
+                    // Appel AJAX pour sauvegarder la désignation
+                    $.ajax({
+                        url: `/debourses/${detailId}/update-detail`,
+                        method: 'PUT',
+                        data: {
+                            designation: newValue
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                self.textContent = newValue;
+                                self.dataset.value = newValue;
+                                // Mettre à jour le total si fourni
+                                if (response.total_debourse) {
+                                    $('.total-amount').text(response.total_debourse);
+                                }
+                                showAlert('success', response.message);
+                            }
+                        },
+                        error: function(xhr) {
+                            const error = xhr.responseJSON?.error || 'Erreur lors de la sauvegarde';
+                            showAlert('error', error);
+                            console.error('Erreur AJAX:', xhr);
+                        }
+                    });
                 }
                 restore();
             }
@@ -199,7 +289,84 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // Code de duplication et suppression supprimé
+
+    // Gestion de l'édition en ligne des champs numériques
+    document.querySelectorAll('input[type="number"]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            const form = this.closest('form');
+            const detailId = form.action.split('/').pop().split('?')[0];
+            
+            // Collecter toutes les données du formulaire
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            $.ajax({
+                url: form.action,
+                method: 'PUT',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        // Mettre à jour le montant de la ligne
+                        if (response.montant) {
+                            const row = input.closest('tr');
+                            row.querySelector('.montant-cell').textContent = response.montant;
+                        }
+                        // Mettre à jour le total
+                        if (response.total_debourse) {
+                            $('.total-amount').text(response.total_debourse);
+                        }
+                        showAlert('success', response.message);
+                    }
+                },
+                error: function(xhr) {
+                    const error = xhr.responseJSON?.error || 'Erreur lors de la sauvegarde';
+                    showAlert('error', error);
+                    console.error('Erreur AJAX:', xhr);
+                }
+            });
+        });
+    });
 });
+
+// Fonction pour afficher les alertes
+function showAlert(type, message) {
+    // Vérifier si Bootstrap est disponible
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Insérer l'alerte en haut de la page
+    const container = document.querySelector('.container-fluid');
+    if (container) {
+        // Supprimer les anciennes alertes
+        const oldAlerts = container.querySelectorAll('.alert');
+        oldAlerts.forEach(alert => alert.remove());
+        
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Supprimer l'alerte après 5 secondes
+        setTimeout(() => {
+            const alert = container.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    } else {
+        // Fallback si le container n'est pas trouvé
+        console.log(`${type.toUpperCase()}: ${message}`);
+        alert(message);
+    }
+}
 </script>
+@endif {{-- Fin de la condition pour désactiver déboursé main d'œuvre --}}
 
 @endsection

@@ -41,7 +41,8 @@ class DebourseChantierDetail extends Model
         $this->total_materiaux = $this->quantite * ($this->cout_unitaire_materiaux ?? 0);
         $this->total_main_oeuvre = $this->quantite * ($this->cout_unitaire_main_oeuvre ?? 0);
         $this->total_materiel = $this->quantite * ($this->cout_unitaire_materiel ?? 0);
-        $this->montant_total = $this->total_materiaux + $this->total_main_oeuvre + $this->total_materiel;
+        // Déboursé chantier : matériaux + matériel seulement (sans main d'œuvre)
+        $this->montant_total = $this->total_materiaux + $this->total_materiel;
         $this->save();
     }
 

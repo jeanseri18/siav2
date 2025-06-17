@@ -21,18 +21,47 @@
                 <i class="fas fa-layer-group"></i> Créer une section
             </button>
             @if($dqe->statut == 'brouillon')
-                <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">
+                <!-- Boutons de génération spécifique -->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fas fa-calculator"></i> Générer déboursés
                     </button>
-                </form>
-                <form action="{{ route('debourses_chantier.generate', $dqe->id) }}" method="POST" class="d-inline ms-2">
-                    @csrf
-                    <button type="submit" class="btn btn-info">
-                        <i class="fas fa-hard-hat"></i> Générer déboursé chantier
-                    </button>
-                </form>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <form action="{{ route('debourses.generate_sec', $dqe->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-cube"></i> Déboursé sec
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <form action="{{ route('debourses.generate_frais_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-tools"></i> Frais de chantier
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <form action="{{ route('debourses.generate_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-hard-hat"></i> Déboursé chantier
+                                </button>
+                            </form>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-calculator"></i> Tous les déboursés
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             @endif
         </div>
     </div>
