@@ -88,6 +88,19 @@
                 <span>Cotations</span>
             </div>
         </a>
+        
+        <a href="{{ route('receptions.index') }}" class="dashboard-card">
+            <div class="card-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="card-content">
+                <h3>Réception</h3>
+                <p>Gérer les réceptions d'articles livrés</p>
+            </div>
+            <div class="card-badge success">
+                <span>Livraisons</span>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -290,6 +303,7 @@
 .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
 .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
 .dashboard-card:nth-child(6) { animation-delay: 0.6s; }
+.dashboard-card:nth-child(7) { animation-delay: 0.7s; }
 
 @keyframes slideInUp {
     to {
@@ -305,6 +319,7 @@
 .dashboard-card:nth-child(4):hover { --hover-color: #96CEB4; }
 .dashboard-card:nth-child(5):hover { --hover-color: #FFEAA7; }
 .dashboard-card:nth-child(6):hover { --hover-color: #DDA0DD; }
+.dashboard-card:nth-child(7):hover { --hover-color: #32CD32; }
 
 .dashboard-card:hover::before {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--hover-color, var(--secondary-color)) 100%);

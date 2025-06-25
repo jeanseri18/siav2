@@ -130,4 +130,20 @@ $request->merge([
         $projet->delete();
         return redirect()->route('projets.index')->with('success', 'Projet supprimé.');
     }
+
+    public function changeProject(Request $request)
+    {
+        $request->validate([
+            'projet_id' => 'required|exists:projets,id'
+        ]);
+
+        $projet = Projet::findOrFail($request->projet_id);
+        
+        session([
+            'projet_id' => $projet->id,
+            'projet_nom' => $projet->nom_projet
+        ]);
+
+        return redirect()->back()->with('success', 'Projet changé avec succès vers: ' . $projet->nom_projet);
+    }
 }

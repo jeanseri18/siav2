@@ -58,38 +58,57 @@
                             <label for="nom" class="app-form-label">
                                 <i class="fas fa-user me-2"></i>Nom:
                             </label>
-                            <input type="text" name="nom_raison_sociale" class="app-form-control" required>
+                            <input type="text" name="nom_raison_sociale" class="app-form-control @error('nom_raison_sociale') is-invalid @enderror" required value="{{ old('nom_raison_sociale') }}">
+                            @error('nom_raison_sociale')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                             
                             <label for="prenoms" class="app-form-label app-mt-3">
                                 <i class="fas fa-user-tag me-2"></i>Prénoms:
                             </label>
-                            <input type="text" name="prenoms" class="app-form-control" required>
+                            <input type="text" name="prenoms" class="app-form-control @error('prenoms') is-invalid @enderror" required value="{{ old('prenoms') }}">
+                            @error('prenoms')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div id="entreprise_fields" class="app-form-group" style="display:none;">
                             <label for="raison_sociale" class="app-form-label">
                                 <i class="fas fa-building me-2"></i>Raison Sociale:
                             </label>
-                            <input type="text" name="nom_raison_sociale" class="app-form-control">
+                            <input type="text" name="nom_raison_sociale" class="app-form-control @error('nom_raison_sociale') is-invalid @enderror" value="{{ old('nom_raison_sociale') }}">
+                            @error('nom_raison_sociale')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                             
                             <label for="n_rccm" class="app-form-label app-mt-3">
                                 <i class="fas fa-file-alt me-2"></i>N° RCCM:
                             </label>
-                            <input type="text" name="n_rccm" class="app-form-control">
+                            <input type="text" name="n_rccm" class="app-form-control @error('n_rccm') is-invalid @enderror" value="{{ old('n_rccm') }}">
+                            @error('n_rccm')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                             
                             <label for="n_cc" class="app-form-label app-mt-3">
                                 <i class="fas fa-id-card me-2"></i>N° CC:
                             </label>
-                            <input type="text" name="n_cc" class="app-form-control">
+                            <input type="text" name="n_cc" class="app-form-control @error('n_cc') is-invalid @enderror" value="{{ old('n_cc') }}">
+                            @error('n_cc')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                             
                             <label for="secteur_activite" class="app-form-label app-mt-3">
                                 <i class="fas fa-industry me-2"></i>Secteur d'Activité:
                             </label>
-                            <select name="secteur_activite" class="app-form-select">
+                            <select name="secteur_activite" class="app-form-select @error('secteur_activite') is-invalid @enderror">
+                                <option value="">Sélectionner un secteur</option>
                                 @foreach ($secteurs as $secteur)
-                                    <option value="{{ $secteur->nom }}">{{ $secteur->nom }}</option>
+                                    <option value="{{ $secteur->nom }}" {{ old('secteur_activite') == $secteur->nom ? 'selected' : '' }}>{{ $secteur->nom }}</option>
                                 @endforeach
                             </select>
+                            @error('secteur_activite')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="app-form-row">
@@ -209,6 +228,18 @@
     let contactIndex = 0;
     
     $(document).ready(function() {
+        // Restaurer la catégorie sélectionnée après une erreur de validation
+        const oldCategorie = '{{ old("categorie", "Particulier") }}';
+        $('#categorie').val(oldCategorie);
+        
+        // Afficher les bons champs selon la catégorie restaurée
+        if (oldCategorie === 'Entreprise') {
+            $('#particulier_fields').hide();
+            $('#entreprise_fields').show();
+        } else {
+            $('#particulier_fields').show();
+            $('#entreprise_fields').hide();
+        }
         // Afficher/masquer les champs en fonction de la catégorie sélectionnée
         $('#categorie').change(function() {
             const particulierFields = document.getElementById('particulier_fields');
@@ -217,17 +248,27 @@
             if (this.value === 'Entreprise') {
                 particulierFields.style.display = 'none';
                 entrepriseFields.style.display = 'block';
-                // Rendre les champs entreprise requis
+                
+                // Vider et désactiver les champs particulier
+                $('#particulier_fields input[name="nom_raison_sociale"]').val('').prop('required', false);
+                $('#particulier_fields input[name="prenoms"]').val('').prop('required', false);
+                
+                // Activer les champs entreprise
                 $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', true);
-                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', false);
-                $('#particulier_fields input[name="prenoms"]').prop('required', false);
+                $('#entreprise_fields select[name="secteur_activite"]').prop('required', true);
             } else {
                 particulierFields.style.display = 'block';
                 entrepriseFields.style.display = 'none';
-                // Rendre les champs particulier requis
+                
+                // Vider et désactiver les champs entreprise
+                $('#entreprise_fields input[name="nom_raison_sociale"]').val('').prop('required', false);
+                $('#entreprise_fields input[name="n_rccm"]').val('');
+                $('#entreprise_fields input[name="n_cc"]').val('');
+                $('#entreprise_fields select[name="secteur_activite"]').prop('required', false);
+                
+                // Activer les champs particulier
                 $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', true);
                 $('#particulier_fields input[name="prenoms"]').prop('required', true);
-                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', false);
             }
         });
         

@@ -49,7 +49,7 @@
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     <tr bgcolor="#3A6B8C" class="text-white" height="40px">
-                        <td colspan="10">
+                        <td colspan="11">
                             <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
                         </td>
                     </tr>
@@ -63,6 +63,7 @@
                         <th>Matériel</th>
                         <th>Déboursé sec</th>
                         <th>Frais</th>
+                        <th>Bénéfice</th>
                         <th>Prix HT</th>
                         <th>Prix TTC</th>
                     </tr>
@@ -77,6 +78,7 @@
                             <td>{{ number_format($bpu->materiel, 0, ',', ' ') }}</td>
                             <td>{{ number_format($bpu->debourse_sec, 0, ',', ' ') }}</td>
                             <td>{{ number_format($bpu->frais_chantier + $bpu->frais_general, 0, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->marge_nette, 0, ',', ' ') }}</td>
                             <td>{{ number_format($bpu->pu_ht, 0, ',', ' ') }}</td>
                             <td>{{ number_format($bpu->pu_ttc, 0, ',', ' ') }}</td>
                         </tr>

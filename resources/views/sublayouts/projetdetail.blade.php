@@ -7,10 +7,30 @@
                     <i class="fas fa-folder-open"></i>
                 </div>
                 <div class="project-details">
-                    <h2 class="project-title-text">Projet Actuel</h2>
-                    <span class="project-name-text">{{ session('projet_nom') }}</span>
-                </div>
+                    <h2 class="project-title-text">Projet Actuel {{ session('projet_nom') }}</h2>
+                    
+<div class="project-change-wrapper">
+                <form action="{{ route('projets.change') }}" method="POST" class="project-change-form">
+                    @csrf
+                    <div class="project-select-group">
+                        <label for="projet_id" class="project-select-label">
+                            <i class="fas fa-exchange-alt"></i> Changer de projet
+                        </label>
+                        <select name="projet_id" id="projet_id" class="project-select" onchange="this.form.submit()">
+                            <option value="">Sélectionner un projet</option>
+                            @if(isset($projets))
+                                @foreach($projets as $projet)
+                                    <option value="{{ $projet->id }}" {{ session('projet_id') == $projet->id ? 'selected' : '' }}>
+                                        {{ $projet->nom_projet }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                </form>
+            </div>                </div>
             </div>
+            
             <div class="project-status-wrapper">
                 <span class="project-status-indicator active"></span>
                 <span class="project-status-text">En cours</span>
@@ -332,6 +352,8 @@
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .project-header-card::before {
@@ -397,6 +419,54 @@
 .project-status-text {
     font-weight: 600;
     color: var(--project-success-color);
+}
+
+/* Styles pour le changement de projet */
+.project-change-wrapper {
+    display: flex;
+    align-items: center;
+    min-width: 300px;
+}
+
+.project-change-form {
+    width: 100%;
+}
+
+.project-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.project-select-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--project-primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    color: var(--project-primary-color);
+    transition: var(--project-transition);
+    cursor: pointer;
+    min-width: 250px;
+}
+
+.project-select:focus {
+    outline: none;
+    border-color: var(--project-secondary-color);
+    box-shadow: 0 0 0 3px rgba(10, 140, 255, 0.1);
+}
+
+.project-select:hover {
+    border-color: var(--project-secondary-color);
 }
 
 .project-navigation-wrapper {
@@ -585,6 +655,16 @@
         flex-direction: column;
         gap: 1rem;
         text-align: center;
+    }
+    
+    .project-change-wrapper {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .project-select {
+        min-width: auto;
+        width: 100%;
     }
     
     .project-nav-grid {

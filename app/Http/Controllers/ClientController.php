@@ -41,13 +41,8 @@ class ClientController extends Controller
      
 
         // Validation des champs
-        $request->validate([
+        $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'nom_raison_sociale' => 'required|string|max:255',
-            'prenoms' => 'required_if:categorie,Particulier|string|max:255',
-            'n_rccm' => 'nullable|string|max:255',
-            'n_cc' => 'nullable|string|max:255',
-            'secteur_activite' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
             'regime_imposition' => 'required|string|max:255',
@@ -67,7 +62,20 @@ class ClientController extends Controller
             'contacts.*.adresse' => 'nullable|string',
             'contacts.*.statut' => 'required_with:contacts|in:Actif,Inactif',
             'contacts.*.contact_principal' => 'nullable|boolean',
-        ]);
+        ];
+
+        // Validation conditionnelle selon la catégorie
+        if ($request->categorie === 'Particulier') {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Nom pour particulier
+            $validationRules['prenoms'] = 'required|string|max:255';
+        } else {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
+            $validationRules['n_rccm'] = 'nullable|string|max:255';
+            $validationRules['n_cc'] = 'nullable|string|max:255';
+            $validationRules['secteur_activite'] = 'required|string|max:255';
+        }
+
+        $request->validate($validationRules);
         $id_bu = session('selected_bu'); // Récupération de l'ID du bus depuis la session
 
         if (!$id_bu) {
@@ -147,9 +155,8 @@ $request->merge([
 
     public function update(Request $request, ClientFournisseur $client) {
         // Validation des champs
-        $request->validate([
+        $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'secteur_activite' => 'required_if:categorie,Entreprise|string|max:255',
             'delai_paiement' => 'required|integer',
             'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
             'regime_imposition' => 'required|string|max:255',
@@ -169,7 +176,20 @@ $request->merge([
             'contacts.*.adresse' => 'nullable|string',
             'contacts.*.statut' => 'required|in:Actif,Inactif',
             'contacts.*.contact_principal' => 'nullable|boolean',
-        ]);
+        ];
+
+        // Validation conditionnelle selon la catégorie
+        if ($request->categorie === 'Particulier') {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Nom pour particulier
+            $validationRules['prenoms'] = 'required|string|max:255';
+        } else {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
+            $validationRules['n_rccm'] = 'nullable|string|max:255';
+            $validationRules['n_cc'] = 'nullable|string|max:255';
+            $validationRules['secteur_activite'] = 'required|string|max:255';
+        }
+
+        $request->validate($validationRules);
 
         // Transaction pour mettre à jour le client et ses contacts
         DB::transaction(function () use ($request, $client) {

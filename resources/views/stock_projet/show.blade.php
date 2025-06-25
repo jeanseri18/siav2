@@ -46,12 +46,12 @@
                         </div>
                         
                         <div class="app-info-item">
-                            <label class="app-info-label">Famille :</label>
+                            <label class="app-info-label">Catégorie :</label>
                             <span class="app-info-value">{{ $stock->article->categorie->nom_categorie ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
-                            <label class="app-info-label">Sous-famille :</label>
+                            <label class="app-info-label">Sous-catégorie :</label>
                             <span class="app-info-value">{{ $stock->article->sousCategorie->nom_sous_categorie ?? 'N/A' }}</span>
                         </div>
                         

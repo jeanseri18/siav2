@@ -43,8 +43,8 @@
                 <thead>
                     <tr>
                         <th>Réf.</th>
-                        <th>Famille</th>
-                        <th>Sous Famille</th>
+                        <th>Catégorie</th>
+                                <th>Sous Catégorie</th>
                         <th>Réf Fourn.</th>
                         <th>Désignation Article</th>
                         <th>Type</th>

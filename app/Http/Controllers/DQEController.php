@@ -43,10 +43,16 @@ public function index()
      */
     public function show($id)
     {
-        $dqe = DQE::with(['lignes.bpu', 'contrat'])->findOrFail($id);
+        $dqe = DQE::with([
+            'lignes.bpu.rubrique.sousCategorie.categorie',
+            'contrat'
+        ])->findOrFail($id);
         $contrat = $dqe->contrat;
         
-        return view('dqe.show', compact('dqe', 'contrat'));
+        // Organiser les lignes par hiérarchie
+        $lignesOrganisees = $this->organiserLignesParHierarchie($dqe->lignes);
+
+        return view('dqe.show', compact('dqe', 'contrat', 'lignesOrganisees'));
     }
 
     /**
@@ -114,13 +120,87 @@ $request->merge([
      */
     public function edit($id)
     {
-        $dqe = DQE::with('lignes.bpu')->findOrFail($id);
+        $dqe = DQE::with([
+            'lignes.bpu.rubrique.sousCategorie.categorie'
+        ])->findOrFail($id);
         $contrat = $dqe->contrat;
         $categories = CategorieRubrique::with([
             'sousCategories.rubriques.bpus'
         ])->get();
         
-        return view('dqe.edit', compact('dqe', 'contrat', 'categories'));
+        // Organiser les lignes par hiérarchie
+        $lignesOrganisees = $this->organiserLignesParHierarchie($dqe->lignes);
+        
+        return view('dqe.edit', compact('dqe', 'contrat', 'categories', 'lignesOrganisees'));
+    }
+
+    /**
+     * Organiser les lignes DQE par hiérarchie (Catégorie > Sous-catégorie > Rubrique)
+     */
+    private function organiserLignesParHierarchie($lignes)
+    {
+        $organisation = [];
+        
+        foreach ($lignes as $ligne) {
+            if ($ligne->bpu && $ligne->bpu->rubrique) {
+                $rubrique = $ligne->bpu->rubrique;
+                $sousCategorie = $rubrique->sousCategorie;
+                $categorie = $sousCategorie ? $sousCategorie->categorie : null;
+                
+                $categorieNom = $categorie ? $categorie->nom : 'Sans catégorie';
+                $sousCategorieNom = $sousCategorie ? $sousCategorie->nom : 'Sans sous-catégorie';
+                $rubriqueNom = $rubrique->nom;
+                
+                if (!isset($organisation[$categorieNom])) {
+                    $organisation[$categorieNom] = [
+                        'categorie' => $categorie,
+                        'sousCategories' => []
+                    ];
+                }
+                
+                if (!isset($organisation[$categorieNom]['sousCategories'][$sousCategorieNom])) {
+                    $organisation[$categorieNom]['sousCategories'][$sousCategorieNom] = [
+                        'sousCategorie' => $sousCategorie,
+                        'rubriques' => []
+                    ];
+                }
+                
+                if (!isset($organisation[$categorieNom]['sousCategories'][$sousCategorieNom]['rubriques'][$rubriqueNom])) {
+                    $organisation[$categorieNom]['sousCategories'][$sousCategorieNom]['rubriques'][$rubriqueNom] = [
+                        'rubrique' => $rubrique,
+                        'lignes' => []
+                    ];
+                }
+                
+                $organisation[$categorieNom]['sousCategories'][$sousCategorieNom]['rubriques'][$rubriqueNom]['lignes'][] = $ligne;
+            } else {
+                // Lignes sans BPU ou rubrique
+                if (!isset($organisation['Sans catégorie'])) {
+                    $organisation['Sans catégorie'] = [
+                        'categorie' => null,
+                        'sousCategories' => []
+                    ];
+                }
+                
+                if (!isset($organisation['Sans catégorie']['sousCategories']['Sans sous-catégorie'])) {
+                    $organisation['Sans catégorie']['sousCategories']['Sans sous-catégorie'] = [
+                        'sousCategorie' => null,
+                        'rubriques' => []
+                    ];
+                }
+                
+                if (!isset($organisation['Sans catégorie']['sousCategories']['Sans sous-catégorie']['rubriques']['Sans rubrique'])) {
+                    $organisation['Sans catégorie']['sousCategories']['Sans sous-catégorie']['rubriques']['Sans rubrique'] = [
+                        'rubrique' => null,
+                        'lignes' => []
+                    ];
+                }
+                
+                $organisation['Sans catégorie']['sousCategories']['Sans sous-catégorie']['rubriques']['Sans rubrique']['lignes'][] = $ligne;
+            }
+        }
+        
+        return $organisation;
     }
 
     /**
@@ -144,14 +224,28 @@ $request->merge([
             }
         }
 
+        // Sauvegarder l'ancien statut avant la mise à jour
+        $ancienStatut = $dqe->statut;
+        
         $dqe->update([
             'reference' => $request->reference,
             'notes' => $request->notes,
             'statut' => $request->statut,
         ]);
 
+        // Si le DQE vient d'être validé, mettre à jour le montant du contrat
+        $contratUpdated = false;
+        if ($request->statut === 'validé' && $ancienStatut !== 'validé') {
+            $contratUpdated = $this->updateContratMontant($dqe);
+        }
+
+        $message = 'DQE mis à jour avec succès.';
+        if ($contratUpdated) {
+            $message .= ' Le montant du contrat a été automatiquement mis à jour avec le montant TTC du DQE (' . number_format($dqe->montant_total_ttc, 0, ',', ' ') . ' FCFA).';
+        }
+
         return redirect()->route('dqe.edit', $dqe->id)
-            ->with('success', 'DQE mis à jour avec succès.');
+            ->with('success', $message);
     }
 
     /**
@@ -164,8 +258,28 @@ $request->merge([
         
         $dqe->delete();
 
-        return redirect()->route('dqe.index', $contratId)
+        return redirect()->route('dqe.index')
             ->with('success', 'DQE supprimé avec succès.');
+    }
+
+    /**
+     * Mettre à jour le montant du contrat basé sur le DQE validé
+     */
+    private function updateContratMontant(DQE $dqe)
+    {
+        $contrat = $dqe->contrat;
+        
+        if ($contrat) {
+            $updated = $contrat->updateMontantFromDQE();
+            
+            if ($updated) {
+                \Log::info("Montant du contrat {$contrat->ref_contrat} mis à jour automatiquement: {$dqe->montant_total_ttc} FCFA");
+            }
+            
+            return $updated;
+        }
+        
+        return false;
     }
 
     /**
@@ -242,6 +356,45 @@ $request->merge([
 
         return redirect()->route('dqe.edit', $dqe->id)
             ->with('success', 'Ligne ajoutée avec succès.');
+    }
+
+    /**
+     * Ajouter plusieurs lignes au DQE
+     */
+    public function addMultipleLines(Request $request, $id)
+    {
+        $dqe = DQE::findOrFail($id);
+        
+        $request->validate([
+            'bpus' => 'required|array|min:1',
+            'bpus.*.bpu_id' => 'required|exists:bpus,id',
+            'bpus.*.quantite' => 'required|numeric|min:0.01',
+        ]);
+
+        $lignesAjoutees = 0;
+        
+        foreach ($request->bpus as $bpuData) {
+            $bpu = Bpu::findOrFail($bpuData['bpu_id']);
+            
+            // Créer la ligne
+            DQELigne::create([
+                'dqe_id' => $dqe->id,
+                'bpu_id' => $bpu->id,
+                'designation' => $bpu->designation,
+                'quantite' => $bpuData['quantite'],
+                'unite' => $bpu->unite,
+                'pu_ht' => $bpu->pu_ht,
+                'montant_ht' => $bpu->pu_ht * $bpuData['quantite'],
+            ]);
+            
+            $lignesAjoutees++;
+        }
+
+        // Mettre à jour les totaux
+        $dqe->updateTotals();
+
+        return redirect()->route('dqe.edit', $dqe->id)
+            ->with('success', $lignesAjoutees . ' ligne(s) ajoutée(s) avec succès.');
     }
 
     /**

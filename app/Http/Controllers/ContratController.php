@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Session;
 
 class ContratController extends Controller
 {
+    // Afficher tous les contrats de tous les projets
+    public function allContracts()
+    {
+        // Récupérer tous les contrats avec leurs relations
+        $contrats = Contrat::with(['client', 'projet'])->get();
+        
+        // Récupérer tous les projets pour le formulaire de création
+        $projets = Projet::all();
+        
+        return view('contrats.all', compact('contrats', 'projets'));
+    }
+
     // Afficher la liste des contrats
     public function index()
     {
@@ -62,7 +74,6 @@ class ContratController extends Controller
     // Enregistrer un nouveau contrat
     public function store(Request $request)
     {
-        
         $request->validate([
             // 'ref_contrat' => 'required|unique:contrats',
             'nom_contrat' => 'required',
@@ -70,27 +81,34 @@ class ContratController extends Controller
             'date_fin' => 'nullable|date',
             'type_travaux' => 'required',
             'taux_garantie' => 'required|numeric',
-            'client_id' => 'required|exists:client_fournisseurs,id',
-            'montant' => 'required|numeric',
+            'client_id' => 'nullable|exists:client_fournisseurs,id',
+            'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
+            'projet_id' => 'nullable|exists:projets,id',
         ]);
 
-                $lastReference = \App\Models\Reference::where('nom', 'Code contrat')
-        ->latest('created_at')
-        ->first();
+        $lastReference = \App\Models\Reference::where('nom', 'Code contrat')
+            ->latest('created_at')
+            ->first();
 
-// Générer la nouvelle référence en prenant la dernière partie de la référence + la date actuelle
-$newReference = $lastReference ? $lastReference->ref : 'Ctr_000';  // Si aucune référence, utiliser un modèle
-$newReference = 'Ctr_' . now()->format('YmdHis'); // Utiliser un underscore et ajouter la date/heure
+        // Générer la nouvelle référence
+        $newReference = $lastReference ? $lastReference->ref : 'Ctr_000';
+        $newReference = 'Ctr_' . now()->format('YmdHis');
 
-// Ajouter la référence générée à la requête
+        // Déterminer l'ID du projet (depuis le formulaire ou la session)
+        $projetId = $request->projet_id ?? session('projet_id');
+        $projetNom = null;
+        
+        if ($projetId) {
+            $projet = Projet::find($projetId);
+            $projetNom = $projet ? $projet->nom_projet : session('projet_nom');
+        }
 
         Contrat::create([
             'ref_contrat' => $newReference,
             'nom_contrat' => $request->nom_contrat,
-            'id_projet' => session('projet_id'),
-          
-            'nom_projet' => session('projet_nom'),
+            'id_projet' => $projetId,
+            'nom_projet' => $projetNom,
             'date_debut' => $request->date_debut,
             'date_fin' => $request->date_fin,
             'type_travaux' => $request->type_travaux,
@@ -101,7 +119,14 @@ $newReference = 'Ctr_' . now()->format('YmdHis'); // Utiliser un underscore et a
             'decompte' => $request->decompte ?? false,
         ]);
 
-        return redirect()->route('contrats.index')->with('success', 'Contrat créé avec succès!');
+        // Rediriger selon la source de la création
+        if ($request->projet_id) {
+            // Création depuis la vue "tous les contrats"
+            return redirect()->route('contrats.all')->with('success', 'Contrat créé avec succès!');
+        } else {
+            // Création depuis la vue projet spécifique
+            return redirect()->route('contrats.index')->with('success', 'Contrat créé avec succès!');
+        }
     }
 
 
@@ -137,7 +162,7 @@ $newReference = 'Ctr_' . now()->format('YmdHis'); // Utiliser un underscore et a
             'type_travaux' => 'required',
             'taux_garantie' => 'required|numeric',
             'client_id' => 'required',
-            'montant' => 'required|numeric',
+            'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
         ]);
         $lastReference = \App\Models\Reference::where('nom', 'Code contrat')
@@ -198,6 +223,9 @@ $request->merge([
     // Coût de revient prévisionnel - à partir du dernier DQE validé
     $lastDqe = $contrat->dqes()->where('statut', 'validé')->latest()->first();
     $coutPrevu = 0;
+    $dsPrevu = 0;
+    $fcPrevu = 0;
+    $fgPrevu = 0;
     
     if ($lastDqe) {
         // Calculer le déboursé sec du DQE validé
@@ -212,8 +240,13 @@ $request->merge([
             ->where('type', 'frais_chantier')
             ->first();
             
-        $coutPrevu = ($debourseSec ? $debourseSec->montant_total : 0) + 
-                     ($fraisChantier ? $fraisChantier->montant_total : 0);
+        $dsPrevu = $debourseSec ? $debourseSec->montant_total : 0;
+        $fcPrevu = $fraisChantier ? $fraisChantier->montant_total : 0;
+        
+        // Calculer les frais généraux prévisionnels (estimation: 15% du DS + FC)
+        $fgPrevu = ($dsPrevu + $fcPrevu) * 0.15;
+        
+        $coutPrevu = $dsPrevu + $fcPrevu + $fgPrevu;
     }
     $stats['Coût de revient Prév.'] = $coutPrevu;
     
@@ -235,13 +268,10 @@ $request->merge([
     // Écart entre prévu et réel
     $stats['Écart'] = $coutPrevu - $coutReel;
     
-    // Déboursé sec prévisionnel
-    $dsPrevu = $contrat->debourses()
-        ->where('type', 'sec')
-        ->where('statut', 'validé')
-        ->latest()
-        ->first();
-    $stats['DS Prévisionnel'] = $dsPrevu ? $dsPrevu->montant_total : 0;
+    // Statistiques prévisionnelles
+    $stats['DS Prévisionnel'] = $dsPrevu;
+    $stats['FC Prévisionnel'] = $fcPrevu;
+    $stats['FG Prévisionnel'] = $fgPrevu;
     
     // Déboursé sec réalisé - estimation à partir du coût réel
     $dsRealise = $coutReel * 0.7; // Approximation: 70% du coût réel
@@ -251,11 +281,21 @@ $request->merge([
     $fcRealise = $coutReel * 0.3; // Approximation: 30% du coût réel
     $stats['FC Réalisé'] = $fcRealise;
     
+    // Frais généraux réalisés - estimation à partir du coût réel
+    $fgRealise = $coutReel * 0.15; // Approximation: 15% du coût réel
+    $stats['FG Réalisé'] = $fgRealise;
+    
     // Chiffre d'affaires réalisé - Somme des factures payées
     $caRealise = Facture::where('id_contrat', $contrat->id)
         ->where('statut', 'payée')
         ->sum('montant_total');
     $stats['CA Réalisé'] = $caRealise;
+    
+    // Bénéfices
+    $beneficePrevu = $stats['Montant du contrat'] - $coutPrevu;
+    $beneficeRealise = $caRealise - $coutReel;
+    $stats['Bénéfice Prévisionnel'] = $beneficePrevu;
+    $stats['Bénéfice Réalisé'] = $beneficeRealise;
     
     return view('contrats.show', compact('contrat', 'clients', 'stats'));
 }

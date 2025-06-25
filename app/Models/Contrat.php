@@ -78,4 +78,22 @@ public function fraisGeneraux()
             ->orderBy('updated_at', 'desc')
             ->first();
     }
+    
+    /**
+     * Mettre à jour le montant du contrat basé sur le dernier DQE validé
+     */
+    public function updateMontantFromDQE()
+    {
+        $lastDqe = $this->getLastValidatedDQE();
+        
+        if ($lastDqe && $lastDqe->montant_total_ttc > 0) {
+            $this->update([
+                'montant' => $lastDqe->montant_total_ttc
+            ]);
+            
+            return true;
+        }
+        
+        return false;
+    }
 }

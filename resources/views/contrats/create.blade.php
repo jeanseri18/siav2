@@ -112,10 +112,10 @@
                         
                         <div class="app-form-group">
                             <label for="montant" class="app-form-label">
-                                <i class="fas fa-money-bill-wave me-2"></i>Montant
+                                <i class="fas fa-money-bill-wave me-2"></i>Montant <span class="text-muted">(optionnel)</span>
                             </label>
-                            <input type="number" step="0.01" class="app-form-control" id="montant" name="montant" required>
-                            <div class="app-form-text">Montant total du contrat</div>
+                            <input type="number" step="0.01" class="app-form-control" id="montant" name="montant" placeholder="Sera mis à jour après validation du DQE">
+                            <div class="app-form-text">Montant total du contrat - sera défini après validation du DQE</div>
                         </div>
                         
                         <div class="app-form-group">

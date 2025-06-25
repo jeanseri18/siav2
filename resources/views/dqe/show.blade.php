@@ -3,6 +3,57 @@
 @section('content')
 @include('sublayouts.contrat')
 
+<style>
+.table-container {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem;
+}
+
+.table .table-primary td {
+    background-color: #cfe2ff !important;
+    font-weight: 600;
+}
+
+.table .table-info td {
+    background-color: #d1ecf1 !important;
+    font-weight: 500;
+}
+
+.table .table-warning td {
+    background-color: #fff3cd !important;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem 0.25rem;
+    }
+}
+</style>
+
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -69,7 +120,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card table-container">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Lignes du DQE</h5>
                     <div>
@@ -77,30 +128,58 @@
                         <span class="badge bg-success">Montant total TTC : {{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }} FCFA</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    @if($dqe->lignes->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                <div class="card-body p-0">
+                    @if(isset($lignesOrganisees) && count($lignesOrganisees) > 0)
+                        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th>Section</th>
-                                        <th>Désignation</th>
-                                        <th>Unité</th>
-                                        <th>Quantité</th>
-                                        <th>Prix Unitaire HT</th>
-                                        <th>Montant HT</th>
+                                        <th style="min-width: 120px;">Section</th>
+                                        <th style="min-width: 250px;">Désignation</th>
+                                        <th style="min-width: 80px;">Unité</th>
+                                        <th style="min-width: 100px;">Quantité</th>
+                                        <th style="min-width: 140px;">Prix Unitaire HT</th>
+                                        <th style="min-width: 140px;">Montant HT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($dqe->lignes as $ligne)
-                                        <tr>
-                                            <td>{{ $ligne->section ?? 'N/A' }}</td>
-                                            <td>{{ $ligne->designation }}</td>
-                                            <td>{{ $ligne->unite }}</td>
-                                            <td>{{ number_format($ligne->quantite, 2, ',', ' ') }}</td>
-                                            <td>{{ number_format($ligne->pu_ht, 2, ',', ' ') }} FCFA</td>
-                                            <td>{{ number_format($ligne->montant_ht, 2, ',', ' ') }} FCFA</td>
+                                    @foreach($lignesOrganisees as $categorieNom => $categorieData)
+                                        <!-- Affichage Catégorie -->
+                                        <tr class="table-primary">
+                                            <td colspan="6">
+                                                <strong><i class="fas fa-folder"></i> {{ $categorieNom }}</strong>
+                                            </td>
                                         </tr>
+                                        
+                                        @foreach($categorieData['sousCategories'] as $sousCategorieNom => $sousCategorieData)
+                                            <!-- Affichage Sous-catégorie -->
+                                            <tr class="table-info">
+                                                <td colspan="6" style="padding-left: 30px;">
+                                                    <strong><i class="fas fa-folder-open"></i> {{ $sousCategorieNom }}</strong>
+                                                </td>
+                                            </tr>
+                                            
+                                            @foreach($sousCategorieData['rubriques'] as $rubriqueNom => $rubriqueData)
+                                                <!-- Affichage Rubrique -->
+                                                <tr class="table-warning">
+                                                    <td colspan="6" style="padding-left: 60px;">
+                                                        <strong><i class="fas fa-list"></i> {{ $rubriqueNom }}</strong>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <!-- Affichage des lignes de cette rubrique -->
+                                                @foreach($rubriqueData['lignes'] as $ligne)
+                                                    <tr style="padding-left: 90px;">
+                                                        <td style="padding-left: 90px; white-space: nowrap;">{{ $ligne->section ?? 'N/A' }}</td>
+                                                        <td style="word-wrap: break-word; max-width: 300px;">{{ $ligne->designation }}</td>
+                                                        <td style="text-align: center;">{{ $ligne->unite }}</td>
+                                                        <td style="text-align: center;">{{ number_format($ligne->quantite, 2, ',', ' ') }}</td>
+                                                        <td style="text-align: right; white-space: nowrap;">{{ number_format($ligne->pu_ht, 2, ',', ' ') }} FCFA</td>
+                                                        <td style="text-align: right; white-space: nowrap; font-weight: bold;">{{ number_format($ligne->montant_ht, 2, ',', ' ') }} FCFA</td>
+                                                    </tr>
+                                                @endforeach
+                                            @endforeach
+                                        @endforeach
                                     @endforeach
                                 </tbody>
                                 <tfoot>

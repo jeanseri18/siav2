@@ -43,16 +43,16 @@
                 <thead>
                     <tr>
                         <th>REF.</th>
-                        <th>FAMILLE</th>
-                        <th>SOUS FAMILLE</th>
+                        <th>CATEGORIE</th>
+                                <th>SOUS CATEGORIE</th>
                         <th>REF FOURN.</th>
                         <th>DÉSIGNATION ARTICLE</th>
                         <th>TYPE</th>
                         <th>UNITE</th>
                         <th>COUT MOYEN PONDERE</th>
                         <th>QTE DISPO</th>
-                        <th>PAY EN COURS</th>
-                        <th>RETOUR HIVE</th>
+                        <th>DEMANDES EN COURS</th>
+                        <th>RETOURS</th>
                         <th>APPRO ARRIVE</th>
                         <th>RETOUR APPRO</th>
                         <th>TRANSFERT DE STOCK IN</th>
@@ -91,19 +91,19 @@
                         <td class="app-fw-bold">{{ $article->quantite_stock }}</td>
                         <td class="text-center">
                             @php
-                                // Calculer PAY EN COURS pour tous les projets de la BU
-                                $payEnCours = DB::table('ligne_demande_approvisionnement')
-                                    ->join('demande_approvisionnements', 'ligne_demande_approvisionnement.demande_id', '=', 'demande_approvisionnements.id')
+                                // Calculer DEMANDES EN COURS pour tous les projets de la BU
+                                $payEnCours = DB::table('lignes_demande_approvisionnement')
+                                    ->join('demande_approvisionnements', 'lignes_demande_approvisionnement.demande_id', '=', 'demande_approvisionnements.id')
                                     ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
-                                    ->where('ligne_demande_approvisionnement.article_id', $article->id)
+                                    ->where('lignes_demande_approvisionnement.article_id', $article->id)
                                     ->where('demande_approvisionnements.statut', 'approuvée')
-                                    ->sum('ligne_demande_approvisionnement.quantite_demandee');
+                                    ->sum('lignes_demande_approvisionnement.quantite_demandee');
                             @endphp
                             {{ $payEnCours ?? 0 }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer RETOUR HIVE pour tous les projets de la BU
+                                // Calculer RETOURS HIVERNAGE pour tous les projets de la BU
                                 $retourHive = DB::table('transfert_stock')
                                     ->whereIn('id_projet_destination', $projets_bu)
                                     ->where('article_id', $article->id)

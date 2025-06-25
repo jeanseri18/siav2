@@ -25,17 +25,18 @@
         </div>
     @endif
 
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-hover">
+    <div class="card table-container"  style="min-height: 600px;>
+        <div class="card-body p-2">
+            <div class="table-responsive" style="min-height: 600px; overflow-y: auto;">
+                <table class="table table-striped table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>Référence</th>
-                        <th>Date de création</th>
-                        <th>Montant HT</th>
-                        <th>Montant TTC</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
+                        <th style="min-width: 120px;">Référence</th>
+                        <th style="min-width: 120px;">Date de création</th>
+                        <th style="min-width: 130px; text-align: right;">Montant HT</th>
+                        <th style="min-width: 130px; text-align: right;">Montant TTC</th>
+                        <th style="min-width: 100px; text-align: center;">Statut</th>
+                        <th style="min-width: 200px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,9 +50,9 @@
                                 @endif
                             </td>
                             <td>{{ $dqe->created_at->format('d/m/Y') }}</td>
-                            <td>{{ number_format($dqe->montant_total_ht, 2, ',', ' ') }}</td>
-                            <td>{{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }}</td>
-                            <td>
+                            <td style="text-align: right; white-space: nowrap;">{{ number_format($dqe->montant_total_ht, 2, ',', ' ') }} FCFA</td>
+                            <td style="text-align: right; white-space: nowrap;">{{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }} FCFA</td>
+                            <td style="text-align: center;">
                                 @if($dqe->statut == 'brouillon')
                                     <span class="badge bg-warning">Brouillon</span>
                                 @elseif($dqe->statut == 'validé')
@@ -123,7 +124,8 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -161,18 +163,18 @@
                                                 <div class="card-body">
                                                     @foreach($sousCategorie->rubriques as $rubrique)
                                                         <h6 class="mt-3">{{ $rubrique->nom }}</h6>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-bordered">
-                                                                <thead>
-                                                                    <tr class="bg-light">
-                                                                        <th style="width: 50px;">
+                                                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                                            <table class="table table-sm table-bordered mb-0">
+                                                                <thead class="sticky-top bg-light">
+                                                                    <tr>
+                                                                        <th style="width: 50px; min-width: 50px;">
                                                                             <div class="form-check">
                                                                                 <input class="form-check-input select-all" type="checkbox" data-rubrique="{{ $rubrique->id }}">
                                                                             </div>
                                                                         </th>
-                                                                        <th>Désignation</th>
-                                                                        <th>Unité</th>
-                                                                        <th>Prix Unitaire HT</th>
+                                                                        <th style="min-width: 200px;">Désignation</th>
+                                                                        <th style="min-width: 80px; text-align: center;">Unité</th>
+                                                                        <th style="min-width: 120px; text-align: right;">Prix Unitaire HT</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -183,9 +185,9 @@
                                                                                     <input class="form-check-input bpu-item" type="checkbox" name="bpu_ids[]" value="{{ $bpu->id }}" data-rubrique="{{ $rubrique->id }}">
                                                                                 </div>
                                                                             </td>
-                                                                            <td>{{ $bpu->designation }}</td>
-                                                                            <td>{{ $bpu->unite }}</td>
-                                                                            <td>{{ number_format($bpu->pu_ht, 2, ',', ' ') }}</td>
+                                                                            <td style="word-wrap: break-word; max-width: 300px;">{{ $bpu->designation }}</td>
+                                                                            <td style="text-align: center;">{{ $bpu->unite }}</td>
+                                                                            <td style="text-align: right; white-space: nowrap;">{{ number_format($bpu->pu_ht, 2, ',', ' ') }} FCFA</td>
                                                                         </tr>
                                                                     @endforeach
                                                                 </tbody>
@@ -209,6 +211,73 @@
         </div>
     </div>
 </div>
+
+<style>
+    .table-container {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .table-responsive {
+        border-radius: 6px;
+    }
+    
+    .table thead th {
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        background-color: #f8f9fa !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .table td {
+        padding: 8px 12px;
+        vertical-align: middle;
+    }
+    
+    .table th {
+        padding: 12px;
+        vertical-align: middle;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .badge {
+        font-size: 0.875em;
+    }
+    
+    .btn-group .btn {
+        margin-right: 2px;
+    }
+    
+    .modal-xl .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+    
+    .accordion-body .table {
+        margin-bottom: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 2px;
+            margin-right: 0;
+        }
+    }
+</style>
 
 <script>
     // Sélectionner/désélectionner tous les éléments d'une rubrique

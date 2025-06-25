@@ -30,6 +30,26 @@
                     <p>Créer un nouveau projet</p>
                 </div>
             </a>
+            
+            <a href="{{ route('contrats.all') }}" class="project-dashboard-card contracts">
+                <div class="project-card-icon">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div class="project-card-content">
+                    <h3>Liste des Contrats</h3>
+                    <p>Consulter tous les contrats</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('contrats.create') }}" class="project-dashboard-card warning">
+                <div class="project-card-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="project-card-content">
+                    <h3>Nouveau Contrat</h3>
+                    <p>Créer un nouveau contrat</p>
+                </div>
+            </a>
         </div>
     </div>
 </div>
@@ -143,6 +163,14 @@
     background: var(--project-gradient-success);
 }
 
+.project-dashboard-card.contracts::before {
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+.project-dashboard-card.warning::before {
+    background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
+}
+
 .project-dashboard-card:hover {
     transform: translateY(-10px) scale(1.02);
     box-shadow: var(--project-shadow-hover);
@@ -165,6 +193,14 @@
 
 .project-dashboard-card.success .project-card-icon {
     color: var(--project-success-color);
+}
+
+.project-dashboard-card.contracts .project-card-icon {
+    color: #4CAF50;
+}
+
+.project-dashboard-card.warning .project-card-icon {
+    color: #FF9800;
 }
 
 .project-dashboard-card:hover .project-card-icon {

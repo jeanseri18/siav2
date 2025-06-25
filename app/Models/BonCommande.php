@@ -55,4 +55,49 @@ class BonCommande extends Model
     {
         return $this->hasMany(LigneBonCommande::class, 'bon_commande_id');
     }
+
+    public function receptions()
+    {
+        return $this->hasMany(Reception::class, 'bon_commande_id');
+    }
+
+    public function getPourcentageReceptionAttribute()
+    {
+        $totalQuantiteCommandee = $this->lignes->sum('quantite');
+        if ($totalQuantiteCommandee == 0) {
+            return 0;
+        }
+        
+        $totalQuantiteRecue = $this->lignes->sum('quantite_recue');
+        return round(($totalQuantiteRecue / $totalQuantiteCommandee) * 100, 2);
+    }
+
+    public function getStatutReceptionAttribute()
+    {
+        $pourcentage = $this->pourcentage_reception;
+        
+        if ($pourcentage == 0) {
+            return 'Non reçu';
+        } elseif ($pourcentage < 100) {
+            return 'Partiellement reçu';
+        } else {
+            return 'Complètement reçu';
+        }
+    }
+
+    public function isCompletelyReceived()
+    {
+        return $this->pourcentage_reception >= 100;
+    }
+
+    public function isPartiallyReceived()
+    {
+        $pourcentage = $this->pourcentage_reception;
+        return $pourcentage > 0 && $pourcentage < 100;
+    }
+
+    public function isNotReceived()
+    {
+        return $this->pourcentage_reception == 0;
+    }
 }

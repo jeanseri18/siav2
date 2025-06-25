@@ -41,7 +41,7 @@
     @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
             <tr bgcolor="#5EB3F6" height="40px">
-                <td colspan="11">
+                <td colspan="12">
                     <div class="row">
                         <div class="col-md-8">
                             <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
@@ -63,7 +63,7 @@
 
             <!-- Formulaire d'ajout de sous-catégorie -->
             <tr>
-                <td colspan="11">
+                <td colspan="12">
                     <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
                         @csrf
                         <div class="row">
@@ -81,7 +81,7 @@
 
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
-                    <td colspan="11">
+                    <td colspan="12">
                         <div class="row">
                             <div class="col-md-8">
                                 <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
@@ -102,7 +102,7 @@
 
                 <!-- Formulaire d'ajout de rubrique -->
                 <tr>
-                    <td colspan="11">
+                    <td colspan="12">
                         <form action="{{ route('rubriques.store') }}" method="POST">
                             @csrf
                             <div class="row">
@@ -120,7 +120,7 @@
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     <tr bgcolor="#3A6B8C" class="text-white" height="40px">
-                        <td colspan="11">
+                        <td colspan="12">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
@@ -149,6 +149,7 @@
                         <td>Déboursé sec</td>
                         <td>Frais de chantier</td>
                         <td>Frais Général</td>
+                        <td>Bénéfice</td>
                         <td>Prix HT</td>
                         <td>Action</td>
                     </tr>
@@ -164,6 +165,7 @@
                             <td>{{ $bpu->debourse_sec }}</td>
                             <td>{{ $bpu->frais_chantier }}</td>
                             <td>{{ $bpu->frais_general }}</td>
+                            <td>{{ $bpu->marge_nette }}</td>
                             <td>{{ $bpu->pu_ht }}</td>
                             <td>
                                 <a href="{{ route('bpus.edit', $bpu->id) }}" class="btn btn-warning btn-sm">Modifier</a>
@@ -177,7 +179,7 @@
                     @endforeach
 
                     <tr>
-                        <td colspan="11">
+                        <td colspan="12">
                             @if(session('success'))
                                 <div class="alert alert-success">
                                     {{ session('success') }}

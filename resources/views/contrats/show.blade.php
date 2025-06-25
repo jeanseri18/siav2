@@ -380,37 +380,110 @@
         <!-- Hero Section -->
         
 
+        <!-- Contract Details Section -->
+        <div class="content-card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-line"></i>Détails du contrat
+                </h2>
+                
+            </div>
+        </div>
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
-            @foreach ($stats as $title => $amount)
-                <div class="stat-card {{ $title === 'Écart' ? ($amount >= 0 ? 'positive' : 'negative') : '' }}">
-                    <div class="stat-title">{{ $title }}</div>
-                    <div class="stat-value" style="{{ $title === 'Écart' && $amount < 0 ? 'color: #dc3545;' : '' }}">
-                        {{ number_format($amount, 0, ',', ' ') }} CFA
-                    </div>
-                    
-                    @if($title === 'Coût de revient Réel' && $stats['Coût de revient Prév.'] > 0)
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" 
-                                 style="width: {{ min(($amount / $stats['Coût de revient Prév.']) * 100, 100) }}%; 
-                                        background: {{ $amount <= $stats['Coût de revient Prév.'] ? 'linear-gradient(90deg, #28a745, #20c997)' : 'linear-gradient(90deg, #dc3545, #fd7e14)' }};"></div>
-                        </div>
-                        <small style="color: #6c757d; margin-top: 5px; display: block;">
-                            {{ number_format(($amount / $stats['Coût de revient Prév.']) * 100, 1) }}% du prévisionnel
-                        </small>
-                    @endif
-                    
-                    @if($title === 'CA Réalisé' && $stats['Montant du contrat'] > 0)
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" 
-                                 style="width: {{ min(($amount / $stats['Montant du contrat']) * 100, 100) }}%;"></div>
-                        </div>
-                        <small style="color: #6c757d; margin-top: 5px; display: block;">
-                            {{ number_format(($amount / $stats['Montant du contrat']) * 100, 1) }}% du contrat
-                        </small>
-                    @endif
+            <!-- Montant du contrat -->
+            <div class="stat-card">
+                <div class="stat-title">Montant du contrat</div>
+                <div class="stat-value">{{ number_format($stats['Montant du contrat'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <!-- Coûts prévisionnels -->
+            <div class="stat-card">
+                <div class="stat-title">DS Prévisionnel</div>
+                <div class="stat-value">{{ number_format($stats['DS Prévisionnel'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">FC Prévisionnel</div>
+                <div class="stat-value">{{ number_format($stats['FC Prévisionnel'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">FG Prévisionnel</div>
+                <div class="stat-value">{{ number_format($stats['FG Prévisionnel'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">Coût de revient Prév.</div>
+                <div class="stat-value">{{ number_format($stats['Coût de revient Prév.'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card positive">
+                <div class="stat-title">Bénéfice Prévisionnel</div>
+                <div class="stat-value" style="{{ $stats['Bénéfice Prévisionnel'] < 0 ? 'color: #dc3545;' : 'color: #28a745;' }}">
+                    {{ number_format($stats['Bénéfice Prévisionnel'], 0, ',', ' ') }} FCFA
                 </div>
-            @endforeach
+            </div>
+
+            <!-- Coûts réalisés -->
+            <div class="stat-card">
+                <div class="stat-title">DS Réalisé</div>
+                <div class="stat-value">{{ number_format($stats['DS Réalisé'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">FC Réalisé</div>
+                <div class="stat-value">{{ number_format($stats['FC Réalisé'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">FG Réalisé</div>
+                <div class="stat-value">{{ number_format($stats['FG Réalisé'], 0, ',', ' ') }} FCFA</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">Coût de revient Réel</div>
+                <div class="stat-value">{{ number_format($stats['Coût de revient Réel'], 0, ',', ' ') }} FCFA</div>
+                @if($stats['Coût de revient Prév.'] > 0)
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" 
+                             style="width: {{ min(($stats['Coût de revient Réel'] / $stats['Coût de revient Prév.']) * 100, 100) }}%; 
+                                    background: {{ $stats['Coût de revient Réel'] <= $stats['Coût de revient Prév.'] ? 'linear-gradient(90deg, #28a745, #20c997)' : 'linear-gradient(90deg, #dc3545, #fd7e14)' }};"></div>
+                    </div>
+                    <small style="color: #6c757d; margin-top: 5px; display: block;">
+                        {{ number_format(($stats['Coût de revient Réel'] / $stats['Coût de revient Prév.']) * 100, 1) }}% du prévisionnel
+                    </small>
+                @endif
+            </div>
+
+            <div class="stat-card positive">
+                <div class="stat-title">Bénéfice Réalisé</div>
+                <div class="stat-value" style="{{ $stats['Bénéfice Réalisé'] < 0 ? 'color: #dc3545;' : 'color: #28a745;' }}">
+                    {{ number_format($stats['Bénéfice Réalisé'], 0, ',', ' ') }} FCFA
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">CA Réalisé</div>
+                <div class="stat-value">{{ number_format($stats['CA Réalisé'], 0, ',', ' ') }} FCFA</div>
+                @if($stats['Montant du contrat'] > 0)
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" 
+                             style="width: {{ min(($stats['CA Réalisé'] / $stats['Montant du contrat']) * 100, 100) }}%;"></div>
+                    </div>
+                    <small style="color: #6c757d; margin-top: 5px; display: block;">
+                        {{ number_format(($stats['CA Réalisé'] / $stats['Montant du contrat']) * 100, 1) }}% du contrat
+                    </small>
+                @endif
+            </div>
+
+            <!-- <div class="stat-card {{ $stats['Écart'] >= 0 ? 'positive' : 'negative' }}">
+                <div class="stat-title">Écart (Prév. - Réel)</div>
+                <div class="stat-value" style="{{ $stats['Écart'] < 0 ? 'color: #dc3545;' : 'color: #28a745;' }}">
+                    {{ number_format($stats['Écart'], 0, ',', ' ') }} FCFA
+                </div>
+            </div> -->
         </div>
 
         <div class="main-content">

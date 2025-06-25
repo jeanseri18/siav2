@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('type_travaux');
             $table->decimal('taux_garantie', 5, 2);
             $table->foreignId('client_id')->constrained('client_fournisseurs')->onDelete('cascade');
-            $table->decimal('montant', 15, 2);
+            $table->decimal('montant', 15, 2)->nullable();
             $table->enum('statut', ['en cours', 'terminé', 'annulé'])->default('en cours');
             $table->boolean('decompte')->default(false);
             $table->timestamps();

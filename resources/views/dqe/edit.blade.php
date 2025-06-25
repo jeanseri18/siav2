@@ -3,6 +3,74 @@
 @section('content')
 @include('sublayouts.contrat')
 
+<style>
+.table-container {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem;
+}
+
+.table .table-primary td {
+    background-color: #cfe2ff !important;
+    font-weight: 600;
+}
+
+.table .table-info td {
+    background-color: #d1ecf1 !important;
+    font-weight: 500;
+}
+
+.table .table-warning td {
+    background-color: #fff3cd !important;
+    font-weight: 500;
+}
+
+.editable-designation:hover {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.form-control-sm {
+    font-size: 0.875rem;
+}
+
+.btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem 0.25rem;
+    }
+}
+</style>
+
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -138,88 +206,121 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card table-container">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>Lignes du DQE</h5>
                     <div>
-                        <span class="badge bg-primary">Montant total HT : {{ number_format($dqe->montant_total_ht, 2, ',', ' ') }}</span>
-                        <span class="badge bg-success">Montant total TTC : {{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }}</span>
+                        <span class="badge bg-primary">Montant total HT : {{ number_format($dqe->montant_total_ht, 2, ',', ' ') }} FCFA</span>
+                        <span class="badge bg-success">Montant total TTC : {{ number_format($dqe->montant_total_ttc, 2, ',', ' ') }} FCFA</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
+
+                    <div class="table-responsive" style=" overflow-y: auto;">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="sticky-top bg-white">
                                 <tr>
-                                    <th><input type="checkbox" id="select-all"> Section</th>
-                                    <th>Désignation</th>
-                                    <th>Unité</th>
-                                    <th>Quantité</th>
-                                    <th>Prix Unitaire HT</th>
-                                    <th>Montant HT</th>
-                                    <th>Actions</th>
+                                    <th style="min-width: 120px;"><input type="checkbox" id="select-all"> Section</th>
+                                    <th style="min-width: 250px;">Désignation</th>
+                                    <th style="min-width: 80px;">Unité</th>
+                                    <th style="min-width: 100px;">Quantité</th>
+                                    <th style="min-width: 120px;">Prix Unitaire HT</th>
+                                    <th style="min-width: 120px;">Montant HT</th>
+                                    <th style="min-width: 120px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($dqe->lignes as $ligne)
+                                @if(isset($lignesOrganisees) && count($lignesOrganisees) > 0)
+                                    @foreach($lignesOrganisees as $categorieNom => $categorieData)
+                                        <!-- Affichage Catégorie -->
+                                        <tr class="table-primary">
+                                            <td colspan="7">
+                                                <strong><i class="fas fa-folder"></i> {{ $categorieNom }}</strong>
+                                            </td>
+                                        </tr>
+                                        
+                                        @foreach($categorieData['sousCategories'] as $sousCategorieNom => $sousCategorieData)
+                                            <!-- Affichage Sous-catégorie -->
+                                            <tr class="table-info">
+                                                <td colspan="7" style="padding-left: 30px;">
+                                                    <strong><i class="fas fa-folder-open"></i> {{ $sousCategorieNom }}</strong>
+                                                </td>
+                                            </tr>
+                                            
+                                            @foreach($sousCategorieData['rubriques'] as $rubriqueNom => $rubriqueData)
+                                                <!-- Affichage Rubrique -->
+                                                <tr class="table-warning">
+                                                    <td colspan="7" style="padding-left: 60px;">
+                                                        <strong><i class="fas fa-list"></i> {{ $rubriqueNom }}</strong>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <!-- Affichage des lignes de cette rubrique -->
+                                                @foreach($rubriqueData['lignes'] as $ligne)
+                                                    <tr style="padding-left: 90px;">
+                                                        <td style="padding-left: 90px; white-space: nowrap;">
+                                                            <input type="checkbox" name="selected_lines[]" value="{{ $ligne->id }}" class="line-checkbox"> 
+                                                            {{ $ligne->section ?? 'N/A' }}
+                                                        </td>
+                                                        <td style="word-wrap: break-word; max-width: 300px;">
+                                                            @if($dqe->statut == 'brouillon')
+                                                                <span class="editable-designation" data-id="{{ $ligne->id }}" data-value="{{ $ligne->designation }}" style="cursor: pointer; border-bottom: 1px dashed #007bff;" title="Cliquer pour modifier">
+                                                                    {{ $ligne->designation }}
+                                                                </span>
+                                                            @else
+                                                                {{ $ligne->designation }}
+                                                            @endif
+                                                        </td>
+                                                        <td style="text-align: center;">{{ $ligne->unite }}</td>
+                                                        <td style="text-align: center;">
+                                                            @if($dqe->statut == 'brouillon')
+                                                                <form action="{{ route('dqe.lines.update', [$dqe->id, $ligne->id]) }}" method="POST" class="d-flex justify-content-center">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-center" name="quantite" value="{{ $ligne->quantite }}" style="width: 80px;">
+                                                                    <button type="submit" class="btn btn-xs btn-outline-primary ms-1" title="Valider">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                </form>
+                                                            @else
+                                                                {{ $ligne->quantite }}
+                                                            @endif
+                                                        </td>
+                                                        <td style="text-align: right; white-space: nowrap;">{{ number_format($ligne->pu_ht, 2, ',', ' ') }}</td>
+                                                        <td style="text-align: right; white-space: nowrap; font-weight: bold;">{{ number_format($ligne->montant_ht, 2, ',', ' ') }}</td>
+                                                        <td>
+                                                            @if($dqe->statut == 'brouillon')
+                                                                <div class="dropdown">
+                                                                    <button class="btn btn-xs btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <i class="fas fa-ellipsis-v"></i>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li><a class="dropdown-item" href="#" onclick="editLine({{ $ligne->id }})"><i class="fas fa-edit"></i> Modifier</a></li>
+                                                                        <li><a class="dropdown-item" href="#" onclick="duplicateLine({{ $ligne->id }})"><i class="fas fa-copy"></i> Dupliquer</a></li>
+                                                                        <li><hr class="dropdown-divider"></li>
+                                                                        <li>
+                                                                            <form action="{{ route('dqe.lines.delete', [$dqe->id, $ligne->id]) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?');" class="d-inline">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash"></i> Supprimer</button>
+                                                                            </form>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            @endforeach
+                                        @endforeach
+                                    @endforeach
+                                @else
                                     <tr>
-                                        <td><input type="checkbox" name="selected_lines[]" value="{{ $ligne->id }}" class="line-checkbox"> {{ $ligne->section ?? 'N/A' }}</td>
-                                        <td>
-                                            @if($dqe->statut == 'brouillon')
-                                                <span class="editable-designation" data-id="{{ $ligne->id }}" data-value="{{ $ligne->designation }}" style="cursor: pointer; border-bottom: 1px dashed #007bff;" title="Cliquer pour modifier">
-                                                    {{ $ligne->designation }}
-                                                </span>
-                                            @else
-                                                {{ $ligne->designation }}
-                                            @endif
-                                        </td>
-                                        <td>{{ $ligne->unite }}</td>
-                                        <td>
-                                            @if($dqe->statut == 'brouillon')
-                                                <form action="{{ route('dqe.lines.update', [$dqe->id, $ligne->id]) }}" method="POST" class="d-flex">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="quantite" value="{{ $ligne->quantite }}" style="width: 100px;">
-                                                    <button type="submit" class="btn btn-xs btn-outline-primary ms-1" title="Valider">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                </form>
-                                            @else
-                                                {{ $ligne->quantite }}
-                                            @endif
-                                        </td>
-                                        <td>{{ number_format($ligne->pu_ht, 2, ',', ' ') }}</td>
-                                        <td>{{ number_format($ligne->montant_ht, 2, ',', ' ') }}</td>
-                                        <td>
-                                            @if($dqe->statut == 'brouillon')
-                                                <div class="dropdown">
-                                                    <button class="btn btn-xs btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="fas fa-ellipsis-v"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li><a class="dropdown-item" href="#" onclick="editLine({{ $ligne->id }})"><i class="fas fa-edit"></i> Modifier</a></li>
-                                                        <li><a class="dropdown-item" href="#" onclick="duplicateLine({{ $ligne->id }})"><i class="fas fa-copy"></i> Dupliquer</a></li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li>
-                                                            <form action="{{ route('dqe.lines.delete', [$dqe->id, $ligne->id]) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?');" class="d-inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash"></i> Supprimer</button>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            @endif
-                                        </td>
+                                        <td colspan="7" class="text-center">Aucune ligne dans ce DQE.</td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center">Aucune ligne dans ce DQE.</td>
-                                    </tr>
-                                @endforelse
+                                @endif
                             </tbody>
                         </table>
-                    </div>
+                    
                     
                     <!-- Actions groupées -->
                     <div class="mt-3" id="bulk-actions" style="display: none;">
@@ -275,7 +376,10 @@
                                                             <tbody>
                                                                 @foreach($rubrique->bpus as $bpu)
                                                                     <tr>
-                                                                        <td>{{ $bpu->designation }}</td>
+                                                                        <td>
+                                                                            <input type="checkbox" class="bpu-checkbox" data-bpu-id="{{ $bpu->id }}" data-designation="{{ $bpu->designation }}" data-unite="{{ $bpu->unite }}" data-pu-ht="{{ $bpu->pu_ht }}">
+                                                                            {{ $bpu->designation }}
+                                                                        </td>
                                                                         <td>{{ $bpu->unite }}</td>
                                                                         <td>{{ number_format($bpu->pu_ht, 2, ',', ' ') }}</td>
                                                                         <td>
@@ -304,7 +408,16 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <div class="me-auto">
+                    <button type="button" class="btn btn-outline-primary" id="selectAllBpu">Tout sélectionner</button>
+                    <button type="button" class="btn btn-outline-secondary" id="deselectAllBpu">Tout désélectionner</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-success" id="addSelectedLines" disabled>
+                        <i class="fas fa-plus"></i> Ajouter les lignes sélectionnées
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
             </div>
         </div>
     </div>
@@ -465,6 +578,131 @@ function editLine(lineId) {
     console.log('Modifier la ligne:', lineId);
     // Ici, vous pouvez ouvrir un modal d'édition
 }
+
+// Gestion de la sélection multiple pour l'ajout de lignes
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllBtn = document.getElementById('selectAllBpu');
+    const deselectAllBtn = document.getElementById('deselectAllBpu');
+    const addSelectedBtn = document.getElementById('addSelectedLines');
+    const bpuCheckboxes = document.querySelectorAll('.bpu-checkbox');
+    
+    // Fonction pour mettre à jour l'état du bouton d'ajout
+    function updateAddButton() {
+        const selectedCheckboxes = document.querySelectorAll('.bpu-checkbox:checked');
+        addSelectedBtn.disabled = selectedCheckboxes.length === 0;
+        addSelectedBtn.innerHTML = selectedCheckboxes.length > 0 
+            ? `<i class="fas fa-plus"></i> Ajouter ${selectedCheckboxes.length} ligne(s) sélectionnée(s)`
+            : '<i class="fas fa-plus"></i> Ajouter les lignes sélectionnées';
+    }
+    
+    // Écouter les changements sur les checkboxes
+    bpuCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', updateAddButton);
+    });
+    
+    // Tout sélectionner
+    selectAllBtn.addEventListener('click', function() {
+        bpuCheckboxes.forEach(function(checkbox) {
+            checkbox.checked = true;
+        });
+        updateAddButton();
+    });
+    
+    // Tout désélectionner
+    deselectAllBtn.addEventListener('click', function() {
+        bpuCheckboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+        updateAddButton();
+    });
+    
+    // Ajouter les lignes sélectionnées
+    addSelectedBtn.addEventListener('click', function() {
+        const selectedCheckboxes = document.querySelectorAll('.bpu-checkbox:checked');
+        
+        if (selectedCheckboxes.length === 0) {
+            alert('Veuillez sélectionner au moins une ligne à ajouter.');
+            return;
+        }
+        
+        // Ouvrir la modal de confirmation des quantités
+        showQuantityModal(selectedCheckboxes);
+    });
+    
+    // Fonction pour afficher la modal de saisie des quantités
+    function showQuantityModal(selectedCheckboxes) {
+        // Créer la modal
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'quantityModal';
+        modal.setAttribute('tabindex', '-1');
+        
+        let modalContent = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Spécifier les quantités</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="multipleAddForm" action="{{ route('dqe.lines.addMultiple', $dqe->id) }}" method="POST">
+                            @csrf
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Désignation</th>
+                                            <th>Unité</th>
+                                            <th>Prix Unitaire HT</th>
+                                            <th>Quantité</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+        
+        selectedCheckboxes.forEach(function(checkbox, index) {
+            modalContent += `
+                <tr>
+                    <td>${checkbox.dataset.designation}</td>
+                    <td>${checkbox.dataset.unite}</td>
+                    <td>${parseFloat(checkbox.dataset.puHt).toLocaleString('fr-FR', {minimumFractionDigits: 2})} FCFA</td>
+                    <td>
+                        <input type="hidden" name="bpus[${index}][bpu_id]" value="${checkbox.dataset.bpuId}">
+                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="bpus[${index}][quantite]" value="1" required>
+                    </td>
+                </tr>`;
+        });
+        
+        modalContent += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-primary" onclick="submitMultipleAdd()">Ajouter les lignes</button>
+                    </div>
+                </div>
+            </div>`;
+        
+        modal.innerHTML = modalContent;
+        document.body.appendChild(modal);
+        
+        // Afficher la modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Nettoyer après fermeture
+        modal.addEventListener('hidden.bs.modal', function() {
+            document.body.removeChild(modal);
+        });
+    }
+    
+    // Fonction pour soumettre le formulaire d'ajout multiple
+    window.submitMultipleAdd = function() {
+        document.getElementById('multipleAddForm').submit();
+    };
+});
 
 // Dupliquer une ligne
 function duplicateLine(lineId) {

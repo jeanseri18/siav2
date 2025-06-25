@@ -111,10 +111,10 @@
             'color' => 'primary'
         ],
         [
-            'route' => 'contrats.index', 
+            'route' => 'contrats.all', 
             'icon' => 'fa-file-contract', 
-            'text' => 'Contrats', 
-            'description' => 'Gérer les contrats',
+            'text' => 'Liste des contrats', 
+            'description' => 'Afficher la liste des contrats de tous les projets',
             'category' => 'projects',
             'color' => 'primary'
         ],

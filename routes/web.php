@@ -44,6 +44,7 @@ use App\Http\Controllers\SousCategorieBpuController;
 use App\Http\Controllers\RubriqueController;
 use App\Http\Controllers\DemandeApprovisionnementController;
 use App\Http\Controllers\BonCommandeController;
+use App\Http\Controllers\ReceptionController;
 use App\Http\Controllers\DemandeAchatController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\DemandeCotationController;
@@ -112,6 +113,7 @@ Route::post('/contrats_dqe_generate/{contrat}/dqe/generate', [DQEController::cla
 
 // Routes pour les lignes de DQE
 Route::post('/dqe/{dqe}/lines', [DQEController::class, 'addLine'])->name('dqe.lines.add');
+Route::post('/dqe/{dqe}/lines/multiple', [DQEController::class, 'addMultipleLines'])->name('dqe.lines.addMultiple');
 Route::put('/dqe/{dqe}/lines/{line}', [DQEController::class, 'updateLine'])->name('dqe.lines.update');
 Route::delete('/dqe/{dqe}/lines/{line}', [DQEController::class, 'deleteLine'])->name('dqe.lines.delete');
 Route::post('/dqe/{dqe}/sections', [DQEController::class, 'createSection'])->name('dqe.sections.create');
@@ -135,8 +137,6 @@ Route::get('/debourses/{debourse}', [DebourseController::class, 'details'])->nam
 Route::get('/debourses/{debourse}/show', [DebourseController::class, 'details'])->name('debourses.show');
 Route::get('/debourses_export/{debourse}/export', [DebourseController::class, 'export'])->name('debourses.export');
 Route::put('/debourses/{detail}/update-detail', [DebourseController::class, 'updateDetail'])->name('debourses.update_detail');
-Route::post('/debourses/{detail}/duplicate', [DebourseController::class, 'duplicateDetail'])->name('debourses.duplicate_detail');
-Route::delete('/debourses/{detail}/delete', [DebourseController::class, 'deleteDetail'])->name('debourses.delete_detail');
 
 // Routes pour les déboursés chantier
 Route::get('/contrats_debourses_chantier/{contrat}/debourses_chantier', [App\Http\Controllers\DebourseChantierController::class, 'index'])->name('debourses_chantier.index');
@@ -196,6 +196,17 @@ Route::post('bon-commandes/{bonCommande}/livrer',
 Route::get('bon-commandes/{bonCommande}/pdf', 
     [BonCommandeController::class, 'exportPDF'])
     ->name('bon-commandes.pdf');
+
+// Routes pour les réceptions
+Route::resource('receptions', ReceptionController::class)->only(['index', 'show', 'create', 'store']);
+Route::get('receptions/create/{bonCommande}', 
+    [ReceptionController::class, 'create'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
+    ->name('receptions.create');
+Route::post('receptions/store/{bonCommande}', 
+    [ReceptionController::class, 'store'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
+    ->name('receptions.store');
 
 // Routes pour les demandes d'achat
 Route::resource('demande-achats', DemandeAchatController::class);
@@ -399,6 +410,7 @@ Route::prefix('stock_contrat')->group(function() {
 
 Route::prefix('contrats')->group(function() {
     Route::get('/', [ContratController::class, 'index'])->name('contrats.index');
+    Route::get('/all', [ContratController::class, 'allContracts'])->name('contrats.all');
     Route::get('create', [ContratController::class, 'create'])->name('contrats.create');
     Route::post('store', [ContratController::class, 'store'])->name('contrats.store');
     Route::get('edit/{id}', [ContratController::class, 'edit'])->name('contrats.edit');
@@ -459,6 +471,8 @@ Route::get('/projets/{projet}/edit', [ProjetController::class, 'edit'])->name('p
 Route::put('/projets/{projet}', [ProjetController::class, 'update'])->name('projets.update');
 // Supprimer un projet
 Route::delete('/projets/{projet}', [ProjetController::class, 'destroy'])->name('projets.destroy');
+// Changer le projet en session
+Route::post('/projets/change-project', [ProjetController::class, 'changeProject'])->name('projets.change');
 
 Route::get('sous_categories', [SousCategorieController::class, 'index'])->name('sous_categories.index'); // Liste des sous-catégories
 Route::get('sous_categories/create', [SousCategorieController::class, 'create'])->name('sous_categories.create'); // Formulaire de création
@@ -557,7 +571,9 @@ Route::get('/sublayouts_projet', function () {
 })->name('sublayouts_projet')->middleware('auth');
 
 Route::get('/sublayouts_projetdetail', function () {
-    return view('sublayouts.projetdetail');
+    $projets = \App\Models\Projet::all();
+    $articles = \App\Models\Article::all();
+    return view('sublayouts.projetdetail', compact('projets', 'articles'));
 })->name('sublayouts_projetdetail')->middleware('auth');
 
 Route::get('/sublayouts_user', function () {
