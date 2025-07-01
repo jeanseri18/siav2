@@ -11,16 +11,7 @@
             </h1>
             <p class="dashboard-subtitle">Vue d'ensemble complète des performances</p>
         </div>
-        <div class="header-actions">
-            <button class="btn-refresh" onclick="refreshDashboard()">
-                <i class="fas fa-sync-alt"></i>
-                Actualiser
-            </button>
-            <button class="btn-export" onclick="exportDashboard()">
-                <i class="fas fa-download"></i>
-                Exporter PDF
-            </button>
-        </div>
+
     </div>
  <div class="financial-summary">
         <h3 class="section-title">
@@ -332,36 +323,7 @@
     font-size: 1.1rem;
 }
 
-.header-actions {
-    display: flex;
-    gap: 1rem;
-}
 
-.btn-refresh, .btn-export {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    color: var(--white);
-    border: none;
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-refresh {
-    background: var(--gradient-primary);
-}
-
-.btn-export {
-    background: var(--gradient-success);
-}
-
-.btn-refresh:hover, .btn-export:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
 
 /* Grille des Statistiques */
 .stats-grid {
@@ -1544,113 +1506,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 });
 
-// Fonction améliorée pour l'export PDF avec gestion des erreurs
-function exportDashboard() {
-    const btn = document.querySelector('.btn-export');
-    if (!btn) return;
-    
-    const originalText = btn.innerHTML;
-    
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export en cours...';
-    btn.disabled = true;
-    
-    // Vérifier si l'API d'export existe
-    fetch('/dashboard/export-pdf', {
-        method: 'HEAD'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('API d\'export non disponible');
-        }
-        
-        // L'API existe, faire l'appel réel
-        return fetch('/dashboard/export-pdf', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            }
-        });
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erreur lors de l\'export');
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        // Créer un lien pour le téléchargement
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'dashboard_' + new Date().toISOString().slice(0, 10) + '.pdf';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showNotification('Dashboard exporté avec succès', 'success');
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        
-        // Si l'API n'est pas disponible, simuler l'export en capturant l'écran
-        if (error.message === 'API d\'export non disponible') {
-            showNotification('Export PDF API non disponible. Simulation d\'export...', 'warning');
-            
-            // Si html2canvas est disponible, l'utiliser pour capturer l'écran
-            if (typeof html2canvas !== 'undefined') {
-                html2canvas(document.querySelector('.dashboard-container')).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const a = document.createElement('a');
-                    a.href = imgData;
-                    a.download = 'dashboard_' + new Date().toISOString().slice(0, 10) + '.png';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    showNotification('Dashboard exporté en PNG avec succès', 'success');
-                }).catch(err => {
-                    console.error('Erreur capture écran:', err);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    showNotification('Erreur lors de l\'export', 'error');
-                });
-            } else {
-                // Si html2canvas n'est pas disponible, juste simuler
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    showNotification('Export simulé (fonctionnalité non disponible)', 'info');
-                }, 1500);
-            }
-        } else {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            showNotification('Erreur lors de l\'export', 'error');
-        }
-    });
-}
 
-function refreshDashboard() {
-    const btn = document.querySelector('.btn-refresh i');
-    if (btn) {
-        btn.style.animation = 'spin 1s linear infinite';
-    }
-    
-    // Actualiser les données
-    updateRealtimeStats();
-    
-    setTimeout(() => {
-        if (btn) {
-            btn.style.animation = '';
-        }
-        showNotification('Dashboard actualisé avec succès', 'success');
-    }, 1500);
-}
 
 
 
@@ -1833,20 +1689,7 @@ window.addEventListener('offline', () => {
     showNotification('Connexion perdue - Mode hors ligne', 'error');
 });
 
-// Raccourcis clavier
-document.addEventListener('keydown', function(e) {
-    // Ctrl+R ou F5 pour actualiser
-    if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
-        e.preventDefault();
-        refreshDashboard();
-    }
-    
-    // Ctrl+E pour exporter
-    if (e.ctrlKey && e.key === 'e') {
-        e.preventDefault();
-        exportDashboard();
-    }
-});
+
 
 // Gestion du redimensionnement de la fenêtre
 let resizeTimeout;
