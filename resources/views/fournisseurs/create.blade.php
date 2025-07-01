@@ -207,6 +207,23 @@
                     </div>
                 </div>
                 
+                <!-- Section Personnes Contacts -->
+                <div class="app-card mt-4">
+                    <div class="app-card-header">
+                        <h4 class="app-card-title">
+                            <i class="fas fa-users me-2"></i>Personnes Contacts
+                        </h4>
+                        <button type="button" class="app-btn app-btn-sm app-btn-primary" id="add-contact">
+                            <i class="fas fa-plus me-2"></i>Ajouter un contact
+                        </button>
+                    </div>
+                    <div class="app-card-body">
+                        <div id="contacts-container">
+                            <!-- Les contacts seront ajoutés ici dynamiquement -->
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="app-card-footer">
                     <a href="{{ route('fournisseurs.index') }}" class="app-btn app-btn-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Annuler
@@ -222,21 +239,149 @@
 
 @push('scripts')
 <script>
-    document.getElementById('categorie').addEventListener('change', function () {
-        const particulierFields = document.getElementById('particulier_fields');
-        const entrepriseFields = document.getElementById('entreprise_fields');
-        const entrepriseFieldsSuite = document.getElementById('entreprise_fields_suite');
+    let contactIndex = 0;
+    
+    $(document).ready(function() {
+        // Gestion de l'affichage des champs selon la catégorie
+        $('#categorie').change(function() {
+            const particulierFields = document.getElementById('particulier_fields');
+            const entrepriseFields = document.getElementById('entreprise_fields');
+            const entrepriseFieldsSuite = document.getElementById('entreprise_fields_suite');
+            
+            if (this.value === 'Entreprise') {
+                particulierFields.style.display = 'none';
+                entrepriseFields.style.display = 'flex';
+                entrepriseFieldsSuite.style.display = 'flex';
+                // Désactiver la validation du champ particulier et activer celle de l'entreprise
+                $('#nom').removeAttr('required');
+                $('#prenoms').removeAttr('required');
+                $('#raison_sociale').attr('required', 'required');
+            } else {
+                particulierFields.style.display = 'flex';
+                entrepriseFields.style.display = 'none';
+                entrepriseFieldsSuite.style.display = 'none';
+                // Désactiver la validation du champ entreprise et activer celle du particulier
+                $('#raison_sociale').removeAttr('required');
+                $('#nom').attr('required', 'required');
+                $('#prenoms').attr('required', 'required');
+            }
+        });
         
-        if (this.value === 'Entreprise') {
-            particulierFields.style.display = 'none';
-            entrepriseFields.style.display = 'flex';
-            entrepriseFieldsSuite.style.display = 'flex';
-        } else {
-            particulierFields.style.display = 'flex';
-            entrepriseFields.style.display = 'none';
-            entrepriseFieldsSuite.style.display = 'none';
-        }
+        // Initialiser l'état par défaut (Particulier)
+        $('#nom').attr('required', 'required');
+        $('#prenoms').attr('required', 'required');
+        
+        // Ajouter un contact
+        $('#add-contact').click(function() {
+            addContactForm();
+        });
     });
+    
+    function addContactForm() {
+        const contactHtml = `
+            <div class="contact-form app-card app-mb-3" data-index="${contactIndex}">
+                <div class="app-card-header">
+                    <h5 class="app-card-title">Contact ${contactIndex + 1}</h5>
+                    <button type="button" class="app-btn app-btn-sm app-btn-danger remove-contact">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="app-card-body">
+                    <div class="app-form-row">
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Civilité:</label>
+                                <select name="contacts[${contactIndex}][civilite]" class="app-form-select" required>
+                                    <option value="M.">M.</option>
+                                    <option value="Mme">Mme</option>
+                                    <option value="Mlle">Mlle</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Nom:</label>
+                                <input type="text" name="contacts[${contactIndex}][nom]" class="app-form-control" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Prénoms:</label>
+                                <input type="text" name="contacts[${contactIndex}][prenoms]" class="app-form-control" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col-3">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Fonction:</label>
+                                <input type="text" name="contacts[${contactIndex}][fonction]" class="app-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Téléphone 1:</label>
+                                <input type="text" name="contacts[${contactIndex}][telephone_1]" class="app-form-control">
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Téléphone 2:</label>
+                                <input type="text" name="contacts[${contactIndex}][telephone_2]" class="app-form-control">
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Email:</label>
+                                <input type="email" name="contacts[${contactIndex}][email]" class="app-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-group">
+                        <label class="app-form-label">Adresse:</label>
+                        <textarea name="contacts[${contactIndex}][adresse]" class="app-form-control" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">
+                                    <input type="checkbox" name="contacts[${contactIndex}][contact_principal]" value="1" class="contact-principal-checkbox">
+                                    Contact principal
+                                </label>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label">Statut:</label>
+                                <select name="contacts[${contactIndex}][statut]" class="app-form-select">
+                                    <option value="Actif" selected>Actif</option>
+                                    <option value="Inactif">Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#contacts-container').append(contactHtml);
+        contactIndex++;
+        
+        // Gérer la suppression des contacts
+        $('.remove-contact').off('click').on('click', function() {
+            $(this).closest('.contact-form').remove();
+        });
+        
+        // Gérer les contacts principaux (un seul à la fois)
+        $('.contact-principal-checkbox').off('change').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('.contact-principal-checkbox').not(this).prop('checked', false);
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

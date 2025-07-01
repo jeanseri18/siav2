@@ -190,6 +190,115 @@
                     </div>
                 </div>
                 
+                <!-- Section Personnes Contacts -->
+                <div class="app-form-section">
+                    <h5 class="app-form-section-title">
+                        <i class="fas fa-users me-2"></i>Personnes Contacts
+                    </h5>
+                    
+                    <div class="app-form-group">
+                        <button type="button" id="addContactBtn" class="app-btn app-btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Ajouter un contact
+                        </button>
+                    </div>
+                    
+                    <div id="contactsContainer">
+                        @if($contacts && $contacts->count() > 0)
+                            @foreach($contacts as $index => $contact)
+                                <div class="app-contact-form" data-contact-index="{{ $index }}">
+                                    <div class="app-contact-header">
+                                        <h6 class="app-contact-title">
+                                            <i class="fas fa-user me-2"></i>Contact {{ $index + 1 }}
+                                        </h6>
+                                        <button type="button" class="app-btn app-btn-sm app-btn-danger remove-contact">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="app-form-row">
+                                        <div class="app-form-col-sm">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Civilité</label>
+                                                <select name="contacts[{{ $index }}][civilite]" class="app-form-select">
+                                                    <option value="M." {{ $contact->civilite == 'M.' ? 'selected' : '' }}>M.</option>
+                                                    <option value="Mme" {{ $contact->civilite == 'Mme' ? 'selected' : '' }}>Mme</option>
+                                                    <option value="Mlle" {{ $contact->civilite == 'Mlle' ? 'selected' : '' }}>Mlle</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Nom</label>
+                                                <input type="text" name="contacts[{{ $index }}][nom]" class="app-form-control" value="{{ $contact->nom }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Prénoms</label>
+                                                <input type="text" name="contacts[{{ $index }}][prenoms]" class="app-form-control" value="{{ $contact->prenoms }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="app-form-row">
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Fonction</label>
+                                                <input type="text" name="contacts[{{ $index }}][fonction]" class="app-form-control" value="{{ $contact->fonction }}">
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Téléphone 1</label>
+                                                <input type="text" name="contacts[{{ $index }}][telephone_1]" class="app-form-control" value="{{ $contact->telephone_1 }}">
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Téléphone 2</label>
+                                                <input type="text" name="contacts[{{ $index }}][telephone_2]" class="app-form-control" value="{{ $contact->telephone_2 }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="app-form-row">
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Email</label>
+                                                <input type="email" name="contacts[{{ $index }}][email]" class="app-form-control" value="{{ $contact->email }}">
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Adresse</label>
+                                                <input type="text" name="contacts[{{ $index }}][adresse]" class="app-form-control" value="{{ $contact->adresse }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="app-form-row">
+                                        <div class="app-form-col">
+                                            <div class="app-form-check">
+                                                <input type="checkbox" name="contacts[{{ $index }}][contact_principal]" value="1" class="app-form-check-input contact-principal" id="contact_principal_{{ $index }}" {{ $contact->contact_principal ? 'checked' : '' }}>
+                                                <label for="contact_principal_{{ $index }}" class="app-form-check-label">Contact principal</label>
+                                            </div>
+                                        </div>
+                                        <div class="app-form-col">
+                                            <div class="app-form-group">
+                                                <label class="app-form-label">Statut</label>
+                                                <select name="contacts[{{ $index }}][statut]" class="app-form-select">
+                                                    <option value="Actif" {{ $contact->statut == 'Actif' ? 'selected' : '' }}>Actif</option>
+                                                    <option value="Inactif" {{ $contact->statut == 'Inactif' ? 'selected' : '' }}>Inactif</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+                
                 <div class="app-card-footer">
                     <a href="{{ route('fournisseurs.index') }}" class="app-btn app-btn-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Annuler
@@ -214,12 +323,175 @@
             particulierFields.style.display = 'none';
             entrepriseFields.style.display = 'flex';
             entrepriseFieldsSuite.style.display = 'flex';
+            // Désactiver la validation du champ particulier et activer celle de l'entreprise
+            document.getElementById('nom').removeAttribute('required');
+            document.getElementById('prenoms').removeAttribute('required');
+            document.getElementById('raison_sociale').setAttribute('required', 'required');
         } else {
             particulierFields.style.display = 'flex';
             entrepriseFields.style.display = 'none';
             entrepriseFieldsSuite.style.display = 'none';
+            // Désactiver la validation du champ entreprise et activer celle du particulier
+            document.getElementById('raison_sociale').removeAttribute('required');
+            document.getElementById('nom').setAttribute('required', 'required');
+            document.getElementById('prenoms').setAttribute('required', 'required');
         }
     });
+    
+    // Initialiser l'état selon la catégorie actuelle
+    const currentCategorie = document.getElementById('categorie').value;
+    if (currentCategorie === 'Entreprise') {
+        document.getElementById('nom').removeAttribute('required');
+        document.getElementById('prenoms').removeAttribute('required');
+        document.getElementById('raison_sociale').setAttribute('required', 'required');
+    } else {
+        document.getElementById('raison_sociale').removeAttribute('required');
+        document.getElementById('nom').setAttribute('required', 'required');
+        document.getElementById('prenoms').setAttribute('required', 'required');
+    }
+
+    // Gestion des contacts
+    let contactIndex = {{ $contacts ? $contacts->count() : 0 }};
+    
+    // Ajouter les événements pour les contacts existants
+    document.querySelectorAll('.remove-contact').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            this.closest('.app-contact-form').remove();
+        });
+    });
+    
+    // Ajouter les événements pour les contacts principaux existants
+    document.querySelectorAll('.contact-principal').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                document.querySelectorAll('.contact-principal').forEach(otherCheckbox => {
+                    if (otherCheckbox !== this) {
+                        otherCheckbox.checked = false;
+                    }
+                });
+            }
+        });
+    });
+
+    function addContactForm() {
+        const container = document.getElementById('contactsContainer');
+        const contactHtml = `
+            <div class="app-contact-form" data-contact-index="${contactIndex}">
+                <div class="app-contact-header">
+                    <h6 class="app-contact-title">
+                        <i class="fas fa-user me-2"></i>Contact ${contactIndex + 1}
+                    </h6>
+                    <button type="button" class="app-btn app-btn-sm app-btn-danger remove-contact">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col-sm">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Civilité</label>
+                            <select name="contacts[${contactIndex}][civilite]" class="app-form-select">
+                                <option value="M.">M.</option>
+                                <option value="Mme">Mme</option>
+                                <option value="Mlle">Mlle</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Nom</label>
+                            <input type="text" name="contacts[${contactIndex}][nom]" class="app-form-control" required>
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Prénoms</label>
+                            <input type="text" name="contacts[${contactIndex}][prenoms]" class="app-form-control" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Fonction</label>
+                            <input type="text" name="contacts[${contactIndex}][fonction]" class="app-form-control">
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Téléphone 1</label>
+                            <input type="text" name="contacts[${contactIndex}][telephone_1]" class="app-form-control">
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Téléphone 2</label>
+                            <input type="text" name="contacts[${contactIndex}][telephone_2]" class="app-form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Email</label>
+                            <input type="email" name="contacts[${contactIndex}][email]" class="app-form-control">
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Adresse</label>
+                            <input type="text" name="contacts[${contactIndex}][adresse]" class="app-form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-check">
+                            <input type="checkbox" name="contacts[${contactIndex}][contact_principal]" value="1" class="app-form-check-input contact-principal" id="contact_principal_${contactIndex}">
+                            <label for="contact_principal_${contactIndex}" class="app-form-check-label">Contact principal</label>
+                        </div>
+                    </div>
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label class="app-form-label">Statut</label>
+                            <select name="contacts[${contactIndex}][statut]" class="app-form-select">
+                                <option value="Actif" selected>Actif</option>
+                                <option value="Inactif">Inactif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', contactHtml);
+        contactIndex++;
+        
+        // Ajouter l'événement pour supprimer le contact
+        const removeBtn = container.querySelector(`[data-contact-index="${contactIndex - 1}"] .remove-contact`);
+        removeBtn.addEventListener('click', function() {
+            this.closest('.app-contact-form').remove();
+        });
+        
+        // Ajouter l'événement pour le contact principal
+        const principalCheckbox = container.querySelector(`#contact_principal_${contactIndex - 1}`);
+        principalCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Décocher tous les autres contacts principaux
+                document.querySelectorAll('.contact-principal').forEach(checkbox => {
+                    if (checkbox !== this) {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+        });
+    }
+
+    // Événement pour ajouter un contact
+    document.getElementById('addContactBtn').addEventListener('click', addContactForm);
 </script>
 @endpush
 @endsection
