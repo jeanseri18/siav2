@@ -93,11 +93,11 @@
                             @php
                                 // Calculer DEMANDES EN COURS pour tous les projets de la BU
                                 $payEnCours = DB::table('lignes_demande_approvisionnement')
-                                    ->join('demande_approvisionnements', 'lignes_demande_approvisionnement.demande_id', '=', 'demande_approvisionnements.id')
-                                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
-                                    ->where('lignes_demande_approvisionnement.article_id', $article->id)
-                                    ->where('demande_approvisionnements.statut', 'approuvée')
-                                    ->sum('lignes_demande_approvisionnement.quantite_demandee');
+                    ->join('demande_approvisionnements', 'lignes_demande_approvisionnement.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
+                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
+                    ->where('lignes_demande_approvisionnement.article_id', $article->id)
+                    ->where('demande_approvisionnements.statut', 'approuvée')
+                    ->sum('lignes_demande_approvisionnement.quantite_demandee');
                             @endphp
                             {{ $payEnCours ?? 0 }}
                         </td>
@@ -117,7 +117,12 @@
                                 // Calculer APPRO ARRIVE pour tous les projets de la BU
                                 $approArrive = DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
-                                    ->whereIn('bon_commandes.projet_id', $projets_bu)
+                                    ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
+                                    ->leftJoin('demande_achats', 'bon_commandes.demande_achat_id', '=', 'demande_achats.id')
+                                    ->where(function($query) use ($projets_bu) {
+                                        $query->whereIn('demande_approvisionnements.projet_id', $projets_bu)
+                                              ->orWhereIn('demande_achats.projet_id', $projets_bu);
+                                    })
                                     ->where('lignes_bon_commande.article_id', $article->id)
                                     ->where('bon_commandes.statut', 'livrée')
                                     ->sum('lignes_bon_commande.quantite_livree');

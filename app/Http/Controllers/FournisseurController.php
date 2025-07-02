@@ -38,7 +38,7 @@ class FournisseurController extends Controller {
         // Validation personnalisée pour nom_raison_sociale
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'nom_raison_sociale' => 'required|string|max:255',
+            'nom_raison_sociale' => 'nullable|string|max:255',
             'prenoms' => 'nullable|string|max:255',
             'n_rccm' => 'nullable|string|max:255',
             'n_cc' => 'nullable|string|max:255',
@@ -64,9 +64,13 @@ class FournisseurController extends Controller {
             'contacts.*.statut' => 'nullable|in:Actif,Inactif',
         ];
         
-        // Validation conditionnelle pour les prénoms
+        // Validation conditionnelle selon la catégorie
         if ($request->categorie === 'Particulier') {
+            $validationRules['nom_raison_sociale'] = 'nullable|string|max:255'; // Nom optionnel pour particulier
             $validationRules['prenoms'] = 'required|string|max:255';
+        } else {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
+            $validationRules['secteur_activite'] = 'required|string|max:255';
         }
         
         $request->validate($validationRules);
@@ -130,7 +134,7 @@ $request->merge([
     public function update(Request $request, ClientFournisseur $fournisseur) {
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'nom_raison_sociale' => 'required|string|max:255',
+            'nom_raison_sociale' => 'nullable|string|max:255',
             'prenoms' => 'nullable|string|max:255',
             'n_rccm' => 'nullable|string|max:255',
             'n_cc' => 'nullable|string|max:255',
@@ -156,9 +160,13 @@ $request->merge([
             'contacts.*.statut' => 'nullable|in:Actif,Inactif',
         ];
         
-        // Validation conditionnelle pour les prénoms
+        // Validation conditionnelle selon la catégorie
         if ($request->categorie === 'Particulier') {
+            $validationRules['nom_raison_sociale'] = 'nullable|string|max:255'; // Nom optionnel pour particulier
             $validationRules['prenoms'] = 'required|string|max:255';
+        } else {
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
+            $validationRules['secteur_activite'] = 'required|string|max:255';
         }
         
         $request->validate($validationRules);

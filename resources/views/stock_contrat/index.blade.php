@@ -111,7 +111,12 @@
                             @php
                                 $approArrive = \DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
-                                    ->where('bon_commandes.contrat_id', $contrat_id)
+                                    ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
+                                    ->leftJoin('demande_achats', 'bon_commandes.demande_achat_id', '=', 'demande_achats.id')
+                                    ->where(function($query) use ($contrat_id) {
+                                        $query->where('demande_approvisionnements.projet_id', $contrat_id)
+                                              ->orWhere('demande_achats.projet_id', $contrat_id);
+                                    })
                                     ->where('lignes_bon_commande.article_id', $stock->article_id)
                                     ->where('bon_commandes.statut', 'livrée')
                                     ->sum('lignes_bon_commande.quantite_livree');
@@ -121,7 +126,11 @@
                         <td>
                             @php
                                 $retourAppro = \App\Models\RetourApprovisionnement::whereHas('bonCommande', function($query) use ($contrat_id) {
-                                        $query->where('contrat_id', $contrat_id);
+                                        $query->whereHas('demandeApprovisionnement', function($subQuery) use ($contrat_id) {
+                                            $subQuery->where('projet_id', $contrat_id);
+                                        })->orWhereHas('demandeAchat', function($subQuery) use ($contrat_id) {
+                                            $subQuery->where('projet_id', $contrat_id);
+                                        });
                                     })
                                     ->where('article_id', $stock->article_id)
                                     ->where('statut', 'accepté')

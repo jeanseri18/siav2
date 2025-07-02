@@ -66,7 +66,7 @@ class ClientController extends Controller
 
         // Validation conditionnelle selon la catégorie
         if ($request->categorie === 'Particulier') {
-            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Nom pour particulier
+            $validationRules['nom_raison_sociale'] = 'nullable|string|max:255'; // Nom optionnel pour particulier
             $validationRules['prenoms'] = 'required|string|max:255';
         } else {
             $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
@@ -180,7 +180,7 @@ $request->merge([
 
         // Validation conditionnelle selon la catégorie
         if ($request->categorie === 'Particulier') {
-            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Nom pour particulier
+            $validationRules['nom_raison_sociale'] = 'nullable|string|max:255'; // Nom optionnel pour particulier
             $validationRules['prenoms'] = 'required|string|max:255';
         } else {
             $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise

@@ -112,7 +112,12 @@
                             @php
                                 $approArrive = \DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
-                                    ->where('bon_commandes.projet_id', $projet_id)
+                                    ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
+                                    ->leftJoin('demande_achats', 'bon_commandes.demande_achat_id', '=', 'demande_achats.id')
+                                    ->where(function($query) use ($projet_id) {
+                                        $query->where('demande_approvisionnements.projet_id', $projet_id)
+                                              ->orWhere('demande_achats.projet_id', $projet_id);
+                                    })
                                     ->where('lignes_bon_commande.article_id', $stock->article_id)
                                     ->where('bon_commandes.statut', 'livrée')
                                     ->sum('lignes_bon_commande.quantite_livree');
