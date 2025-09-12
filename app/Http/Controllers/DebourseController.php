@@ -142,20 +142,19 @@ public function index()
             'statut' => 'brouillon',
         ]);
 
-        // Remplir les détails pour chaque ligne du DQE
+        // Créer les détails vides pour chaque ligne du DQE (saisie manuelle)
         foreach ($dqe->lignes as $ligne) {
-            $bpu = $ligne->bpu;
-            
-            // Calculer les montants pour cette ligne
-            $debourseSec_montant = ($bpu->materiaux + $bpu->main_oeuvre + $bpu->materiel) * $ligne->quantite;
-            // $debourseMO_montant = $bpu->main_oeuvre * $ligne->quantite;
-            $debourseFC_montant = $bpu->frais_chantier * $ligne->quantite;
-            
-            // Créer les détails pour le déboursé sec
+            // Créer les détails pour le déboursé sec (saisie manuelle)
             DebourseDetail::create([
                 'debourse_id' => $debourseSec->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $debourseSec_montant,
+                'montant' => 0, // À saisir manuellement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
             ]);
             
             // Créer les détails pour le déboursé main d'œuvre - DÉSACTIVÉ
@@ -163,15 +162,21 @@ public function index()
             DebourseDetail::create([
                 'debourse_id' => $debourseMO->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $debourseMO_montant,
+                'montant' => 0,
             ]);
             */
             
-            // Créer les détails pour les frais de chantier
+            // Créer les détails pour les frais de chantier (saisie manuelle)
             DebourseDetail::create([
                 'debourse_id' => $debourseFC->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $debourseFC_montant,
+                'montant' => 0, // À saisir manuellement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
             ]);
         }
 
@@ -240,19 +245,19 @@ public function index()
             'statut' => 'brouillon',
         ]);
 
-        // Remplir les détails pour chaque ligne du DQE
+        // Créer les détails vides pour chaque ligne du DQE (saisie manuelle)
         foreach ($dqe->lignes as $ligne) {
-            $bpu = $ligne->bpu;
-            $bpu->updateDerivedValues(); // S'assurer que les valeurs dérivées sont à jour
-            
-            // Calculer le montant pour cette ligne en utilisant debourse_sec
-            $montant = $bpu->debourse_sec * $ligne->quantite;
-            
-            // Créer le détail
+            // Créer le détail avec montant à 0 pour saisie manuelle
             DebourseDetail::create([
                 'debourse_id' => $debourseSec->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $montant,
+                'montant' => 0, // À saisir manuellement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
             ]);
         }
 
@@ -286,19 +291,19 @@ public function index()
             'statut' => 'brouillon',
         ]);
 
-        // Remplir les détails pour chaque ligne du DQE
+        // Créer les détails vides pour chaque ligne du DQE (saisie manuelle)
         foreach ($dqe->lignes as $ligne) {
-            $bpu = $ligne->bpu;
-            $bpu->updateDerivedValues(); // S'assurer que les valeurs dérivées sont à jour
-            
-            // Calculer le montant pour cette ligne
-            $montant = $bpu->frais_chantier * $ligne->quantite;
-            
-            // Créer le détail
+            // Créer le détail avec montant à 0 pour saisie manuelle
             DebourseDetail::create([
                 'debourse_id' => $debourseFC->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $montant,
+                'montant' => 0, // À saisir manuellement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
             ]);
         }
 
@@ -332,19 +337,19 @@ public function index()
             'statut' => 'brouillon',
         ]);
 
-        // Remplir les détails pour chaque ligne du DQE
+        // Créer les détails vides pour chaque ligne du DQE (saisie manuelle)
         foreach ($dqe->lignes as $ligne) {
-            $bpu = $ligne->bpu;
-            $bpu->updateDerivedValues(); // S'assurer que les valeurs dérivées sont à jour
-            
-            // Calculer le montant total pour cette ligne (matériaux + matériel)
-            $montant = ($bpu->materiaux + $bpu->materiel) * $ligne->quantite;
-            
-            // Créer le détail
+            // Créer le détail avec montant à 0 pour saisie manuelle
             DebourseDetail::create([
                 'debourse_id' => $debourseChantier->id,
                 'dqe_ligne_id' => $ligne->id,
-                'montant' => $montant,
+                'montant' => 0, // À saisir manuellement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
             ]);
         }
 

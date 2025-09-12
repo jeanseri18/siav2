@@ -52,11 +52,8 @@ class DebourseChantierController extends Controller
             'statut' => 'brouillon',
         ]);
 
-        // Remplir les détails pour chaque ligne du DQE
+        // Créer les détails vides pour chaque ligne du DQE (saisie manuelle)
         foreach ($dqe->lignes as $ligne) {
-            $bpu = $ligne->bpu;
-            $bpu->updateDerivedValues(); // S'assurer que les valeurs dérivées sont à jour
-            
             DebourseChantierDetail::create([
                 'debourse_chantier_id' => $debourseChantier->id,
                 'dqe_ligne_id' => $ligne->id,
@@ -64,13 +61,13 @@ class DebourseChantierController extends Controller
                 'designation' => $ligne->designation,
                 'unite' => $ligne->unite,
                 'quantite' => $ligne->quantite,
-                'cout_unitaire_materiaux' => $bpu->materiaux ?? 0,
-                'cout_unitaire_main_oeuvre' => $bpu->main_oeuvre ?? 0,
-                'cout_unitaire_materiel' => $bpu->materiel ?? 0,
-                'total_materiaux' => ($bpu->materiaux ?? 0) * $ligne->quantite,
-                'total_main_oeuvre' => ($bpu->main_oeuvre ?? 0) * $ligne->quantite,
-                'total_materiel' => ($bpu->materiel ?? 0) * $ligne->quantite,
-                'montant_total' => (($bpu->materiaux ?? 0) + ($bpu->materiel ?? 0)) * $ligne->quantite, // Déboursé chantier : matériaux + matériel seulement
+                'cout_unitaire_materiaux' => 0, // À saisir manuellement
+                'cout_unitaire_main_oeuvre' => 0, // À saisir manuellement
+                'cout_unitaire_materiel' => 0, // À saisir manuellement
+                'total_materiaux' => 0,
+                'total_main_oeuvre' => 0,
+                'total_materiel' => 0,
+                'montant_total' => 0, // Sera calculé lors de la saisie manuelle
             ]);
         }
 
