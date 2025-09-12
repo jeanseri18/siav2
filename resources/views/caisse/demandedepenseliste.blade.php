@@ -11,13 +11,17 @@
 
 @section('content')
 
-<div class=" app-fade-in">
+<div class="app-fade-in">
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-money-bill-wave me-2"></i>Liste des Demandes de Dépenses - {{ $bus->nom }}
+                <i class="fas fa-money-bill-wave me-2"></i>Liste des Demandes de Dépenses
             </h2>
-
+            <div class="app-card-actions">
+                <a href="{{ route('caisse.demandesEnAttente') }}" class="app-btn app-btn-outline-warning">
+                    <i class="fas fa-clock me-1"></i> Demandes en attente
+                </a>
+            </div>
         </div>
 
         <div class="app-card-body app-table-responsive">
@@ -25,26 +29,46 @@
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Demandeur</th>
+                        <th>BU</th>
                         <th>Montant</th>
                         <th>Motif</th>
+                        <th>Responsable</th>
+                        <th>RAF</th>
                         <th>Statut</th>
-                        <th style="width: 200px;">Actions</th>
+                        <th style="width: 250px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($demandes as $demande)
+                    @foreach($demandesDepenses as $demande)
                         <tr>
-                            <td>{{ $demande->created_at }}</td>
-                            <td class="app-fw-bold">{{ $demande->montant }}</td>
+                            <td>{{ $demande->created_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ $demande->user ? $demande->user->nom . ' ' . $demande->user->prenom : 'N/A' }}</td>
+                            <td>{{ $demande->bu ? $demande->bu->nom : 'N/A' }}</td>
+                            <td class="app-fw-bold">{{ number_format($demande->montant, 0, ',', ' ') }} FCFA</td>
                             <td>{{ $demande->motif }}</td>
+                            <td>{{ $demande->responsableHierarchique ? $demande->responsableHierarchique->nom . ' ' . $demande->responsableHierarchique->prenom : 'N/A' }}</td>
+                            <td>{{ $demande->raf ? $demande->raf->nom . ' ' . $demande->raf->prenom : 'N/A' }}</td>
                             <td>
-                                @if($demande->statut == 'en attente')
+                                @if($demande->statut == 'en_attente_responsable')
                                     <span class="app-badge app-badge-warning app-badge-pill">
-                                        <i class="fas fa-clock me-1"></i> En attente
+                                        <i class="fas fa-clock me-1"></i> En attente responsable
+                                    </span>
+                                @elseif($demande->statut == 'approuve_responsable')
+                                    <span class="app-badge app-badge-info app-badge-pill">
+                                        <i class="fas fa-user-check me-1"></i> Approuvé responsable
+                                    </span>
+                                @elseif($demande->statut == 'approuve_raf')
+                                    <span class="app-badge app-badge-primary app-badge-pill">
+                                        <i class="fas fa-check-double me-1"></i> Approuvé RAF
                                     </span>
                                 @elseif($demande->statut == 'validée')
                                     <span class="app-badge app-badge-success app-badge-pill">
                                         <i class="fas fa-check-circle me-1"></i> Validée
+                                    </span>
+                                @elseif($demande->statut == 'rejete')
+                                    <span class="app-badge app-badge-danger app-badge-pill">
+                                        <i class="fas fa-times-circle me-1"></i> Rejetée
                                     </span>
                                 @elseif($demande->statut == 'annulée')
                                     <span class="app-badge app-badge-danger app-badge-pill">
@@ -53,24 +77,38 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="app-d-flex app-gap-2">
-                                    <!-- Bouton pour voir la demande en PDF (disponible pour toutes les demandes) -->
+                                <div class="app-d-flex app-gap-1 flex-wrap">
+                                    <!-- Bouton pour voir la demande en PDF -->
                                     <a href="{{ route('caisse.voirDemandeDepensePDF', $demande->id) }}" target="_blank" class="app-btn app-btn-primary app-btn-sm app-btn-icon" title="Voir en PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
                                     
-                                    @if($demande->statut == 'en attente' && in_array(Auth::user()->role, ['caissier', 'chef_projet', 'conducteur_travaux', 'admin', 'dg']))
+                                    <!-- Boutons d'approbation pour responsable hiérarchique -->
+                                    @if($demande->statut == 'en_attente_responsable' && $demande->responsable_hierarchique_id == Auth::id())
+                                        <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'responsable', 'approuver')" title="Approuver">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="app-btn app-btn-danger app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'responsable', 'rejeter')" title="Rejeter">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    @endif
+                                    
+                                    <!-- Boutons d'approbation pour RAF -->
+                                    @if($demande->statut == 'approuve_responsable' && in_array(Auth::user()->role, ['admin', 'dg']))
+                                        <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'raf', 'approuver')" title="Approuver RAF">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                        <button type="button" class="app-btn app-btn-danger app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'raf', 'rejeter')" title="Rejeter RAF">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    @endif
+                                    
+                                    <!-- Bouton de validation finale -->
+                                    @if($demande->statut == 'approuve_raf' && in_array(Auth::user()->role, ['caissier', 'admin', 'dg']))
                                         <form action="{{ route('caisse.validerDemandeDepense', $demande->id) }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Valider la demande">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                        
-                                        <form action="{{ route('caisse.annulerDemandeDepense', $demande->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon" title="Annuler la demande">
-                                                <i class="fas fa-times"></i>
+                                            <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Valider pour paiement">
+                                                <i class="fas fa-money-bill"></i>
                                             </button>
                                         </form>
                                     @endif
@@ -80,6 +118,32 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'approbation -->
+<div class="modal fade" id="approbationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approbationModalTitle">Approbation de la demande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approbationForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="action" id="approbationAction">
+                    <div class="mb-3">
+                        <label for="commentaire" class="form-label">Commentaire (optionnel)</label>
+                        <textarea class="form-control" name="commentaire" id="commentaire" rows="3" placeholder="Ajoutez un commentaire..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn" id="approbationSubmitBtn">Confirmer</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -116,6 +180,44 @@
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
     });
+    
+    // Fonction pour gérer les approbations
+    function approuverDemande(demandeId, type, action) {
+        const modal = new bootstrap.Modal(document.getElementById('approbationModal'));
+        const form = document.getElementById('approbationForm');
+        const title = document.getElementById('approbationModalTitle');
+        const submitBtn = document.getElementById('approbationSubmitBtn');
+        const actionInput = document.getElementById('approbationAction');
+        
+        // Configurer le formulaire selon le type et l'action
+        if (type === 'responsable') {
+            form.action = `{{ url('caisse/approuver-responsable') }}/${demandeId}`;
+            if (action === 'approuver') {
+                title.textContent = 'Approuver la demande (Responsable)';
+                submitBtn.textContent = 'Approuver';
+                submitBtn.className = 'btn btn-success';
+            } else {
+                title.textContent = 'Rejeter la demande (Responsable)';
+                submitBtn.textContent = 'Rejeter';
+                submitBtn.className = 'btn btn-danger';
+            }
+        } else if (type === 'raf') {
+            form.action = `{{ url('caisse/approuver-raf') }}/${demandeId}`;
+            if (action === 'approuver') {
+                title.textContent = 'Approuver la demande (RAF)';
+                submitBtn.textContent = 'Approuver';
+                submitBtn.className = 'btn btn-success';
+            } else {
+                title.textContent = 'Rejeter la demande (RAF)';
+                submitBtn.textContent = 'Rejeter';
+                submitBtn.className = 'btn btn-danger';
+            }
+        }
+        
+        actionInput.value = action;
+        document.getElementById('commentaire').value = '';
+        modal.show();
+    }
 </script>
 @endpush
 @endsection

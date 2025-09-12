@@ -51,9 +51,9 @@
                         <th>UNITE</th>
                         <th>COUT MOYEN PONDERE</th>
                         <th>QTE DISPO</th>
-                        <th>DEMANDES EN COURS</th>
-                        <th>RETOURS</th>
-                        <th>APPRO ARRIVE</th>
+                        <th>RAV EN COURS</th>
+                        <th>RETOURS RAV</th>
+                        <th>APPRO EN COURS</th>
                         <th>RETOUR APPRO</th>
                         <th>TRANSFERT DE STOCK IN</th>
                         <th>TRANSFERT DE STOCK OUT</th>
@@ -86,12 +86,24 @@
                                 -
                             @endif
                         </td>
-                        <td>{{ $article->unite_mesure }}</td>
+                        <td>                        {{  $article->uniteMesure->ref }}</td>
+
                         <td>{{ number_format($article->cout_moyen_pondere, 0, ',', ' ') }}</td>
-                        <td class="app-fw-bold">{{ $article->quantite_stock }}</td>
+                        <td class="app-fw-bold">
+                            @php
+                                // Calculer la quantité de stock général comme la somme des quantités des projets
+                                $quantiteStockGeneral = DB::table('stock_projet')
+                                    ->whereIn('id_projet', $projets_bu)
+                                    ->where('article_id', $article->id)
+                                    ->sum('quantite');
+                            @endphp
+                            <a href="#" class="text-decoration-none stock-detail-link" data-article-id="{{ $article->id }}" data-bs-toggle="modal" data-bs-target="#stockDetailModal">
+                                {{ $quantiteStockGeneral ?? 0 }}
+                            </a>
+                        </td>
                         <td class="text-center">
                             @php
-                                // Calculer DEMANDES EN COURS pour tous les projets de la BU
+                                // Calculer RAV EN COURS pour tous les projets de la BU
                                 $payEnCours = DB::table('lignes_demande_approvisionnement')
                     ->join('demande_approvisionnements', 'lignes_demande_approvisionnement.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
                     ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
@@ -103,18 +115,19 @@
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer RETOURS HIVERNAGE pour tous les projets de la BU
-                                $retourHive = DB::table('transfert_stock')
-                                    ->whereIn('id_projet_destination', $projets_bu)
-                                    ->where('article_id', $article->id)
-                                    ->where('type_transfert', 'retour_hive')
-                                    ->sum('quantite');
+                                // Calculer RETOURS RAV pour tous les projets de la BU
+                                $retourChantier = DB::table('mouvements_stock')
+                                    ->join('stock_projet', 'mouvements_stock.stock_projet_id', '=', 'stock_projet.id')
+                                    ->whereIn('stock_projet.id_projet', $projets_bu)
+                                    ->where('stock_projet.article_id', $article->id)
+                                    ->where('mouvements_stock.type_mouvement', 'retour_chantier')
+                                    ->sum('mouvements_stock.quantite');
                             @endphp
-                            {{ $retourHive ?? 0 }}
+                            {{ $retourChantier ?? 0 }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer APPRO ARRIVE pour tous les projets de la BU
+                                // Calculer APPRO EN COURS pour tous les projets de la BU (découle du bon de commande)
                                 $approArrive = DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
                                     ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
@@ -124,8 +137,8 @@
                                               ->orWhereIn('demande_achats.projet_id', $projets_bu);
                                     })
                                     ->where('lignes_bon_commande.article_id', $article->id)
-                                    ->where('bon_commandes.statut', 'livrée')
-                                    ->sum('lignes_bon_commande.quantite_livree');
+                                    ->whereIn('bon_commandes.statut', ['confirmé', 'en_cours'])
+                                    ->sum('lignes_bon_commande.quantite');
                             @endphp
                             {{ $approArrive ?? 0 }}
                         </td>
@@ -240,7 +253,74 @@
                 $(this).closest('form').submit();
             }
         });
+        
+        // Gestion des clics sur les liens de détail de stock
+        $('.stock-detail-link').on('click', function(e) {
+            e.preventDefault();
+            const articleId = $(this).data('article-id');
+            
+            // Appel AJAX pour récupérer les détails du stock
+            $.ajax({
+                url: `/articles/${articleId}/stock-details`,
+                method: 'GET',
+                success: function(response) {
+                    // Remplir la modal avec les données
+                    $('#stockDetailModalLabel').text(`Détails du stock - ${response.article.nom}`);
+                    
+                    let stockTableBody = '';
+                    if (response.stocks.length > 0) {
+                        response.stocks.forEach(function(stock) {
+                            stockTableBody += `
+                                <tr>
+                                    <td>${stock.projet_nom}</td>
+                                    <td class="text-end">${stock.quantite}</td>
+                                    <td>${stock.unite_mesure}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        stockTableBody = '<tr><td colspan="3" class="text-center">Aucun stock disponible pour cet article</td></tr>';
+                    }
+                    
+                    $('#stockTableBody').html(stockTableBody);
+                },
+                error: function() {
+                    alert('Erreur lors du chargement des détails du stock');
+                }
+            });
+        });
     });
 </script>
+
+<!-- Modal pour afficher les détails du stock -->
+<div class="modal fade" id="stockDetailModal" tabindex="-1" aria-labelledby="stockDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockDetailModalLabel">Détails du stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Projet</th>
+                                <th class="text-end">Quantité</th>
+                                <th>Unité</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <!-- Les données seront chargées ici via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endpush
 @endsection

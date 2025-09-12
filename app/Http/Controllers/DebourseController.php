@@ -26,7 +26,9 @@ public function index()
         }
 
         $contrat = Contrat::findOrFail($contratId);
-        $debourses = Debourse::where('contrat_id', $contrat->id)->get();
+        $debourses = Debourse::where('contrat_id', $contrat->id)
+                            ->orderBy('created_at', 'desc')
+                            ->get();
         return view('debourses.index', compact('debourses', 'contrat'));
     }
 
@@ -43,6 +45,7 @@ public function index()
         $contrat = Contrat::with(['dqes.lignes'])->findOrFail($contratId);
         $debourses = Debourse::where('contrat_id', $contrat->id)
                             ->where('type', 'sec')
+                            ->orderBy('created_at', 'desc')
                             ->get();
         return view('debourses.debourse_sec', compact('debourses', 'contrat'));
     }
@@ -84,6 +87,7 @@ public function index()
         $contrat = Contrat::findOrFail($contratId);
         $debourses = Debourse::where('contrat_id', $contrat->id)
                             ->where('type', 'frais_chantier')
+                            ->orderBy('created_at', 'desc')
                             ->get();
         return view('debourses.frais_chantier', compact('debourses', 'contrat'));
     }

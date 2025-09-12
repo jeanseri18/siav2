@@ -6,21 +6,20 @@
 <div class="dashboard-section users">
     <div class="section-header">
         <h2 class="section-title">
-            <i class="fas fa-users-cog"></i>
-            Accès et Permissions des Utilisateurs
+            <i class="fas fa-users"></i>
+            Gestion des Utilisateurs
         </h2>
     </div>
     
     <div class="dashboard-grid">
         <a href="{{ route('users.index') }}" class="dashboard-card primary">
             <div class="card-icon">
-                <i class="fas fa-users"></i>
+                <i class="fas fa-list"></i>
             </div>
             <div class="card-content">
                 <h3>Liste des Utilisateurs</h3>
-                <p>Gérer tous les utilisateurs</p>
+                <p>Consulter tous les utilisateurs</p>
             </div>
-           
         </a>
         
         <a href="{{ route('users.create') }}" class="dashboard-card success">
@@ -29,24 +28,27 @@
             </div>
             <div class="card-content">
                 <h3>Nouvel Utilisateur</h3>
-                <p>Ajouter un nouvel utilisateur</p>
+                <p>Créer un nouvel utilisateur</p>
             </div>
-          
         </a>
+        
+       
+      
     </div>
 </div>
 
 <style>
 :root {
-    --primary-color: #033765;
+    --primary-color: #033d71;
     --secondary-color: #0A8CFF;
     --success-color: #28a745;
     --info-color: #17a2b8;
     --warning-color: #ffc107;
     --accent-color: #ffffff;
-    --gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
+    --gradient-primary: linear-gradient(135deg, #033d71 0%, #0A8CFF 100%);
     --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     --gradient-info: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
     --gradient-utilities: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
     --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
     --shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);
@@ -92,13 +94,18 @@
 }
 
 .dashboard-section.users::before {
-    bottom: 0;
-    left: 0;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
-    border-radius: 50%;
-    transform: translate(-30%, 30%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
 }
 
 /* Section Ventes */
@@ -145,7 +152,7 @@
 }
 
 .users .section-title i {
-    background: linear-gradient(45deg, #74b9ff, #0984e3);
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -160,7 +167,7 @@
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 2rem;
     position: relative;
     z-index: 1;
@@ -202,6 +209,7 @@
 .dashboard-card.primary::before { background: var(--gradient-primary); }
 .dashboard-card.success::before { background: var(--gradient-success); }
 .dashboard-card.info::before { background: var(--gradient-info); }
+.dashboard-card.warning::before { background: var(--gradient-warning); }
 .dashboard-card.import::before { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 .dashboard-card.config::before { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
 
@@ -225,6 +233,7 @@
 .dashboard-card.primary .card-icon { color: var(--primary-color); }
 .dashboard-card.success .card-icon { color: var(--success-color); }
 .dashboard-card.info .card-icon { color: var(--info-color); }
+.dashboard-card.warning .card-icon { color: var(--warning-color); }
 .dashboard-card.import .card-icon { color: #667eea; }
 .dashboard-card.config .card-icon { color: #f5576c; }
 

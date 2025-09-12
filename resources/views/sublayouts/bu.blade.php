@@ -38,13 +38,14 @@
 <style>
 :root {
     /* Variables harmonisées avec app.blade.php */
-    --primary-color: var(--primary, #033765);
+    --primary-color: var(--primary, #033d71);
     --secondary-color: var(--primary-light, #0A8CFF);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
     --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
@@ -57,7 +58,7 @@
     border-radius: var(--border-radius);
     padding: 3rem 2rem;
     margin: 2rem auto;
-    max-width: 2600px;
+    max-width: 1400px;
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
@@ -66,27 +67,18 @@
 .dashboard-section.business-units::before {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(30%, -30%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
     pointer-events: none;
 }
 
-.dashboard-section.business-units::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(-30%, 30%);
-    pointer-events: none;
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
 }
 
 .section-title {
@@ -106,13 +98,10 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: buildingPulse 2s ease-in-out infinite;
+
 }
 
-@keyframes buildingPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
+
 
 .dashboard-grid {
     display: grid;
@@ -179,7 +168,7 @@
 }
 
 .card-icon {
-    font-size: 4rem;
+    font-size: 3.5rem;
     margin-bottom: 1.5rem;
     color: var(--secondary-color);
     transition: var(--transition);

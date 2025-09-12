@@ -155,9 +155,9 @@
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                                                            data-designation="{{ $article->designation }}"
+                                                            data-designation="{{ $article->nom }}"
                                                             {{ $ligne->article_id == $article->id ? 'selected' : '' }}>
-                                                            {{ $article->code }} - {{ $article->designation }}
+                                                            {{ $article->reference_fournisseur }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -224,8 +224,8 @@
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                        data-designation="{{ $article->designation }}">
-                        {{ $article->code }} - {{ $article->designation }}
+                        data-designation="{{ $article->nom }}">
+                        {{ $article->reference_fournisseur }} - {{ $article->nom }}
                     </option>
                 @endforeach
             </select>

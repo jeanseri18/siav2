@@ -77,6 +77,7 @@
                             <td>
                                 @php
                                     $roleLabels = [
+                                        'dg' => 'DG',
                                         'chef_projet' => 'Chef de Projet',
                                         'conducteur_travaux' => 'Conducteur de Travaux',
                                         'chef_chantier' => 'Chef de Chantier',
@@ -84,12 +85,12 @@
                                         'magasinier' => 'Magasinier',
                                         'acheteur' => 'Acheteur',
                                         'controleur_gestion' => 'Contrôleur de Gestion',
+                                        'controleur_qualite' => 'Contrôleur Qualité',
+                                        'responsable_technique' => 'Responsable technique',
+                                        'responsable_financier' => 'Responsable financier',
                                         'secretaire' => 'Secrétaire',
                                         'chauffeur' => 'Chauffeur',
-                                        'gardien' => 'Gardien',
-                                        'employe' => 'Employé',
-                                        'admin' => 'Administrateur',
-                                        'dg' => 'Directeur Général'
+                                        'admin' => 'Administrateur'
                                     ];
                                     $roleClass = match($employe->role) {
                                         'admin', 'dg' => 'danger',

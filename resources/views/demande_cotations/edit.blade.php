@@ -187,7 +187,7 @@
                                                         <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
                                                             data-designation="{{ $article->nom }}"
                                                             {{ $ligne->article_id == $article->id ? 'selected' : '' }}>
-                                                            {{ $article->code }} - {{ $article->nom }}
+                                                            {{ $article->reference }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -244,7 +244,7 @@
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
                         data-designation="{{ $article->nom }}">
-                        {{ $article->code }} - {{ $article->nom }}
+                        {{ $article->reference }} - {{ $article->nom }}
                     </option>
                 @endforeach
             </select>

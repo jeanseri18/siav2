@@ -9,6 +9,7 @@ use App\Models\Facture;
 use App\Models\Prestation;
 use App\Models\ClientFournisseur;
 use App\Models\TypeTravaux;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -26,6 +27,18 @@ class ContratController extends Controller
         return view('contrats.all', compact('contrats', 'projets'));
     }
 
+    // Afficher le formulaire de création de contrat (vue séparée)
+    public function allCreate()
+    {
+        // Récupérer tous les projets pour le formulaire
+        $projets = Projet::all();
+        
+        // Récupérer tous les types de travaux
+        $typeTravaux = TypeTravaux::all();
+        
+        return view('contrats.allcreate', compact('projets', 'typeTravaux'));
+    }
+
     // Afficher la liste des contrats
     public function index()
     {
@@ -38,7 +51,7 @@ class ContratController extends Controller
         
         // Récupérer les contrats du projet sélectionné
         $contrats = Contrat::where('id_projet', $projet_id)
-                          ->with(['client', 'projet'])
+                          ->with(['client', 'projet', 'chefChantier'])
                           ->get();
         
         // Récupérer tous les projets et articles pour le sublayout projetdetail
@@ -68,7 +81,8 @@ class ContratController extends Controller
         $projets = Projet::all();
         $articles = Article::all();
         $typeTravaux=TypeTravaux::all();
-        return view('contrats.create', compact('projet_id','clients','projets','articles','typeTravaux'));
+        $chefsChantier = User::where('role', 'chef_chantier')->get();
+        return view('contrats.create', compact('projet_id','clients','projets','articles','typeTravaux','chefsChantier'));
     }
 
     // Enregistrer un nouveau contrat
@@ -82,6 +96,7 @@ class ContratController extends Controller
             'type_travaux' => 'required',
             'taux_garantie' => 'required|numeric',
             'client_id' => 'nullable|exists:client_fournisseurs,id',
+            'chef_chantier_id' => 'nullable|exists:users,id',
             'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
             'projet_id' => 'nullable|exists:projets,id',
@@ -114,6 +129,7 @@ class ContratController extends Controller
             'type_travaux' => $request->type_travaux,
             'taux_garantie' => $request->taux_garantie,
             'client_id' => $request->client_id,
+            'chef_chantier_id' => $request->chef_chantier_id,
             'montant' => $request->montant,
             'statut' => $request->statut,
             'decompte' => $request->decompte ?? false,
@@ -148,7 +164,8 @@ class ContratController extends Controller
         $projets = Projet::all();
         $articles = Article::all();
         $typeTravaux=TypeTravaux::all();
-        return view('contrats.edit', compact('contrat','clients','projets','articles','typeTravaux'));
+        $chefsChantier = User::where('role', 'chef_chantier')->get();
+        return view('contrats.edit', compact('contrat','clients','projets','articles','typeTravaux','chefsChantier'));
     }
 
     // Mettre à jour un contrat
@@ -162,6 +179,7 @@ class ContratController extends Controller
             'type_travaux' => 'required',
             'taux_garantie' => 'required|numeric',
             'client_id' => 'required',
+            'chef_chantier_id' => 'nullable|exists:users,id',
             'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
         ]);
@@ -317,5 +335,25 @@ $request->merge([
         
         return redirect()->route('contrats.show', $newContrat->id)
             ->with('success', 'Contrat dupliqué avec succès!');
+    }
+
+    // API pour récupérer les clients selon le projet
+    public function getClientsByProject($projetId)
+    {
+        // Récupérer l'ID du bus depuis la session
+        $id_bu = session('selected_bu');
+        
+        if (!$id_bu) {
+            return response()->json(['error' => 'Aucun BU sélectionné'], 400);
+        }
+        
+        // Récupérer tous les clients du BU sélectionné
+        // Note: Dans cette version, tous les clients du BU sont disponibles pour tous les projets
+        $clients = ClientFournisseur::where('type', 'client')
+                                    ->where('id_bu', $id_bu)
+                                    ->select('id', 'nom_raison_sociale', 'prenoms')
+                                    ->get();
+        
+        return response()->json($clients);
     }
 }

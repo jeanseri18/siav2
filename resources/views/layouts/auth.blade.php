@@ -26,7 +26,7 @@
 <style>
 /* Variables CSS */
 :root {
-    --primary-color: #033765;
+    --primary-color: #033d71;
     --primary-hover: #022954;
     --secondary-color: #0A91EA;
     --success-color: #28a745;
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<body style="background-color:#033765">
+<body style="background-color:#033d71">
    
 
 

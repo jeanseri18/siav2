@@ -46,7 +46,11 @@
                             <tbody>
                                 @forelse($debourses->where('type', 'sec') as $debourse)
                                     <tr>
-                                        <td>{{ $debourse->reference }}</td>
+                                        <td>
+                                            <a href="{{ route('debourses.details', $debourse->id) }}" class="text-primary text-decoration-none fw-bold">
+                                                {{ $debourse->reference }}
+                                            </a>
+                                        </td>
                                         <td>{{ $debourse->projet->nom_projet ?? 'N/A' }}</td>
                                         <td>{{ $debourse->contrat->nom_contrat ?? 'N/A' }}</td>
                                         <td>{{ $debourse->dqe->reference ?? 'DQE sans référence' }}</td>

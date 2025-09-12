@@ -23,6 +23,7 @@ class EmployeController extends Controller
     public function create()
     {
         $roles = [
+            'dg' => 'DG',
             'chef_projet' => 'Chef de Projet',
             'conducteur_travaux' => 'Conducteur de Travaux',
             'chef_chantier' => 'Chef de Chantier',
@@ -30,10 +31,11 @@ class EmployeController extends Controller
             'magasinier' => 'Magasinier',
             'acheteur' => 'Acheteur',
             'controleur_gestion' => 'Contrôleur de Gestion',
+            'controleur_qualite' => 'Contrôleur Qualité',
+            'responsable_technique' => 'Responsable technique',
+            'responsable_financier' => 'Responsable financier',
             'secretaire' => 'Secrétaire',
-            'chauffeur' => 'Chauffeur',
-            'gardien' => 'Gardien',
-            'employe' => 'Employé'
+            'chauffeur' => 'Chauffeur'
         ];
         
         return view('employes.create', compact('roles'));
@@ -46,7 +48,7 @@ class EmployeController extends Controller
             'prenom' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,secretaire,chauffeur,gardien,employe',
+            'role' => 'required|in:dg,chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,controleur_qualite,responsable_technique,responsable_financier,secretaire,chauffeur',
             'poste' => 'nullable|string|max:255',
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',
@@ -57,7 +59,7 @@ class EmployeController extends Controller
             'sexe' => 'nullable|in:M,F',
             'lieu_naissance' => 'nullable|string|max:255',
             'nationalite' => 'nullable|string|max:100',
-            'situation_matrimoniale' => 'nullable|in:celibataire,marie,divorce,veuf',
+            'situation_matrimoniale' => 'nullable|in:célibataire,marié(e),divorcé(e),veuf/veuve',
             'numero_cni' => 'nullable|string|max:50',
             'numero_passeport' => 'nullable|string|max:50',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -86,6 +88,7 @@ class EmployeController extends Controller
     public function edit(User $employe)
     {
         $roles = [
+            'dg' => 'DG',
             'chef_projet' => 'Chef de Projet',
             'conducteur_travaux' => 'Conducteur de Travaux',
             'chef_chantier' => 'Chef de Chantier',
@@ -93,10 +96,11 @@ class EmployeController extends Controller
             'magasinier' => 'Magasinier',
             'acheteur' => 'Acheteur',
             'controleur_gestion' => 'Contrôleur de Gestion',
+            'controleur_qualite' => 'Contrôleur Qualité',
+            'responsable_technique' => 'Responsable technique',
+            'responsable_financier' => 'Responsable financier',
             'secretaire' => 'Secrétaire',
-            'chauffeur' => 'Chauffeur',
-            'gardien' => 'Gardien',
-            'employe' => 'Employé'
+            'chauffeur' => 'Chauffeur'
         ];
         
         return view('employes.edit', compact('employe', 'roles'));
@@ -109,7 +113,7 @@ class EmployeController extends Controller
             'prenom' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($employe->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,secretaire,chauffeur,gardien,employe',
+            'role' => 'required|in:dg,chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,controleur_qualite,responsable_technique,responsable_financier,secretaire,chauffeur',
             'poste' => 'nullable|string|max:255',
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',
@@ -120,7 +124,7 @@ class EmployeController extends Controller
             'sexe' => 'nullable|in:M,F',
             'lieu_naissance' => 'nullable|string|max:255',
             'nationalite' => 'nullable|string|max:100',
-            'situation_matrimoniale' => 'nullable|in:celibataire,marie,divorce,veuf',
+            'situation_matrimoniale' => 'nullable|in:célibataire,marié(e),divorcé(e),veuf/veuve',
             'numero_cni' => 'nullable|string|max:50',
             'numero_passeport' => 'nullable|string|max:50',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

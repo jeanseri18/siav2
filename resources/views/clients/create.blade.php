@@ -131,9 +131,10 @@
                                         <i class="fas fa-money-bill-wave me-2"></i>Mode de paiement:
                                     </label>
                                     <select name="mode_paiement" class="app-form-select" required>
-                                        <option value="Virement">Virement</option>
-                                        <option value="Chèque">Chèque</option>
-                                        <option value="Espèces">Espèces</option>
+                                        <option value="">Sélectionner un mode de paiement</option>
+                                        @foreach ($modesPaiement as $mode)
+                                            <option value="{{ $mode->nom }}" {{ old('mode_paiement') == $mode->nom ? 'selected' : '' }}>{{ $mode->nom }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -236,9 +237,17 @@
         if (oldCategorie === 'Entreprise') {
             $('#particulier_fields').hide();
             $('#entreprise_fields').show();
+            // Désactiver les champs particulier
+            $('#particulier_fields input, #particulier_fields select').prop('disabled', true);
+            // Activer les champs entreprise
+            $('#entreprise_fields input, #entreprise_fields select').prop('disabled', false);
         } else {
             $('#particulier_fields').show();
             $('#entreprise_fields').hide();
+            // Activer les champs particulier
+            $('#particulier_fields input, #particulier_fields select').prop('disabled', false);
+            // Désactiver les champs entreprise
+            $('#entreprise_fields input, #entreprise_fields select').prop('disabled', true);
         }
         // Afficher/masquer les champs en fonction de la catégorie sélectionnée
         $('#categorie').change(function() {
@@ -249,24 +258,28 @@
                 particulierFields.style.display = 'none';
                 entrepriseFields.style.display = 'block';
                 
-                // Vider et désactiver les champs particulier
-                $('#particulier_fields input[name="nom_raison_sociale"]').val('').prop('required', false);
-                $('#particulier_fields input[name="prenoms"]').val('').prop('required', false);
+                // Désactiver les champs particulier
+                $('#particulier_fields input, #particulier_fields select').prop('disabled', true);
+                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', false);
+                $('#particulier_fields input[name="prenoms"]').prop('required', false);
                 
                 // Activer les champs entreprise
+                $('#entreprise_fields input, #entreprise_fields select').prop('disabled', false);
                 $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', true);
                 $('#entreprise_fields select[name="secteur_activite"]').prop('required', true);
             } else {
                 particulierFields.style.display = 'block';
                 entrepriseFields.style.display = 'none';
                 
-                // Vider et désactiver les champs entreprise
-                $('#entreprise_fields input[name="nom_raison_sociale"]').val('').prop('required', false);
+                // Désactiver les champs entreprise
+                $('#entreprise_fields input, #entreprise_fields select').prop('disabled', true);
+                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', false);
                 $('#entreprise_fields input[name="n_rccm"]').val('');
                 $('#entreprise_fields input[name="n_cc"]').val('');
                 $('#entreprise_fields select[name="secteur_activite"]').prop('required', false);
                 
                 // Activer les champs particulier
+                $('#particulier_fields input, #particulier_fields select').prop('disabled', false);
                 $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', true);
                 $('#particulier_fields input[name="prenoms"]').prop('required', true);
             }

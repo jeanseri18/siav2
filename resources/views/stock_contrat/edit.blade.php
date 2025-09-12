@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier un Produit du Stock')
-@section('page-title', 'Modifier un Produit du Stock')
+@section('title', 'Modifier un Article du Stock')
+@section('page-title', 'Modifier un Article du Stock')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('contrats.index') }}">Contrats</a></li>
@@ -15,7 +15,7 @@
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-edit me-2"></i>Modifier le Produit: {{ $stock->article->nom }}
+                <i class="fas fa-edit me-2"></i>Modifier l'Article: {{ $stock->article->nom }}
             </h2>
         </div>
         

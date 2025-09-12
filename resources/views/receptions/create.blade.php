@@ -121,9 +121,9 @@
                                                 @endphp
                                                 <tr>
                                                     <td>
-                                                        <strong>{{ $ligne->article->designation }}</strong>
+                                                        <strong>{{ $ligne->article->nom }}</strong>
                                                         <br>
-                                                        <small class="text-muted">{{ $ligne->article->reference_fournisseur ?? $ligne->article->code }}</small>
+                                                        <small class="text-muted">{{ $ligne->article->reference_fournisseur ?? $ligne->article->reference }}</small>
                                                         <input type="hidden" name="ligne_id[]" value="{{ $ligne->id }}">
                                                     </td>
                                                     <td>

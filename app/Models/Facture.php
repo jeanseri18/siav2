@@ -20,9 +20,12 @@ class Facture extends Model
         'id_artisan',
         'date_emission',
         'num_decompte',
+        'decompte',
         'taux_avancement',
         'montant_ht',
+        'tva',
         'montant_total',
+        'montant_ttc',
         'ca_realise',
         'montant_reglement',
         'statut'

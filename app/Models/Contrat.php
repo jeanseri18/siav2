@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Contrat extends Model
 {
@@ -13,12 +14,17 @@ class Contrat extends Model
     
     protected $fillable = [
         'ref_contrat', 'nom_contrat','id_projet', 'nom_projet', 'date_debut', 'date_fin',
-        'type_travaux', 'taux_garantie', 'client_id', 'montant', 'statut', 'decompte'
+        'type_travaux', 'taux_garantie', 'client_id', 'chef_chantier_id', 'montant', 'statut', 'decompte'
     ];
     
     public function client()
     {
         return $this->belongsTo(ClientFournisseur::class, 'client_id');
+    }
+    
+    public function chefChantier()
+    {
+        return $this->belongsTo(User::class, 'chef_chantier_id');
     }
     
     public function projet()
@@ -66,6 +72,20 @@ public function fraisGeneraux()
     public function factures()
     {
         return $this->hasMany(Facture::class, 'id_contrat');
+    }
+    
+    /**
+     * Relation avec les demandes de ravitaillement
+     */
+    public function demandesRavitaillement()
+    {
+        return $this->hasMany(DemandeRavitaillement::class);
+    }
+    
+    // Accessor pour la référence
+    public function getReferenceAttribute()
+    {
+        return $this->ref_contrat;
     }
     
     /**

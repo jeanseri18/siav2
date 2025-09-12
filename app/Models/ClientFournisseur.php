@@ -41,6 +41,28 @@ class ClientFournisseur extends Model {
         return $this->hasOne(ContactPerson::class, 'client_fournisseur_id')->where('contact_principal', true);
     }
     
+    /**
+     * Relation avec les demandes de ravitaillement (en tant que fournisseur)
+     */
+    public function demandesRavitaillement()
+    {
+        return $this->hasMany(DemandeRavitaillement::class, 'fournisseur_id');
+    }
+    
+    /**
+     * Relation avec les contrats (en tant que client)
+     */
+    public function contrats()
+    {
+        return $this->hasMany(Contrat::class, 'client_id');
+    }
+    
+    // Accessor pour le nom
+    public function getNomAttribute()
+    {
+        return $this->nom_raison_sociale;
+    }
+    
     protected static function boot() {
         parent::boot();
     

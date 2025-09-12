@@ -39,7 +39,7 @@
 
         <div class="project-navigation-wrapper">
             <div class="project-nav-grid">
-                <a href="#" class="project-nav-card detail">
+                <a href="{{ route('projets.show', ['projet' => session('projet_id')]) }}" class="project-nav-card detail">
                     <div class="project-nav-icon">
                         <i class="fas fa-info-circle"></i>
                     </div>
@@ -162,11 +162,11 @@
 /* Au lieu de :root, utilisez un préfixe pour vos variables CSS */
 
 .project-theme {
-    --project-primary-color: #033765;
+    --project-primary-color: #033d71;
     --project-secondary-color: #0A8CFF;
     --project-success-color: #28a745;
     --project-accent-color: #ffffff;
-    --project-gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
+    --project-gradient-primary: linear-gradient(135deg, #033d71 0%, #0A8CFF 100%);
     --project-gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     --project-gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
     --project-shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);

@@ -13,18 +13,18 @@
             padding: 20px;
         }
         h1 {
-            color: #033765;
+            color: #033d71;
             margin-bottom: 5px;
         }
         h2 {
-            color: #033765;
+            color: #033d71;
             margin-bottom: 10px;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #033765;
+            border-bottom: 2px solid #033d71;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
@@ -60,7 +60,7 @@
         th {
             background-color: #f8f9fa;
             font-weight: bold;
-            color: #033765;
+            color: #033d71;
         }
         .text-right {
             text-align: right;

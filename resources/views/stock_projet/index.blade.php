@@ -20,7 +20,7 @@
             </h2>
             <div class="app-card-actions">
                 <a href="{{ route('stock.create') }}" class="app-btn app-btn-primary app-btn-icon">
-                    <i class="fas fa-plus"></i> Ajouter un produit
+                    <i class="fas fa-plus"></i> Ajouter un article
                 </a>
             </div>
         </div>
@@ -45,19 +45,19 @@
                     <tr>
                         <th>Réf.</th>
                         <th>Catégorie</th>
-                                <th>Sous Catégorie</th>
-                        <th>Réf Fourn.</th>
+                        <th>Sous Catégorie</th>
+                        <!-- <th>Réf Fourn.</th> -->
                         <th>Désignation Article</th>
                         <th>Type</th>
                         <th>Unité</th>
-                        <th>Coût Moyen Pondéré</th>
+                        <!-- <th>Coût Moyen Pondéré</th> -->
                         <th>Qté Disponible</th>
-                        <th>Paiement en Cours</th>
-                        <th>Retour Ruche</th>
-                        <th>Appro en Cours</th>
-                        <th>Retour Appro</th>
-                        <th>Transfert Stock In</th>
-                        <th>Transfert Stock Out</th>
+                        <!-- <th>Paiement en Cours</th> -->
+                        <!-- <th>Retour Ruche</th> -->
+                        <!-- <th>Appro en Cours</th>
+                        <th>Retour Appro</th> -->
+                        <!-- <th>Transfert Stock In</th>
+                        <th>Transfert Stock Out</th> -->
                         <th style="width: 200px;">Actions</th>
                     </tr>
                 </thead>
@@ -73,7 +73,7 @@
                         </td>
                         <td>{{ $stock->article && $stock->article->categorie ? $stock->article->categorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->sousCategorie ? $stock->article->sousCategorie->nom : '-' }}</td>
-                        <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom : '-' }}</td>
+                        <!-- <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom_raison_sociale . ' ' . $stock->article->fournisseur->prenoms : '-' }}</td> -->
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -83,12 +83,12 @@
                             </div>
                         </td>
                         <td>{{ $stock->article ? $stock->article->type : '-' }}</td>
-                        <td>{{ $stock->uniteMesure ? $stock->uniteMesure->nom : ($stock->article && $stock->article->unite ? $stock->article->unite->nom : '-') }}</td>
-                        <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td>
+                        <td>{{ $stock->article->uniteMesure->ref }}</td>
+                        <!-- <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td> -->
                         <td class="app-fw-bold">{{ $stock->qte_disponible ?? $stock->quantite }}</td>
-                        <td>{{ $stock->paiement_en_cours ?? '0' }}</td>
-                        <td>{{ $stock->retour_ruche ?? '0' }}</td>
-                        <td>
+                        <!-- <td>{{ $stock->paiement_en_cours ?? '0' }}</td> -->
+                        <!-- <td>{{ $stock->retour_ruche ?? '0' }}</td> -->
+                        <!-- <td>
                             @php
                                 $approEnCours = \App\Models\LigneDemandeApprovisionnement::whereHas('demandeApprovisionnement', function($query) use ($projet_id) {
                                     $query->where('projet_id', $projet_id)
@@ -123,8 +123,8 @@
                                     ->sum('lignes_bon_commande.quantite_livree');
                             @endphp
                             {{ $approArrive ?? '0' }}
-                        </td>
-                        <td>
+                        </td> -->
+                        <!-- <td>
                             @php
                                 $retourAppro = \App\Models\RetourApprovisionnement::where('projet_id', $projet_id)
                                     ->where('article_id', $stock->article_id)
@@ -132,8 +132,8 @@
                                     ->sum('quantite_retournee');
                             @endphp
                             {{ $retourAppro }}
-                        </td>
-                        <td>
+                        </td> -->
+                        <!-- <td>
                             @php
                                 $transfertIn = \App\Models\TransfertStock::where('id_projet_destination', $projet_id)
                                     ->where('article_id', $stock->article_id)
@@ -150,8 +150,8 @@
                                     ->sum('quantite');
                             @endphp
                             {{ $transfertOut }}
-                        </td>
-                        <td>
+                        </td>-->
+                        <td> 
                             <div class="dropdown">
                                 <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
@@ -325,7 +325,7 @@
         $('.delete-btn').click(function(e) {
             e.preventDefault();
             
-            if (confirm('Êtes-vous sûr de vouloir supprimer ce produit du stock ?')) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet article du stock ?')) {
                 $(this).closest('form').submit();
             }
         });

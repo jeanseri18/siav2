@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container">
-@include('sublayouts.vente')
 <br>
     <h1>Rapport des Ventes</h1>
     

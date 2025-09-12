@@ -114,6 +114,21 @@
                         </div>
                         
                         <div class="app-form-group">
+                            <label for="chef_chantier_id" class="app-form-label">
+                                <i class="fas fa-user-tie me-2"></i>Chef de chantier
+                            </label>
+                            <select class="app-form-select" id="chef_chantier_id" name="chef_chantier_id">
+                                <option value="">Sélectionner un chef de chantier</option>
+                                @foreach($chefsChantier as $chef)
+                                    <option value="{{ $chef->id }}" {{ old('chef_chantier_id', $contrat->chef_chantier_id) == $chef->id ? 'selected' : '' }}>
+                                        {{ $chef->nom }} {{ $chef->prenom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Chef de chantier responsable du contrat</div>
+                        </div>
+                        
+                        <div class="app-form-group">
                             <label for="montant" class="app-form-label">
                                 <i class="fas fa-money-bill-wave me-2"></i>Montant <span class="text-muted">(optionnel)</span>
                             </label>

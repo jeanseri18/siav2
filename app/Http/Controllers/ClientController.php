@@ -5,6 +5,7 @@ use App\Models\ClientFournisseur;
 use App\Models\ContactPerson;
 use App\Models\SecteurActivite;
 use App\Models\RegimeImposition;
+use App\Models\ModePaiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -34,17 +35,20 @@ class ClientController extends Controller
         $secteurs = SecteurActivite::all();
         // On récupère les régimes d'imposition
         $regimes = RegimeImposition::all();
-        return view('clients.create', compact('secteurs', 'regimes'));
+        // On récupère les modes de paiement
+        $modesPaiement = ModePaiement::all();
+        return view('clients.create', compact('secteurs', 'regimes', 'modesPaiement'));
     }
 
     public function store(Request $request) {
      
 
         // Validation des champs
+        $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
             'delai_paiement' => 'required|integer',
-            'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
+            'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
@@ -66,7 +70,7 @@ class ClientController extends Controller
 
         // Validation conditionnelle selon la catégorie
         if ($request->categorie === 'Particulier') {
-            $validationRules['nom_raison_sociale'] = 'nullable|string|max:255'; // Nom optionnel pour particulier
+            $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Nom optionnel pour particulier
             $validationRules['prenoms'] = 'required|string|max:255';
         } else {
             $validationRules['nom_raison_sociale'] = 'required|string|max:255'; // Raison sociale pour entreprise
@@ -150,15 +154,18 @@ $request->merge([
         $secteurs = SecteurActivite::all();
         // On récupère les régimes d'imposition
         $regimes = RegimeImposition::all();
-        return view('clients.edit', compact('client', 'secteurs', 'regimes'));
+        // On récupère les modes de paiement
+        $modesPaiement = ModePaiement::all();
+        return view('clients.edit', compact('client', 'secteurs', 'regimes', 'modesPaiement'));
     }
 
     public function update(Request $request, ClientFournisseur $client) {
         // Validation des champs
+        $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
             'delai_paiement' => 'required|integer',
-            'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
+            'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
@@ -245,6 +252,12 @@ $request->merge([
         });
 
         return redirect()->route('clients.index')->with('success', 'Client mis à jour avec succès.');
+    }
+
+    public function show($id)
+    {
+        $client = ClientFournisseur::with(['contactPersons'])->findOrFail($id);
+        return view('clients.show', compact('client'));
     }
 
     public function destroy(ClientFournisseur $client) {

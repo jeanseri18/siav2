@@ -140,13 +140,14 @@
                                         <th style="min-width: 100px;">Quantité</th>
                                         <th style="min-width: 140px;">Prix Unitaire HT</th>
                                         <th style="min-width: 140px;">Montant HT</th>
+                                        <th style="min-width: 100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($lignesOrganisees as $categorieNom => $categorieData)
                                         <!-- Affichage Catégorie -->
                                         <tr class="table-primary">
-                                            <td colspan="6">
+                                            <td colspan="7">
                                                 <strong><i class="fas fa-folder"></i> {{ $categorieNom }}</strong>
                                             </td>
                                         </tr>
@@ -154,7 +155,7 @@
                                         @foreach($categorieData['sousCategories'] as $sousCategorieNom => $sousCategorieData)
                                             <!-- Affichage Sous-catégorie -->
                                             <tr class="table-info">
-                                                <td colspan="6" style="padding-left: 30px;">
+                                                <td colspan="7" style="padding-left: 30px;">
                                                     <strong><i class="fas fa-folder-open"></i> {{ $sousCategorieNom }}</strong>
                                                 </td>
                                             </tr>
@@ -162,20 +163,44 @@
                                             @foreach($sousCategorieData['rubriques'] as $rubriqueNom => $rubriqueData)
                                                 <!-- Affichage Rubrique -->
                                                 <tr class="table-warning">
-                                                    <td colspan="6" style="padding-left: 60px;">
+                                                    <td colspan="7" style="padding-left: 60px;">
                                                         <strong><i class="fas fa-list"></i> {{ $rubriqueNom }}</strong>
                                                     </td>
                                                 </tr>
                                                 
                                                 <!-- Affichage des lignes de cette rubrique -->
                                                 @foreach($rubriqueData['lignes'] as $ligne)
-                                                    <tr style="padding-left: 90px;">
+                                                    <tr style="padding-left: 90px;" id="ligne-{{ $ligne->id }}">
                                                         <td style="padding-left: 90px; white-space: nowrap;">{{ $ligne->section ?? 'N/A' }}</td>
-                                                        <td style="word-wrap: break-word; max-width: 300px;">{{ $ligne->designation }}</td>
+                                                        <td style="word-wrap: break-word; max-width: 300px;">
+                                                            <div id="designation-display-{{ $ligne->id }}">
+                                                                {{ $ligne->designation }}
+                                                            </div>
+                                                            <div id="designation-edit-{{ $ligne->id }}" style="display: none;">
+                                                                <form action="{{ route('dqe.lines.update', [$dqe->id, $ligne->id]) }}" method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <div class="input-group input-group-sm">
+                                                                        <input type="text" name="designation" class="form-control" value="{{ $ligne->designation }}" required>
+                                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                                            <i class="fas fa-check"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit({{ $ligne->id }})">
+                                                                            <i class="fas fa-times"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </td>
                                                         <td style="text-align: center;">{{ $ligne->unite }}</td>
                                                         <td style="text-align: center;">{{ number_format($ligne->quantite, 2, ',', ' ') }}</td>
                                                         <td style="text-align: right; white-space: nowrap;">{{ number_format($ligne->pu_ht, 2, ',', ' ') }} FCFA</td>
                                                         <td style="text-align: right; white-space: nowrap; font-weight: bold;">{{ number_format($ligne->montant_ht, 2, ',', ' ') }} FCFA</td>
+                                                        <td style="text-align: center;">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editDesignation({{ $ligne->id }})" title="Modifier la désignation">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             @endforeach
@@ -205,4 +230,40 @@
         </div>
     </div>
 </div>
+
+<script>
+function editDesignation(ligneId) {
+    // Masquer l'affichage et afficher le formulaire d'édition
+    document.getElementById('designation-display-' + ligneId).style.display = 'none';
+    document.getElementById('designation-edit-' + ligneId).style.display = 'block';
+    
+    // Focus sur le champ de saisie
+    const input = document.querySelector('#designation-edit-' + ligneId + ' input[name="designation"]');
+    if (input) {
+        input.focus();
+        input.select();
+    }
+}
+
+function cancelEdit(ligneId) {
+    // Masquer le formulaire d'édition et afficher l'affichage normal
+    document.getElementById('designation-edit-' + ligneId).style.display = 'none';
+    document.getElementById('designation-display-' + ligneId).style.display = 'block';
+}
+
+// Gérer l'annulation avec la touche Échap
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        // Trouver tous les formulaires d'édition ouverts et les fermer
+        const editForms = document.querySelectorAll('[id^="designation-edit-"]');
+        editForms.forEach(function(form) {
+            if (form.style.display !== 'none') {
+                const ligneId = form.id.replace('designation-edit-', '');
+                cancelEdit(ligneId);
+            }
+        });
+    }
+});
+</script>
+
 @endsection

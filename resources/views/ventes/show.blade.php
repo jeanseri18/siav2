@@ -10,7 +10,6 @@
 @endsection
 
 @section('content')
-@include('sublayouts.vente')
 
 <div class="container app-fade-in">
     <div class="row">

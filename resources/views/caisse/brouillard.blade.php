@@ -7,6 +7,88 @@
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('caisse.brouillard') }}">Caisse</a></li>
 <li class="breadcrumb-item active">Brouillard</li>
+<!-- Modal Saisir Dépense -->
+<div class="modal fade" id="saisirDepenseModal" tabindex="-1" aria-labelledby="saisirDepenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saisirDepenseModalLabel">Saisir une Dépense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('caisse.saisirDepense') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="motif" class="form-label">Motif de la dépense</label>
+                        <input type="text" class="form-control" id="motif" name="motif" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="montant" class="form-label">Montant</label>
+                        <input type="number" class="form-control" id="montant" name="montant" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (optionnel)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning">Saisir la Dépense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Demander une Dépense -->
+<div class="modal fade" id="demanderDepenseModal" tabindex="-1" aria-labelledby="demanderDepenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="demanderDepenseModalLabel">Demander une Dépense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('caisse.demandeDepense') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="motif_demande" class="form-label">Motif de la demande</label>
+                        <input type="text" class="form-control" id="motif_demande" name="motif" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="montant_demande" class="form-label">Montant demandé</label>
+                        <input type="number" class="form-control" id="montant_demande" name="montant" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="responsable_hierarchique" class="form-label">Responsable hiérarchique</label>
+                        <select class="form-control" id="responsable_hierarchique" name="responsable_hierarchique_id" required>
+                            <option value="">Choisir un responsable</option>
+                            @foreach($responsables as $responsable)
+                                <option value="{{ $responsable->id }}">{{ $responsable->prenom }} {{ $responsable->nom }} ({{ $responsable->poste }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="justification" class="form-label">Justification</label>
+                        <textarea class="form-control" id="justification" name="justification" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-info">Envoyer la Demande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(modalId) {
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    modal.show();
+}
+</script>
+
 @endsection
 
 @section('content')
@@ -17,6 +99,53 @@
         <a href="{{ route('caisse.approvisionnement') }}" class="app-btn app-btn-primary">
             <i class="fas fa-plus-circle me-2"></i>Nouvel Approvisionnement
         </a>
+    </div>
+    
+    <!-- Tableau de bord -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="app-card">
+                <div class="app-card-header">
+                    <h2 class="app-card-title">
+                        <i class="fas fa-chart-line me-2"></i>Tableau de Bord - {{ $bus->nom }}
+                    </h2>
+                </div>
+                <div class="app-card-body">
+                    <div class="row">
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-2">Solde Début Mois</h6>
+                                <div class="h4 fw-bold text-info">{{ number_format((float)$soldeDebutMois, 2, ',', ' ') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-2">Solde Actuel</h6>
+                                <div class="h4 fw-bold text-primary">{{ number_format((float)$soldeActuel, 2, ',', ' ') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-2">Total Sorties Mois</h6>
+                                <div class="h4 fw-bold text-danger">{{ number_format((float)$totalSortiesMois, 2, ',', ' ') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-2">Total Approvisionnements</h6>
+                                <div class="h4 fw-bold text-success">{{ number_format((float)$totalApproMois, 2, ',', ' ') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-2">Solde Mois</h6>
+                                <div class="h4 fw-bold {{ ($soldeActuel - $soldeDebutMois) >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format((float)($soldeActuel - $soldeDebutMois), 2, ',', ' ') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="row">
         <!-- Formulaire d'approvisionnement de caisse -->
@@ -101,24 +230,39 @@
             </div>
         </div>
         
-        <!-- Solde de caisse actuel -->
+        <!-- Actions rapides -->
         <div class="col-md-6 mb-4">
             <div class="app-card">
                 <div class="app-card-header">
                     <h2 class="app-card-title">
-                        <i class="fas fa-wallet me-2"></i>Solde de Caisse
+                        <i class="fas fa-tools me-2"></i>Actions Rapides
                     </h2>
                 </div>
                 <div class="app-card-body">
-                    <div class="text-center py-4">
-                        <h3 class="mb-3">Solde Actuel</h3>
-                        <div class="display-4 fw-bold text-primary">{{ number_format($bus->soldecaisse, 2, ',', ' ') }}</div>
-                        <p class="text-muted mt-2">Dernière mise à jour: {{ $brouillardCaisse->first() ? $brouillardCaisse->first()->created_at->format('d/m/Y H:i') : 'Jamais' }}</p>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a href="{{ route('caisse.demande-liste') }}" class="app-btn app-btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>Demandes de Dépense
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <button class="app-btn app-btn-outline-warning w-100" onclick="openModal('saisirDepenseModal')">
+                                <i class="fas fa-minus-circle me-2"></i>Saisir Dépense
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <a href="{{ route('caisse.approvisionnement') }}" class="app-btn app-btn-outline-success w-100">
+                                <i class="fas fa-plus-circle me-2"></i>Approvisionner Caisse
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <button class="app-btn app-btn-outline-info w-100" onclick="openModal('demanderDepenseModal')">
+                                <i class="fas fa-hand-paper me-2"></i>Demander une Dépense
+                            </button>
+                        </div>
                     </div>
-                    <div class="d-grid gap-2 mt-3">
-                        <a href="{{ route('caisse.demande-liste') }}" class="app-btn app-btn-outline-primary">
-                            <i class="fas fa-list me-2"></i>Voir les demandes de dépenses
-                        </a>
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">Dernière mise à jour: {{ $brouillardCaisse->first() ? $brouillardCaisse->first()->created_at->format('d/m/Y H:i') : 'Jamais' }}</small>
                     </div>
                 </div>
             </div>

@@ -11,42 +11,42 @@
     </div>
     
     <div class="dashboard-grid">
-        <a href="{{ route('until') }}" class="dashboard-card import">
+        <a href="{{ route('until') }}" class="dashboard-card primary">
             <div class="card-icon">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <i class="fas fa-list"></i>
             </div>
             <div class="card-content">
-                <h3>Importer des Données</h3>
-                <p>Importation massive de données</p>
+                <h3>Liste des Utilitaires</h3>
+                <p>Consulter tous les utilitaires disponibles</p>
             </div>
-           
         </a>
         
-        <a href="{{ route('config-global.index') }}" class="dashboard-card config">
+        <a href="{{ route('config-global.index') }}" class="dashboard-card warning">
             <div class="card-icon">
-                <i class="fas fa-cogs"></i>
+                <i class="fas fa-chart-bar"></i>
             </div>
             <div class="card-content">
                 <h3>Configuration Globale</h3>
-                <p>Paramètres système</p>
+                <p>Parametre sytème</p>
             </div>
-            
         </a>
+        
+      
     </div>
 </div>
 <style>
 :root {
     /* Variables harmonisées avec app.blade.php */
-    --primary-color: var(--primary, #033765);
+    --primary-color: var(--primary, #033d71);
     --secondary-color: var(--primary-light, #0A8CFF);
     --success-color: var(--success, #28a745);
     --info-color: var(--info, #17a2b8);
     --warning-color: var(--warning, #ffc107);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
     --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
-    --gradient-utilities: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-utilities: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
     --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
@@ -59,7 +59,7 @@
     border-radius: var(--border-radius);
     padding: 3rem 2rem;
     margin: 2rem auto;
-    max-width: 2600px;
+    max-width: 1400px;
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
@@ -73,16 +73,17 @@
 
 /* Section Utilitaire */
 .dashboard-section.utilities {
-    background: var(--gradient-utilities);
+    background: var(--gradient-primary);
 }
 
 .dashboard-section.utilities::before {
     top: -50%;
-    right: -50%;
+    left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
-    animation: rotate 30s linear infinite;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
 }
 
 /* Section Utilisateurs */
@@ -118,6 +119,11 @@
 @keyframes rotate {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
 }
 
 .section-title {
@@ -202,6 +208,7 @@
 .dashboard-card.primary::before { background: var(--gradient-primary); }
 .dashboard-card.success::before { background: var(--gradient-success); }
 .dashboard-card.info::before { background: var(--gradient-info); }
+.dashboard-card.warning::before { background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%); }
 .dashboard-card.import::before { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 .dashboard-card.config::before { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
 
@@ -225,6 +232,7 @@
 .dashboard-card.primary .card-icon { color: var(--primary-color); }
 .dashboard-card.success .card-icon { color: var(--success-color); }
 .dashboard-card.info .card-icon { color: var(--info-color); }
+.dashboard-card.warning .card-icon { color: var(--warning-color); }
 .dashboard-card.import .card-icon { color: #667eea; }
 .dashboard-card.config .card-icon { color: #f5576c; }
 

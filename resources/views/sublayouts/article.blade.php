@@ -11,7 +11,7 @@
     </div>
     
     <div class="dashboard-grid">
-        <a href="{{ route('articles.index') }}" class="dashboard-card">
+        <a href="{{ route('articles.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-warehouse"></i>
             </div>
@@ -19,12 +19,9 @@
                 <h3>Stock</h3>
                 <p>Consultez l'état des stocks</p>
             </div>
-            <div class="card-badge">
-                <span>Inventaire</span>
-            </div>
         </a>
         
-        <a href="{{ route('articles.create') }}" class="dashboard-card">
+        <a href="{{ route('articles.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-square"></i>
             </div>
@@ -32,12 +29,9 @@
                 <h3>Nouveau Article</h3>
                 <p>Ajouter un nouvel article</p>
             </div>
-            <div class="card-badge success">
-                <span>Créer</span>
-            </div>
         </a>
         
-        <a href="{{ route('demande-approvisionnements.index') }}" class="dashboard-card">
+        <a href="{{ route('demande-approvisionnements.index') }}" class="dashboard-card warning">
             <div class="card-icon">
                 <i class="fas fa-truck-loading"></i>
             </div>
@@ -45,12 +39,9 @@
                 <h3>Demandes d'Approvisionnement</h3>
                 <p>Gérer les demandes de réapprovisionnement</p>
             </div>
-            <div class="card-badge warning">
-                <span>En cours</span>
-            </div>
         </a>
         
-        <a href="{{ route('bon-commandes.index') }}" class="dashboard-card">
+        <a href="{{ route('bon-commandes.index') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-file-invoice"></i>
             </div>
@@ -58,12 +49,9 @@
                 <h3>Bons de Commande</h3>
                 <p>Consulter et gérer les commandes</p>
             </div>
-            <div class="card-badge info">
-                <span>Commandes</span>
-            </div>
         </a>
         
-        <a href="{{ route('demande-achats.index') }}" class="dashboard-card">
+        <a href="{{ route('demande-achats.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-shopping-cart"></i>
             </div>
@@ -71,12 +59,9 @@
                 <h3>Demandes d'Achat</h3>
                 <p>Traiter les demandes d'achat</p>
             </div>
-            <div class="card-badge primary">
-                <span>Achats</span>
-            </div>
         </a>
         
-        <a href="{{ route('demande-cotations.index') }}" class="dashboard-card">
+        <a href="{{ route('demande-cotations.index') }}" class="dashboard-card secondary">
             <div class="card-icon">
                 <i class="fas fa-calculator"></i>
             </div>
@@ -84,21 +69,15 @@
                 <h3>Demandes de Cotation</h3>
                 <p>Gérer les demandes et comparaisons</p>
             </div>
-            <div class="card-badge secondary">
-                <span>Cotations</span>
-            </div>
         </a>
         
-        <a href="{{ route('receptions.index') }}" class="dashboard-card">
+        <a href="{{ route('receptions.index') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-truck"></i>
             </div>
             <div class="card-content">
                 <h3>Réception</h3>
                 <p>Gérer les réceptions d'articles livrés</p>
-            </div>
-            <div class="card-badge success">
-                <span>Livraisons</span>
             </div>
         </a>
     </div>
@@ -107,13 +86,17 @@
 <style>
 :root {
     /* Variables harmonisées avec app.blade.php */
-    --primary-color: var(--primary, #033765);
+    --primary-color: var(--primary, #033d71);
     --secondary-color: var(--primary-light, #0A8CFF);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
+    --gradient-warning: linear-gradient(135deg, var(--warning, #ffc107) 0%, #fd7e14 100%);
+    --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
+    --gradient-secondary: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
     --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
@@ -201,9 +184,28 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: var(--gradient-primary);
     transition: var(--transition);
     z-index: -1;
+}
+
+.dashboard-card.primary::before {
+    background: var(--gradient-primary);
+}
+
+.dashboard-card.success::before {
+    background: var(--gradient-success);
+}
+
+.dashboard-card.warning::before {
+    background: var(--gradient-warning);
+}
+
+.dashboard-card.info::before {
+    background: var(--gradient-info);
+}
+
+.dashboard-card.secondary::before {
+    background: var(--gradient-secondary);
 }
 
 .dashboard-card:hover {
@@ -219,8 +221,27 @@
 .card-icon {
     font-size: 3.5rem;
     margin-bottom: 1rem;
-    color: var(--secondary-color);
     transition: var(--transition);
+}
+
+.dashboard-card.primary .card-icon {
+    color: var(--primary-color);
+}
+
+.dashboard-card.success .card-icon {
+    color: var(--success-color);
+}
+
+.dashboard-card.warning .card-icon {
+    color: var(--warning-color);
+}
+
+.dashboard-card.info .card-icon {
+    color: var(--info-color);
+}
+
+.dashboard-card.secondary .card-icon {
+    color: #6c757d;
 }
 
 .dashboard-card:hover .card-icon {
@@ -249,46 +270,7 @@
     line-height: 1.4;
 }
 
-.card-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.3rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: var(--secondary-color);
-    color: white;
-    transition: var(--transition);
-}
 
-.card-badge.success {
-    background: var(--success-color);
-}
-
-.card-badge.warning {
-    background: var(--warning-color);
-    color: #333;
-}
-
-.card-badge.info {
-    background: var(--info-color);
-}
-
-.card-badge.primary {
-    background: var(--primary-color);
-}
-
-.card-badge.secondary {
-    background: #6c757d;
-}
-
-.dashboard-card:hover .card-badge {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
 
 /* Animation pour les cartes */
 .dashboard-card {
@@ -312,18 +294,7 @@
     }
 }
 
-/* Effet de survol spécial pour chaque carte */
-.dashboard-card:nth-child(1):hover { --hover-color: #FF6B6B; }
-.dashboard-card:nth-child(2):hover { --hover-color: #4ECDC4; }
-.dashboard-card:nth-child(3):hover { --hover-color: #45B7D1; }
-.dashboard-card:nth-child(4):hover { --hover-color: #96CEB4; }
-.dashboard-card:nth-child(5):hover { --hover-color: #FFEAA7; }
-.dashboard-card:nth-child(6):hover { --hover-color: #DDA0DD; }
-.dashboard-card:nth-child(7):hover { --hover-color: #32CD32; }
 
-.dashboard-card:hover::before {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--hover-color, var(--secondary-color)) 100%);
-}
 
 /* Responsive */
 @media (max-width: 768px) {

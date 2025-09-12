@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Artisan;
+use App\Models\CorpMetier;
 
 class ArtisanController extends Controller
 {
@@ -13,19 +14,21 @@ class ArtisanController extends Controller
     }
 
     public function create() {
-        return view('artisans.create');
+        $corpsMetier = CorpMetier::all();
+        return view('artisans.create', compact('corpsMetier'));
     }
 
     public function store(Request $request) {
         $request->validate([
             'nom' => 'required|string|max:255',
+            // 'id_corpmetier' => 'required|exists:corp_metiers,id',
             'civilite' => 'required|in:Monsieur,Madame,Mademoiselle',
             'prenoms' => 'nullable|string|max:255',
             'type_piece' => 'required|in:CNI,Passeport,Permis',
             'numero_piece' => 'required|string|max:100',
             'date_naissance' => 'nullable|date',
             'nationalite' => 'nullable|string|max:100',
-            'fonction' => 'required|in:Artisan,Ouvrier,Chef equipe',
+            'fonction' => 'required|string',
             'localisation' => 'required|string|max:255',
             'rcc' => 'nullable|string|max:100',
             'rccm' => 'nullable|string|max:100',
@@ -33,6 +36,7 @@ class ArtisanController extends Controller
             'tel1' => 'required|string|max:20',
             'tel2' => 'nullable|string|max:20',
             'mail' => 'nullable|email|max:255',
+            'ppsi' => 'nullable|boolean',
         ]);
 
          $lastReference = \App\Models\Reference::where('nom', 'Code Artisans')
@@ -53,7 +57,8 @@ $request->merge([
 
     public function edit($id) {
         $artisan = Artisan::findOrFail($id);
-        return view('artisans.edit', compact('artisan'));
+        $corpsMetier = CorpMetier::all();
+        return view('artisans.edit', compact('artisan', 'corpsMetier'));
     }
 
     public function update(Request $request, $id) {
@@ -65,7 +70,7 @@ $request->merge([
             'numero_piece' => 'required|string|max:100',
             'date_naissance' => 'nullable|date',
             'nationalite' => 'nullable|string|max:100',
-            'fonction' => 'required|in:Artisan,Ouvrier,Chef equipe',
+            'fonction' => 'required|string',
             'localisation' => 'required|string|max:255',
             'rcc' => 'nullable|string|max:100',
             'rccm' => 'nullable|string|max:100',
@@ -73,6 +78,7 @@ $request->merge([
             'tel1' => 'required|string|max:20',
             'tel2' => 'nullable|string|max:20',
             'mail' => 'nullable|email|max:255',
+            'ppsi' => 'nullable|boolean',
         ]);
 
         $artisan = Artisan::findOrFail($id);

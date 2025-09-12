@@ -21,7 +21,7 @@
 }
 
 .contract-hero {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033765 100%);
+    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
     border-radius: 20px;
     color: white;
     padding: 30px;
@@ -100,7 +100,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #5EB3F6, #033765);
+    background: linear-gradient(90deg, #5EB3F6, #033d71);
 }
 
 .stat-card.positive::before {
@@ -137,7 +137,7 @@
 
 .stat-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #5EB3F6, #033765);
+    background: linear-gradient(90deg, #5EB3F6, #033d71);
     border-radius: 3px;
     transition: width 0.8s ease;
 }
@@ -241,7 +241,7 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033765 100%);
+    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
     color: white;
     box-shadow: 0 4px 15px rgba(94, 179, 246, 0.3);
 }
@@ -295,7 +295,7 @@
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033765 100%);
+    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
     color: white;
     font-weight: 600;
     border: none;

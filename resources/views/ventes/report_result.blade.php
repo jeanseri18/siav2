@@ -6,7 +6,7 @@
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('ventes.index') }}">Ventes</a></li>
-<li class="breadcrumb-item"><a href="{{ route('ventes.report') }}">Rapport</a></li>
+<li class="breadcrumb-item"><a href="{{ route('ventes.report.form') }}">Rapport</a></li>
 <li class="breadcrumb-item active">Résultats</li>
 @endsection
 
@@ -20,7 +20,7 @@
                 <i class="fas fa-chart-bar me-2"></i>Résultats du Rapport des Ventes
             </h2>
             <div class="app-card-actions">
-                <a href="{{ route('ventes.report') }}" class="app-btn app-btn-secondary app-btn-sm">
+                <a href="{{ route('ventes.report.form') }}" class="app-btn app-btn-secondary app-btn-sm">
                     <i class="fas fa-filter me-2"></i>Modifier les filtres
                 </a>
                 <button class="app-btn app-btn-success app-btn-sm" onclick="window.print()">
@@ -45,7 +45,7 @@
                     Aucune vente ne correspond aux critères sélectionnés. 
                     Essayez de modifier vos filtres de recherche.
                 </p>
-                <a href="{{ route('ventes.report') }}" class="app-btn app-btn-primary">
+                <a href="{{ route('ventes.report.form') }}" class="app-btn app-btn-primary">
                     <i class="fas fa-filter me-2"></i>Modifier les filtres
                 </a>
             </div>

@@ -101,7 +101,7 @@
                             <select id="client" name="client" class="app-form-select" required>
                                 <option value="">-- Sélectionnez un client --</option>
                                 @foreach($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->prenoms }}</option>
+                                    <option value="{{ $client->id }}">{{ $client->nom_raison_sociale }}{{ $client->prenoms }}</option>
                                 @endforeach
                             </select>
                             <div class="app-form-text">Client pour lequel le projet est réalisé</div>

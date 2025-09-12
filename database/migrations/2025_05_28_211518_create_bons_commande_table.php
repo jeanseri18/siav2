@@ -35,6 +35,7 @@ return new class extends Migration {
             $table->decimal('prix_unitaire', 15, 2);
             $table->decimal('montant', 15, 2)->virtualAs('quantite * prix_unitaire');
             $table->integer('quantite_livree')->default(0);
+            $table->decimal('quantite_recue', 10, 2)->default(0);
             $table->text('commentaire')->nullable();
             $table->timestamps();
             

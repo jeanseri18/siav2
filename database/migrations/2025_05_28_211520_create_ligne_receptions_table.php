@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ligne_receptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('reception_id')->constrained('receptions')->onDelete('cascade');
-            $table->foreignId('ligne_bon_commande_id')->constrained('ligne_bon_commandes')->onDelete('cascade');
+            $table->foreignId('ligne_bon_commande_id')->constrained('lignes_bon_commande')->onDelete('cascade');
             $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
             $table->decimal('quantite_recue', 10, 2);
             $table->decimal('quantite_conforme', 10, 2)->default(0);

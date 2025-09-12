@@ -18,8 +18,16 @@
                 <i class="fas fa-boxes me-2"></i>Liste des Stocks pour le Projet
             </h2>
             <div class="app-card-actions">
+                <div class="btn-group me-2" role="group">
+                    <a href="{{ route('stock_contrat.historique') }}" class="app-btn app-btn-info app-btn-icon">
+                        <i class="fas fa-history"></i> Historique
+                    </a>
+                    <a href="{{ route('stock_contrat.historique_complet') }}" class="app-btn app-btn-info app-btn-icon">
+                        <i class="fas fa-list-ul"></i> Historique Complet
+                    </a>
+                </div>
                 <a href="{{ route('stock_contrat.create') }}" class="app-btn app-btn-primary app-btn-icon">
-                    <i class="fas fa-plus"></i> Ajouter un produit au stock
+                    <i class="fas fa-plus"></i> Ajouter un article au stock
                 </a>
             </div>
         </div>
@@ -39,7 +47,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="Table" class="app-table display">
+            <table id="stockContratTable" class="app-table display">
                 <thead>
                     <tr>
                         <th>Réf.</th>
@@ -49,14 +57,14 @@
                         <th>Désignation Article</th>
                         <th>Type</th>
                         <th>Unité</th>
-                        <th>Coût Moyen Pondéré</th>
+                        <!-- <th>Coût Moyen Pondéré</th> -->
                         <th>Qté Disponible</th>
-                        <th>Paiement en Cours</th>
+                        <!-- <th>Paiement en Cours</th> -->
                         <th>Retour Ruche</th>
-                        <th>Appro en Cours</th>
-                        <th>Retour Appro</th>
-                        <th>Transfert Stock In</th>
-                        <th>Transfert Stock Out</th>
+                        <!-- <th>Appro en Cours</th> -->
+                        <!-- <th>Retour Appro</th> -->
+                        <!-- <th>Transfert Stock In</th>
+                        <th>Transfert Stock Out</th> -->
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
@@ -72,7 +80,7 @@
                         </td>
                         <td>{{ $stock->article && $stock->article->categorie ? $stock->article->categorie->nom : '-' }}</td>
                         <td>{{ $stock->article && $stock->article->sousCategorie ? $stock->article->sousCategorie->nom : '-' }}</td>
-                        <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom : '-' }}</td>
+                        <td>{{ $stock->article && $stock->article->fournisseur ? $stock->article->fournisseur->nom_raison_sociale . ' ' . $stock->article->fournisseur->prenoms : '-' }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -82,12 +90,12 @@
                             </div>
                         </td>
                         <td>{{ $stock->article ? $stock->article->type : '-' }}</td>
-                        <td>{{ $stock->article && $stock->article->unite ? $stock->article->unite->nom : '-' }}</td>
-                        <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td>
+                        <td>{{ $stock->uniteMesure->ref  ?? ''}}</td>
+                        <!-- <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td> -->
                         <td class="app-fw-bold">{{ $stock->qte_disponible ?? $stock->quantite }}</td>
-                        <td>{{ $stock->paiement_en_cours ?? '0' }}</td>
+                        <!-- <td>{{ $stock->paiement_en_cours ?? '0' }}</td> -->
                         <td>{{ $stock->retour_ruche ?? '0' }}</td>
-                        <td>
+                        <!-- <td>
                             @php
                                 $approEnCours = \App\Models\LigneDemandeApprovisionnement::whereHas('demandeApprovisionnement', function($query) use ($contrat_id) {
                                     $query->where('projet_id', $contrat_id)
@@ -97,8 +105,8 @@
                                 ->sum('quantite_demandee');
                             @endphp
                             {{ $approEnCours }}
-                        </td>
-                        <td>
+                        </td> -->
+                        <!-- <td>
                             @php
                                 $retourHive = \App\Models\TransfertStock::where('id_projet_destination', $contrat_id)
                                     ->where('article_id', $stock->article_id)
@@ -106,8 +114,8 @@
                                     ->sum('quantite');
                             @endphp
                             {{ $retourHive }}
-                        </td>
-                        <td>
+                        </td> -->
+                        <!-- <td>
                             @php
                                 $approArrive = \DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
@@ -122,8 +130,8 @@
                                     ->sum('lignes_bon_commande.quantite_livree');
                             @endphp
                             {{ $approArrive ?? '0' }}
-                        </td>
-                        <td>
+                        </td> -->
+                        <!-- <td>
                             @php
                                 $retourAppro = \App\Models\RetourApprovisionnement::whereHas('bonCommande', function($query) use ($contrat_id) {
                                         $query->whereHas('demandeApprovisionnement', function($subQuery) use ($contrat_id) {
@@ -155,7 +163,7 @@
                                     ->sum('quantite');
                             @endphp
                             {{ $transfertOut }}
-                        </td>
+                        </td> -->
                         <td>
                             <div class="dropdown">
                                 <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -176,6 +184,25 @@
                                         <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" 
                                            onclick="populateTransfertModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
                                             <i class="fas fa-exchange-alt me-2"></i>Transférer
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#livraisonModal" 
+                                           onclick="populateLivraisonModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
+                                            <i class="fas fa-truck me-2"></i>Livraison Chantier
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-info" href="#" data-bs-toggle="modal" data-bs-target="#retourChantierModal" 
+                                           onclick="populateRetourChantierModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
+                                            <i class="fas fa-undo me-2"></i>Retour Chantier
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-warning" href="#" data-bs-toggle="modal" data-bs-target="#retourProjetModal" 
+                                           onclick="populateRetourProjetModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
+                                            <i class="fas fa-reply me-2"></i>Retour Projet
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
@@ -210,7 +237,7 @@
 <script>
     $(document).ready(function () {
         // Configuration DataTable
-        $('#Table').DataTable({
+        $('#stockContratTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
             buttons: [
@@ -236,7 +263,7 @@
         $('.delete-btn').click(function(e) {
             e.preventDefault();
             
-            if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
                 $(this).closest('form').submit();
             }
         });
@@ -338,5 +365,207 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Livraison Chantier --}}
+<div class="modal fade" id="livraisonModal" tabindex="-1" aria-labelledby="livraisonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content app-modal">
+            <div class="app-modal-header">
+                <h5 class="app-modal-title" id="livraisonModalLabel">
+                    <i class="fas fa-truck me-2"></i>Livraison Chantier
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="app-modal-body">
+                <form action="{{ route('stock_contrat.livraison') }}" method="POST" class="app-form" id="livraisonForm">
+                    @csrf
+                    <input type="hidden" name="stock_id" id="livraisonStockId">
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-box me-2"></i>Article</label>
+                                <input type="text" id="livraisonArticleNom" class="app-form-input" readonly>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-sort-numeric-down me-2"></i>Quantité à livrer</label>
+                                <input type="number" name="quantite" id="livraisonQuantite" class="app-form-input" min="1" required>
+                                <small class="app-form-help">Quantité disponible: <span id="livraisonQuantiteDisponible"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-calendar me-2"></i>Date de livraison</label>
+                                <input type="date" name="date_livraison" class="app-form-input" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-comment me-2"></i>Commentaires</label>
+                                <textarea name="commentaires" class="app-form-textarea" rows="2" placeholder="Commentaires optionnels..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-modal-actions">
+                        <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="submit" class="app-btn app-btn-success">
+                            <i class="fas fa-truck me-2"></i>Livrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Retour Chantier --}}
+<div class="modal fade" id="retourChantierModal" tabindex="-1" aria-labelledby="retourChantierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content app-modal">
+            <div class="app-modal-header">
+                <h5 class="app-modal-title" id="retourChantierModalLabel">
+                    <i class="fas fa-undo me-2"></i>Retour Chantier
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="app-modal-body">
+                <form action="{{ route('stock_contrat.retour_chantier') }}" method="POST" class="app-form" id="retourChantierForm">
+                    @csrf
+                    <input type="hidden" name="stock_id" id="retourChantierStockId">
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-box me-2"></i>Article</label>
+                                <input type="text" id="retourChantierArticleNom" class="app-form-input" readonly>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-sort-numeric-up me-2"></i>Quantité de retour</label>
+                                <input type="number" name="quantite" id="retourChantierQuantite" class="app-form-input" min="1" required>
+                                <small class="app-form-help">Quantité actuellement en stock: <span id="retourChantierQuantiteActuelle"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-calendar me-2"></i>Date de retour</label>
+                                <input type="date" name="date_retour" class="app-form-input" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-comment me-2"></i>Commentaires</label>
+                                <textarea name="commentaires" class="app-form-textarea" rows="2" placeholder="Commentaires optionnels..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-modal-actions">
+                        <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="submit" class="app-btn app-btn-info">
+                            <i class="fas fa-undo me-2"></i>Retourner
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Retour Projet --}}
+<div class="modal fade" id="retourProjetModal" tabindex="-1" aria-labelledby="retourProjetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content app-modal">
+            <div class="app-modal-header">
+                <h5 class="app-modal-title" id="retourProjetModalLabel">
+                    <i class="fas fa-reply me-2"></i>Retour Projet
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="app-modal-body">
+                <form action="{{ route('stock_contrat.retour_projet') }}" method="POST" class="app-form" id="retourProjetForm">
+                    @csrf
+                    <input type="hidden" name="stock_id" id="retourProjetStockId">
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-box me-2"></i>Article</label>
+                                <input type="text" id="retourProjetArticleNom" class="app-form-input" readonly>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-sort-numeric-down me-2"></i>Quantité à retourner</label>
+                                <input type="number" name="quantite" id="retourProjetQuantite" class="app-form-input" min="1" required>
+                                <small class="app-form-help">Quantité disponible: <span id="retourProjetQuantiteDisponible"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-row">
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-calendar me-2"></i>Date de retour</label>
+                                <input type="date" name="date_retour" class="app-form-input" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label class="app-form-label"><i class="fas fa-comment me-2"></i>Commentaires</label>
+                                <textarea name="commentaires" class="app-form-textarea" rows="2" placeholder="Commentaires optionnels..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-modal-actions">
+                        <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="submit" class="app-btn app-btn-warning">
+                            <i class="fas fa-reply me-2"></i>Retourner au Projet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function populateLivraisonModal(stockId, articleNom, quantiteDisponible) {
+    document.getElementById('livraisonStockId').value = stockId;
+    document.getElementById('livraisonArticleNom').value = articleNom;
+    document.getElementById('livraisonQuantiteDisponible').textContent = quantiteDisponible;
+    document.getElementById('livraisonQuantite').max = quantiteDisponible;
+}
+
+function populateRetourChantierModal(stockId, articleNom, quantiteActuelle) {
+    document.getElementById('retourChantierStockId').value = stockId;
+    document.getElementById('retourChantierArticleNom').value = articleNom;
+    document.getElementById('retourChantierQuantiteActuelle').textContent = quantiteActuelle;
+}
+
+function populateRetourProjetModal(stockId, articleNom, quantiteDisponible) {
+    document.getElementById('retourProjetStockId').value = stockId;
+    document.getElementById('retourProjetArticleNom').value = articleNom;
+    document.getElementById('retourProjetQuantiteDisponible').textContent = quantiteDisponible;
+    document.getElementById('retourProjetQuantite').max = quantiteDisponible;
+}
+</script>
 
 @endsection

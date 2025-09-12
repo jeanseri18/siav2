@@ -22,7 +22,7 @@
             <div class="summary-card">
                 <div class="summary-title">Solde de Caisse</div>
                 <div class="summary-value {{ $soldeCaisse >= 0 ? 'positive' : 'negative' }}">
-                    {{ number_format($soldeCaisse, 0, ',', ' ') }} CFA
+                    {{ number_format((float)$soldeCaisse, 0, ',', ' ') }} CFA
                 </div>
             </div>
             <div class="summary-card">
@@ -259,7 +259,7 @@
 
 <style>
 :root {
-    --primary-color: #033765;
+    --primary-color: #033d71;
     --secondary-color: #0A8CFF;
     --success-color: #28a745;
     --warning-color: #ffc107;
@@ -269,7 +269,7 @@
     --white: #ffffff;
     --text-dark: #2d3436;
     --text-muted: #636e72;
-    --gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
+    --gradient-primary: linear-gradient(135deg, #033d71 0%, #0A8CFF 100%);
     --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
     --gradient-danger: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
@@ -961,7 +961,7 @@
     document.addEventListener("DOMContentLoaded", function() {
     // Configuration des couleurs
     const colors = {
-        primary: '#033765',
+        primary: '#033d71',
         secondary: '#0A8CFF',
         success: '#28a745',
         danger: '#dc3545',
@@ -1486,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', function() {
             height: 30px;
             margin: -15px 0 0 -15px;
             border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top-color: #033765;
+            border-top-color: #033d71;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             z-index: 10;

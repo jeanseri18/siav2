@@ -48,6 +48,7 @@
                         <th>Nom du contrat</th>
                         <th>Date de début</th>
                         <th>Date de fin</th>
+                        <th>Chef de chantier</th>
                         <th>Statut</th>
                         <th style="width: 200px;">Actions</th>
                     </tr>
@@ -66,6 +67,13 @@
                             <td>{{ $contrat->nom_contrat }}</td>
                             <td>{{ $contrat->date_debut }}</td>
                             <td>{{ $contrat->date_fin }}</td>
+                            <td>
+                                @if($contrat->chefChantier)
+                                    {{ $contrat->chefChantier->nom }} {{ $contrat->chefChantier->prenom }}
+                                @else
+                                    <span class="text-muted">Non assigné</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($contrat->statut == 'en cours')
                                     <span class="app-badge app-badge-warning app-badge-pill">

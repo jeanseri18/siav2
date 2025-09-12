@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (newValue && newValue !== currentValue) {
                     // Appel AJAX pour sauvegarder la désignation
                     $.ajax({
-                        url: `/debourses/${detailId}/update-detail`,
+                        url: `/debourses/update_detail/${detailId}`,
                         method: 'PUT',
                         data: {
                             designation: newValue

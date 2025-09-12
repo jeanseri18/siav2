@@ -62,7 +62,7 @@
                             <label for="raison_sociale" class="app-form-label">
                                 <i class="fas fa-building me-2"></i>Raison Sociale
                             </label>
-                            <input type="text" name="raison_sociale" id="raison_sociale" class="app-form-control" value="{{ old('raison_sociale', $fournisseur->raison_sociale) }}">
+                            <input type="text" name="nom_raison_sociale" id="raison_sociale" class="app-form-control" value="{{ old('nom_raison_sociale', $fournisseur->nom_raison_sociale) }}">
                             <div class="app-form-text">Nom de l'entreprise</div>
                         </div>
                     </div>
@@ -125,9 +125,9 @@
                                 <i class="fas fa-money-check-alt me-2"></i>Mode de paiement
                             </label>
                             <select name="mode_paiement" id="mode_paiement" class="app-form-select" required>
-                                <option value="Virement" {{ $fournisseur->mode_paiement == 'Virement' ? 'selected' : '' }}>Virement</option>
-                                <option value="Chèque" {{ $fournisseur->mode_paiement == 'Chèque' ? 'selected' : '' }}>Chèque</option>
-                                <option value="Espèces" {{ $fournisseur->mode_paiement == 'Espèces' ? 'selected' : '' }}>Espèces</option>
+                                @foreach ($modesPaiement as $mode)
+                                    <option value="{{ $mode->nom }}" {{ $fournisseur->mode_paiement == $mode->nom ? 'selected' : '' }}>{{ $mode->nom }}</option>
+                                @endforeach
                             </select>
                             <div class="app-form-text">Méthode de règlement préférée</div>
                         </div>

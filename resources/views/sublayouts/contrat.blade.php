@@ -72,7 +72,7 @@
     <i class="fas fa-boxes"></i>
     <span>Stock</span>
 </a>
-            <a href="#" class="nav-item">
+            <a href="{{ route('demandes-ravitaillement.index') }}" class="nav-item">
                 <i class="fas fa-truck"></i>
                 <span>Demande de Ravitaillement</span>
             </a>
@@ -99,11 +99,11 @@
 /* SOLUTION 1: Encapsulation avec une classe conteneur */
 .contract-section {
     /* Variables harmonisées avec app.blade.php */
-    --contract-primary-color: var(--primary, #033765);
+    --contract-primary-color: var(--primary, #033d71);
     --contract-secondary-color: var(--primary-light, #0A8CFF);
     --contract-accent-color: var(--white, #ffffff);
     --contract-success-color: var(--success, #28a745);
-    --contract-gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --contract-gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
     --contract-gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --contract-shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
     --contract-shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));

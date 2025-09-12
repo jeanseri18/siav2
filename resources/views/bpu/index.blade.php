@@ -148,7 +148,7 @@
                         <td>Matériel</td>
                         <td>Déboursé sec</td>
                         <td>Frais de chantier</td>
-                        <td>Frais Général</td>
+                        <td>Frais généraux</td>
                         <td>Bénéfice</td>
                         <td>Prix HT</td>
                         <td>Action</td>

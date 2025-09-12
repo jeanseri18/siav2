@@ -7,17 +7,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('secteurs', function (Blueprint $table) {
-            $table->id();
-            $table->string('nom');
-            $table->foreignId('quartier_id')->constrained('quartiers')->onDelete('cascade');
-            $table->timestamps();
-        });
+        // This migration is intentionally empty
+        // The actual migration has been moved to 2025_06_02_172703_create_secteurs_table.php
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('secteurs');
+        // This migration is intentionally empty
     }
 };
 

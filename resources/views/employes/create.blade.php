@@ -127,10 +127,10 @@
                         <select class="form-select @error('situation_matrimoniale') is-invalid @enderror" 
                                 id="situation_matrimoniale" name="situation_matrimoniale">
                             <option value="">Sélectionner...</option>
-                            <option value="celibataire" {{ old('situation_matrimoniale') === 'celibataire' ? 'selected' : '' }}>Célibataire</option>
-                            <option value="marie" {{ old('situation_matrimoniale') === 'marie' ? 'selected' : '' }}>Marié(e)</option>
-                            <option value="divorce" {{ old('situation_matrimoniale') === 'divorce' ? 'selected' : '' }}>Divorcé(e)</option>
-                            <option value="veuf" {{ old('situation_matrimoniale') === 'veuf' ? 'selected' : '' }}>Veuf/Veuve</option>
+                            <option value="célibataire" {{ old('situation_matrimoniale') === 'célibataire' ? 'selected' : '' }}>Célibataire</option>
+                            <option value="marié(e)" {{ old('situation_matrimoniale') === 'marié(e)' ? 'selected' : '' }}>Marié(e)</option>
+                            <option value="divorcé(e)" {{ old('situation_matrimoniale') === 'divorcé(e)' ? 'selected' : '' }}>Divorcé(e)</option>
+                            <option value="veuf/veuve" {{ old('situation_matrimoniale') === 'veuf/veuve' ? 'selected' : '' }}>Veuf/Veuve</option>
                         </select>
                         @error('situation_matrimoniale')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -204,7 +204,8 @@
                         @enderror
                     </div>
                     
-                    <div class="col-md-6 mb-3">
+                    {{-- Champs masqués selon demande --}}
+                    {{-- <div class="col-md-6 mb-3">
                         <label for="salaire" class="form-label">Salaire (FCFA)</label>
                         <input type="number" class="form-control @error('salaire') is-invalid @enderror" 
                                id="salaire" name="salaire" value="{{ old('salaire') }}" min="0" step="1000">
@@ -220,7 +221,7 @@
                         @error('numero_cnss')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
                     
                     <div class="col-md-6 mb-3">
                         <label for="status" class="form-label">Statut <span class="text-danger">*</span></label>

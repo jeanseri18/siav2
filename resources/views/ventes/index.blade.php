@@ -17,10 +17,13 @@
                 <i class="fas fa-shopping-cart me-2"></i>Liste des Ventes
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('devis.index') }}" class="app-btn app-btn-secondary app-btn-icon">
+                    <i class="fas fa-file-alt"></i> Devis
+                </a>
                 <a href="{{ route('ventes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Vente
                 </a>
-                <a href="{{ route('ventes.report') }}" class="app-btn app-btn-info app-btn-icon">
+                <a href="{{ route('ventes.report.form') }}" class="app-btn app-btn-info app-btn-icon">
                     <i class="fas fa-chart-bar"></i> Rapport
                 </a>
             </div>
@@ -45,9 +48,13 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Client</th>
+                        <th>Numéro Client</th>
+                        <th>Nom Client</th>
                         <th>Date</th>
-                        <th>Total</th>
+                        <th>Articles</th>
+                        <th>Total HT</th>
+                        <th>TVA (18%)</th>
+                        <th>Total TTC</th>
                         <th>Statut</th>
                         <th style="width: 200px;">Actions</th>
                     </tr>
@@ -60,18 +67,23 @@
                                 #{{ str_pad($vente->id, 4, '0', STR_PAD_LEFT) }}
                             </a>
                         </td>
+                        <td>{{ $vente->numero_client ?? 'N/A' }}</td>
+                        <td>{{ $vente->nom_client ?? $vente->client->nom ?? 'N/A' }}</td>
+                        <td>{{ $vente->created_at->format('d/m/Y H:i') }}</td>
                         <td>
-                            <div class="app-d-flex app-align-items-center app-gap-2">
-                                <div class="item-icon">
-                                    <i class="fas fa-user text-primary"></i>
-                                </div>
-                                <span>{{ $vente->client->nom_raison_sociale ?? $vente->client->prenoms }}</span>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach($vente->articles as $article)
+                                    <span class="badge badge-light" title="{{ $article->nom }} - Qté: {{ $article->pivot->quantite }} - Prix HT: {{ number_format($article->pivot->prix_unitaire_ht, 0, ',', ' ') }} FCFA">
+                                        {{ $article->nom }} ({{ $article->pivot->quantite }})
+                                    </span>
+                                @endforeach
                             </div>
                         </td>
-                        <td>{{ $vente->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ number_format($vente->total_ht ?? 0, 0, ',', ' ') }} FCFA</td>
+                        <td>{{ number_format($vente->tva ?? 0, 0, ',', ' ') }} FCFA</td>
                         <td class="app-fw-bold text-success">
                             <i class="fas fa-coins me-1"></i>
-                            {{ number_format($vente->total, 0, ',', ' ') }} FCFA
+                            {{ number_format($vente->total_ttc ?? $vente->total ?? 0, 0, ',', ' ') }} FCFA
                         </td>
                         <td>
                             @php

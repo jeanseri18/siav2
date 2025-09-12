@@ -13,7 +13,7 @@
             padding: 20px;
         }
         h1 {
-            color: #033765;
+            color: #033d71;
             margin-bottom: 5px;
         }
         h2 {
@@ -27,7 +27,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #033765;
+            border-bottom: 2px solid #033d71;
             padding-bottom: 20px;
         }
         .logo {

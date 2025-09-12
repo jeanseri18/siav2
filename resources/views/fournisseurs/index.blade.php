@@ -41,8 +41,7 @@
                 <thead>
                     <tr>
                         <th>Code</th>
-                        <th>Nom</th>
-                        <th>Prénoms</th>
+                        <th>Nom Prénoms/Raison</th>
                         <th>Délai de paiement</th>
                         <th>Mode de paiement</th>
                         <th>Régime d'imposition</th>
@@ -64,10 +63,7 @@
                                 <div class="item-icon">
                                     <i class="fas fa-user text-primary"></i>
                                 </div>
-                                <span>{{ $fournisseur->nom_raison_sociale }}</span>
-                            </div>
-                        </td>
-                        <td>{{ $fournisseur->prenoms }}</td>
+                                <span>{{ $fournisseur->nom_raison_sociale }} {{ $fournisseur->prenoms }} </span>    </div></td>
                         <td>{{ $fournisseur->delai_paiement }} jours</td>
                         <td>{{ $fournisseur->mode_paiement }}</td>
                         <td>{{ $fournisseur->regime_imposition }}</td>
@@ -98,17 +94,32 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('fournisseurs.edit', $fournisseur) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('fournisseurs.destroy', $fournisseur) }}" method="POST" class="delete-form" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('fournisseurs.show', $fournisseur->id) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('fournisseurs.edit', $fournisseur) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('fournisseurs.destroy', $fournisseur) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

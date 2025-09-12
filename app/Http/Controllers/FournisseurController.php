@@ -6,6 +6,7 @@ use App\Models\ContactPerson;
 use Illuminate\Http\Request;
 use App\Models\SecteurActivite;
 use App\Models\RegimeImposition;
+use App\Models\ModePaiement;
 
 class FournisseurController extends Controller {
   
@@ -31,11 +32,13 @@ class FournisseurController extends Controller {
     public function create() {
         $secteurs = SecteurActivite::all();
         $regimes = RegimeImposition::all();
-        return view('fournisseurs.create', compact('secteurs', 'regimes'));
+        $modesPaiement = ModePaiement::all();
+        return view('fournisseurs.create', compact('secteurs', 'regimes', 'modesPaiement'));
     }
 
     public function store(Request $request) {
         // Validation personnalisée pour nom_raison_sociale
+        $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
             'nom_raison_sociale' => 'nullable|string|max:255',
@@ -44,7 +47,7 @@ class FournisseurController extends Controller {
             'n_cc' => 'nullable|string|max:255',
             'secteur_activite' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
-            'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
+            'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
@@ -127,11 +130,13 @@ $request->merge([
     public function edit(ClientFournisseur $fournisseur) {
         $secteurs = SecteurActivite::all();
         $regimes = RegimeImposition::all();
+        $modesPaiement = ModePaiement::all();
         $contacts = $fournisseur->contactPersons;
-        return view('fournisseurs.edit', compact('fournisseur', 'secteurs', 'regimes', 'contacts'));
+        return view('fournisseurs.edit', compact('fournisseur', 'secteurs', 'regimes', 'modesPaiement', 'contacts'));
     }
 
     public function update(Request $request, ClientFournisseur $fournisseur) {
+        $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
             'nom_raison_sociale' => 'nullable|string|max:255',
@@ -140,7 +145,7 @@ $request->merge([
             'n_cc' => 'nullable|string|max:255',
             'regime_imposition' => 'nullable|string|max:255',
             'delai_paiement' => 'required|integer',
-            'mode_paiement' => 'required|in:Virement,Chèque,Espèces',
+            'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'secteur_activite' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
             'adresse_localisation' => 'required|string',
@@ -197,6 +202,12 @@ $request->merge([
         }
         
         return redirect()->route('fournisseurs.index')->with('success', 'Fournisseur mis à jour avec succès.');
+    }
+
+    public function show($id)
+    {
+        $fournisseur = ClientFournisseur::with(['contactPersons', ])->findOrFail($id);
+        return view('fournisseurs.show', compact('fournisseur'));
     }
 
     public function destroy(ClientFournisseur $fournisseur) {

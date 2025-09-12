@@ -30,12 +30,15 @@ class DemandeApprovisionnementController extends Controller
     {
         $request->validate([
             'date_demande' => 'required|date',
+            'date_reception' => 'nullable|date|after_or_equal:date_demande',
             'projet_id' => 'nullable|exists:projets,id',
-            'description' => 'nullable|string',
+            'initiateur' => 'nullable|string',
             'article_id' => 'required|array',
             'article_id.*' => 'exists:articles,id',
             'quantite_demandee' => 'required|array',
-            'quantite_demandee.*' => 'integer|min:1'
+            'quantite_demandee.*' => 'integer|min:1',
+            'designation' => 'nullable|array',
+            'unite' => 'nullable|array'
         ]);
 
         // Générer la référence
@@ -51,8 +54,9 @@ class DemandeApprovisionnementController extends Controller
         $demande = DemandeApprovisionnement::create([
             'reference' => $newReference,
             'date_demande' => $request->date_demande,
+            'date_reception' => $request->date_reception,
             'projet_id' => $request->projet_id,
-            'description' => $request->description,
+            'initiateur' => $request->initiateur ?? Auth::user()->name,
             'user_id' => Auth::id(),
             'statut' => 'en attente'
         ]);

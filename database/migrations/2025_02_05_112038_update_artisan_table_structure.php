@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('artisan', function (Blueprint $table) {
             // Ajouter seulement les champs manquants
-            $table->enum('fonction', ['Artisan', 'Ouvrier', 'Chef equipe'])->after('nationalite');
+            $table->string('fonction')->after('type');
             $table->string('localisation')->after('fonction');
             $table->string('rcc')->nullable()->after('localisation');
             $table->string('rccm')->nullable()->after('rcc');
@@ -63,7 +63,7 @@ return new class extends Migration
             $table->date('date_embauche')->nullable()->after('numero_siret');
             $table->text('notes')->nullable()->after('date_embauche');
             $table->enum('statut', ['actif', 'inactif'])->default('actif')->after('notes');
-            
+            //nullable
             $table->foreign('id_corpmetier')->references('id')->on('corp_metiers');
         });
     }

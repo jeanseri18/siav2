@@ -113,8 +113,8 @@
         [
             'route' => 'contrats.all', 
             'icon' => 'fa-file-contract', 
-            'text' => 'Liste des contrats', 
-            'description' => 'Afficher la liste des contrats de tous les projets',
+            'text' => 'Contrats', 
+            'description' => 'Afficher la contrats de tous les projets',
             'category' => 'projects',
             'color' => 'primary'
         ],
@@ -155,8 +155,8 @@
             'icon' => 'fa-hammer', 
             'text' => 'Corps de Métier', 
             'description' => 'Gérer les corps de métier',
-            'category' => 'other',
-            'color' => 'secondary'
+            'category' => 'projects',
+            'color' => 'primary'
         ],
         [
             'route' => 'pays.index', 
@@ -305,7 +305,7 @@
     }
 
     .utilities-title {
-        color: #033765;
+        color: #033d71;
         font-weight: 700;
         margin-bottom: 0.5rem;
     }
@@ -338,7 +338,7 @@
     }
 
     .utilities-categories .nav-link.active {
-        background-color: #033765;
+        background-color: #033d71;
         color: white;
         box-shadow: 0 4px 10px rgba(3, 55, 101, 0.2);
     }

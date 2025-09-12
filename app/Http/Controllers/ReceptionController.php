@@ -108,7 +108,7 @@ class ReceptionController extends Controller
                 // Vérifier que la quantité reçue ne dépasse pas la quantité restante
                 $quantiteRestante = $ligne->quantite - $ligne->quantite_recue;
                 if ($quantiteRecue > $quantiteRestante) {
-                    throw new \Exception("La quantité reçue pour {$ligne->article->designation} ne peut pas dépasser la quantité restante ({$quantiteRestante}).");
+                    throw new \Exception("La quantité reçue pour {$ligne->article->nom} ne peut pas dépasser la quantité restante ({$quantiteRestante}).");
                 }
                 
                 // Créer la ligne de réception

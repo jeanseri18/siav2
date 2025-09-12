@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Ajouter un Produit au Stock')
-@section('page-title', 'Ajouter un Produit au Stock')
+@section('title', 'Ajouter un Article au Stock')
+@section('page-title', 'Ajouter un Article au Stock')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('contrats.index') }}">Contrats</a></li>
@@ -15,7 +15,7 @@
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-plus-circle me-2"></i>Ajouter un Produit au Stock
+                <i class="fas fa-plus-circle me-2"></i>Ajouter un Article au Stock
             </h2>
         </div>
         

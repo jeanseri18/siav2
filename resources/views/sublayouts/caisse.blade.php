@@ -1,5 +1,7 @@
 @extends('layouts.app')
-@section('content')<div class="dashboard-section finances">
+@section('content')
+
+<div class="dashboard-section finances">
     <div class="section-header">
         <h2 class="section-title">
             <i class="fas fa-coins"></i>
@@ -8,7 +10,7 @@
     </div>
     
     <div class="dashboard-grid">
-        <a href="{{ route('caisse.brouillard') }}" class="dashboard-card">
+        <a href="{{ route('caisse.brouillard') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-book"></i>
             </div>
@@ -18,7 +20,7 @@
             </div>
         </a>
         
-        <a href="{{ route('caisse.demande-liste') }}" class="dashboard-card">
+        <a href="{{ route('caisse.demande-liste') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-list-alt"></i>
             </div>
@@ -28,7 +30,7 @@
             </div>
         </a>
         
-        <button class="dashboard-card" onclick="openModal('saisirDepenseModal')">
+        <button class="dashboard-card success" onclick="openModal('saisirDepenseModal')">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
             </div>
@@ -38,7 +40,7 @@
             </div>
         </button>
         
-        <button class="dashboard-card" onclick="openModal('approvisionnerModal')">
+        <button class="dashboard-card warning" onclick="openModal('approvisionnerModal')">
             <div class="card-icon">
                 <i class="fas fa-wallet"></i>
             </div>
@@ -48,7 +50,7 @@
             </div>
         </button>
         
-        <button class="dashboard-card" onclick="openModal('demanderDepenseModal')">
+        <button class="dashboard-card secondary" onclick="openModal('demanderDepenseModal')">
             <div class="card-icon">
                 <i class="fas fa-hand-holding-usd"></i>
             </div>
@@ -57,6 +59,18 @@
                 <p>Faire une demande de dépense</p>
             </div>
         </button>
+        
+        @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'admin', 'dg']))
+        <a href="{{ route('caisse.demandesEnAttente') }}" class="dashboard-card secondary">
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>Approuver Demandes</h3>
+                <p>Approuver les demandes de dépense en attente</p>
+            </div>
+        </a>
+        @endif
     </div>
 </div>
 
@@ -276,13 +290,17 @@
 <style>
 :root {
     /* Variables harmonisées avec app.blade.php */
-    --primary-color: var(--primary, #033765);
+    --primary-color: var(--primary, #033d71);
     --secondary-color: var(--primary-light, #0A8CFF);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
+    --gradient-warning: linear-gradient(135deg, var(--warning, #ffc107) 0%, #fd7e14 100%);
+    --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
+    --gradient-secondary: linear-gradient(135deg, #6c757d 0%, #495057 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
     --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
@@ -347,7 +365,7 @@
     border-radius: var(--border-radius);
     padding: 3rem 2rem;
     margin: 2rem auto;
-    max-width: 2600px;
+    max-width: 1400px;
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
@@ -357,11 +375,17 @@
     content: '';
     position: absolute;
     top: -50%;
-    right: -50%;
-    width: 100%;
+    left: -50%;
+    width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
     pointer-events: none;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
 }
 
 .section-title {
@@ -416,26 +440,73 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: var(--gradient-primary);
     transition: var(--transition);
     z-index: -1;
+}
+
+.dashboard-card.primary::before {
+    background: var(--gradient-primary);
+}
+
+.dashboard-card.success::before {
+    background: var(--gradient-success);
+}
+
+.dashboard-card.warning::before {
+    background: var(--gradient-warning);
+}
+
+.dashboard-card.info::before {
+    background: var(--gradient-info);
+}
+
+.dashboard-card.secondary::before {
+    background: var(--gradient-secondary);
 }
 
 .dashboard-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-hover);
-    color: white;
+    color: white !important;
 }
 
 .dashboard-card:hover::before {
     left: 0;
 }
 
+.dashboard-card:hover * {
+    color: white !important;
+}
+
+.dashboard-card:hover h3,
+.dashboard-card:hover p {
+    color: white !important;
+}
+
 .card-icon {
-    font-size: 3rem;
+    font-size: 3.5rem;
     margin-bottom: 1rem;
-    color: var(--secondary-color);
     transition: var(--transition);
+}
+
+.dashboard-card.primary .card-icon {
+    color: var(--primary-color);
+}
+
+.dashboard-card.success .card-icon {
+    color: var(--success-color);
+}
+
+.dashboard-card.warning .card-icon {
+    color: var(--warning-color);
+}
+
+.dashboard-card.info .card-icon {
+    color: var(--info-color);
+}
+
+.dashboard-card.secondary .card-icon {
+    color: #6c757d;
 }
 
 .dashboard-card:hover .card-icon {

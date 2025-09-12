@@ -45,7 +45,7 @@
                         <th>Civilité</th>
                         <th>Nom</th>
                         <th>Prénoms</th>
-                        <th>Fonction</th>
+                        <th>Corps de métier</th>
                         <th>Localisation</th>
                         <th>Tel1</th>
                         <th>Mail</th>
@@ -68,10 +68,8 @@
                         </td>
                         <td>{{ $artisan->prenoms }}</td>
                         <td>
-                            <span class="app-badge app-badge-{{ $artisan->fonction == 'Artisan' ? 'info' : 'primary' }} app-badge-pill">
-                                <i class="fas fa-{{ $artisan->fonction == 'Artisan' ? 'tools' : 'user-cog' }} me-1"></i> 
+
                                 {{ $artisan->fonction }}
-                            </span>
                         </td>
                         <td>{{ $artisan->localisation }}</td>
                         <td>{{ $artisan->tel1 }}</td>

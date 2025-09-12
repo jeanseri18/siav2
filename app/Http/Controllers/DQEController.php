@@ -28,7 +28,9 @@ public function index()
     }
     
     $contrat = Contrat::findOrFail($contratId);
-    $dqes = DQE::where('contrat_id', $contratId)->get();
+    $dqes = DQE::where('contrat_id', $contratId)
+               ->orderBy('created_at', 'desc')
+               ->get();
     
     // Ajouter les catégories pour le modal de génération de DQE
     $categories = CategorieRubrique::with([
@@ -405,13 +407,23 @@ $request->merge([
         $ligne = DQELigne::findOrFail($ligneId);
         
         $request->validate([
-            'quantite' => 'required|numeric|min:0.01',
+            'quantite' => 'nullable|numeric|min:0.01',
+            'designation' => 'nullable|string|max:500',
         ]);
 
-        $ligne->quantite = $request->quantite;
+        // Mettre à jour la quantité si fournie
+        if ($request->has('quantite')) {
+            $ligne->quantite = $request->quantite;
+        }
+        
+        // Mettre à jour la désignation si fournie
+        if ($request->has('designation')) {
+            $ligne->designation = $request->designation;
+        }
+        
         $ligne->calculerMontant();
 
-        return redirect()->route('dqe.edit', $id)
+        return redirect()->back()
             ->with('success', 'Ligne mise à jour avec succès.');
     }
 

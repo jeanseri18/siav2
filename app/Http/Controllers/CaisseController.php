@@ -8,6 +8,7 @@ use App\Models\ApprovisionnementCaisse;
 use App\Models\BU;
 use App\Models\Banque;
 use App\Models\ModePaiement;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,7 +26,39 @@ class CaisseController extends Controller
    }
     $bus = BU::find($id_bu);
         $brouillardCaisse = BrouillardCaisse::where('bus_id', $id_bu)->orderBy('created_at', 'desc')->get();
-        return view('caisse.brouillard', compact('bus', 'brouillardCaisse'));
+        
+        // Calculs pour le tableau de bord
+        $now = now();
+        $debutMois = $now->copy()->startOfMonth();
+        
+        // Solde début de mois (dernier solde_cumule avant le début du mois)
+        $soldeDebutMois = BrouillardCaisse::where('bus_id', $id_bu)
+            ->where('created_at', '<', $debutMois)
+            ->orderBy('created_at', 'desc')
+            ->value('solde_cumule') ?? 0;
+            
+        // Montant total des sorties du mois en cours
+        $totalSortiesMois = BrouillardCaisse::where('bus_id', $id_bu)
+            ->where('type', 'Sortie')
+            ->where('created_at', '>=', $debutMois)
+            ->sum('montant');
+            
+        // Montant total des approvisionnements du mois en cours
+        $totalApproMois = BrouillardCaisse::where('bus_id', $id_bu)
+            ->where('type', 'Entrée')
+            ->where('created_at', '>=', $debutMois)
+            ->sum('montant');
+            
+        // Solde actuel
+        $soldeActuel = (float)$bus->soldecaisse;
+        
+        // Récupérer la liste des responsables hiérarchiques (chef_projet, conducteur_travaux, admin, dg)
+        $responsables = User::whereIn('role', ['chef_projet', 'conducteur_travaux', 'admin', 'dg'])
+            ->where('status', 'actif')
+            ->orderBy('nom')
+            ->get();
+        
+        return view('caisse.brouillard', compact('bus', 'brouillardCaisse', 'soldeDebutMois', 'totalSortiesMois', 'totalApproMois', 'soldeActuel', 'responsables'));
     }
     
 
@@ -129,49 +162,101 @@ class CaisseController extends Controller
         
         // Valider les données du formulaire
         $request->validate([
-            'mois' => 'required|string',
-            'objet' => 'required|string',
-            'beneficiaires' => 'required|string',
-            'date_emission' => 'required|date',
-            'montant_total' => 'required|numeric|min:0',
-            'lignes' => 'required|array|min:1',
-            'lignes.*.designation' => 'required|string',
-            'lignes.*.quantite' => 'required|numeric|min:1',
-            'lignes.*.prix_unitaire' => 'required|numeric|min:0',
+            'motif' => 'required|string',
+            'montant' => 'required|numeric|min:0',
+            'responsable_hierarchique_id' => 'required|exists:users,id',
+            'justification' => 'required|string'
         ]);
         
-        $bus = BU::find($id_bu);
-        
-        // Construire le motif détaillé
-        $motifDetail = "Objet: {$request->objet} - Mois: {$request->mois} - Bénéficiaires: {$request->beneficiaires}";
-        
-        // Créer la demande de dépense principale
+        // Créer la demande de dépense avec le nouveau workflow
         $demande = DemandeDepense::create([
             'bus_id' => $id_bu,
-            'montant' => $request->montant_total,
-            'motif' => $motifDetail,
-            'statut' => 'en attente'
+            'user_id' => Auth::id(),
+            'montant' => $request->montant,
+            'motif' => $request->motif . "\n\nJustification: " . $request->justification,
+            'responsable_hierarchique_id' => $request->responsable_hierarchique_id,
+            'statut' => 'en_attente_responsable',
+            'statut_responsable' => 'en_attente',
+            'statut_raf' => 'en_attente'
         ]);
+
+        return redirect()->back()->with('success', 'Demande de dépense créée avec succès et envoyée à votre responsable hiérarchique.');
+    }
+
+    // Approbation par le responsable hiérarchique
+    public function approuverParResponsable(Request $request, $demandeId)
+    {
+        $demande = DemandeDepense::findOrFail($demandeId);
         
-        // Stocker les détails des lignes dans le motif (puisque nous n'avons pas de table pour les lignes)
-        // Dans une évolution future, on pourrait créer une table LigneDemandeDepense
-        $detailsLignes = [];
-        foreach ($request->lignes as $index => $ligne) {
-            $detailsLignes[] = [
-                'designation' => $ligne['designation'],
-                'quantite' => $ligne['quantite'],
-                'prix_unitaire' => $ligne['prix_unitaire'],
-                'total' => $ligne['quantite'] * $ligne['prix_unitaire']
-            ];
+        // Vérifier que l'utilisateur est bien le responsable hiérarchique assigné
+        if ($demande->responsable_hierarchique_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à approuver cette demande.');
         }
         
-        // Stocker les détails des lignes en JSON dans un champ supplémentaire
-        // Note: Ceci nécessiterait d'ajouter un champ 'details_lignes' à la table demandes_de_depenses
-        // Pour l'instant, nous allons simplement les ajouter au motif
-        $motifAvecLignes = $motifDetail . "\n" . json_encode($detailsLignes);
-        $demande->update(['motif' => $motifAvecLignes]);
-
-        return redirect()->back()->with('success', 'Demande de dépense créée avec succès.');
+        $request->validate([
+            'action' => 'required|in:approuver,rejeter',
+            'commentaire' => 'nullable|string'
+        ]);
+        
+        if ($request->action === 'approuver') {
+            // Trouver un RAF disponible (admin ou dg)
+            $raf = User::whereIn('role', ['admin', 'dg'])->where('status', 'actif')->first();
+            
+            $demande->update([
+                'statut_responsable' => 'approuve',
+                'date_approbation_responsable' => now(),
+                'commentaire_responsable' => $request->commentaire,
+                'raf_id' => $raf ? $raf->id : null,
+                'statut' => 'approuve_responsable'
+            ]);
+            
+            return redirect()->back()->with('success', 'Demande approuvée et transmise au RAF.');
+        } else {
+            $demande->update([
+                'statut_responsable' => 'rejete',
+                'date_approbation_responsable' => now(),
+                'commentaire_responsable' => $request->commentaire,
+                'statut' => 'rejete'
+            ]);
+            
+            return redirect()->back()->with('success', 'Demande rejetée.');
+        }
+    }
+    
+    // Approbation par le RAF
+    public function approuverParRAF(Request $request, $demandeId)
+    {
+        $demande = DemandeDepense::findOrFail($demandeId);
+        
+        // Vérifier que l'utilisateur est bien le RAF assigné ou a le rôle approprié
+        if ($demande->raf_id !== Auth::id() && !in_array(Auth::user()->role, ['admin', 'dg'])) {
+            return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à approuver cette demande.');
+        }
+        
+        $request->validate([
+            'action' => 'required|in:approuver,rejeter',
+            'commentaire' => 'nullable|string'
+        ]);
+        
+        if ($request->action === 'approuver') {
+            $demande->update([
+                'statut_raf' => 'approuve',
+                'date_approbation_raf' => now(),
+                'commentaire_raf' => $request->commentaire,
+                'statut' => 'approuve_raf'
+            ]);
+            
+            return redirect()->back()->with('success', 'Demande approuvée par le RAF. Elle peut maintenant être validée pour paiement.');
+        } else {
+            $demande->update([
+                'statut_raf' => 'rejete',
+                'date_approbation_raf' => now(),
+                'commentaire_raf' => $request->commentaire,
+                'statut' => 'rejete'
+            ]);
+            
+            return redirect()->back()->with('success', 'Demande rejetée par le RAF.');
+        }
     }
 
     public function validerDemandeDepense($demandeId)
@@ -223,18 +308,52 @@ class CaisseController extends Controller
     }
     public function listerDemandesDepenses()
     {
-        $id_bu = session('selected_bu');
-
-        // Vérifier si l'ID du bus est présent dans la session
-        if (!$id_bu) {
-            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        $user = Auth::user();
+        $demandesDepenses = collect();
+        
+        // Si l'utilisateur est admin, dg, caissier ou contrôleur caisse, il voit toutes les demandes
+        if (in_array($user->role, ['admin', 'dg', 'caissier', 'controleur_caisse'])) {
+            $demandesDepenses = DemandeDepense::with(['bu', 'user', 'responsableHierarchique', 'raf'])->get();
         }
-
-        // Récupérer les demandes de dépenses pour ce bus
-        $bus = BU::find($id_bu);
-        $demandes = DemandeDepense::where('bus_id', $id_bu)->orderBy('created_at', 'desc')->get();
-
-        return view('caisse.demandedepenseliste', compact('bus', 'demandes'));
+        // Si l'utilisateur est responsable hiérarchique, il voit ses demandes et celles à approuver
+        elseif (in_array($user->role, ['chef_projet', 'conducteur_travaux'])) {
+            $demandesDepenses = DemandeDepense::with(['bu', 'user', 'responsableHierarchique', 'raf'])
+                ->where(function($query) use ($user) {
+                    $query->where('user_id', $user->id) // Ses propres demandes
+                          ->orWhere('responsable_hierarchique_id', $user->id); // Demandes à approuver
+                })->get();
+        }
+        // Utilisateur normal : seulement ses propres demandes
+        else {
+            $demandesDepenses = DemandeDepense::with(['bu', 'user', 'responsableHierarchique', 'raf'])
+                ->where('user_id', $user->id)->get();
+        }
+        
+        return view('caisse.demandedepenseliste', compact('demandesDepenses'));
+    }
+    
+    // Nouvelle méthode pour les demandes en attente d'approbation
+    public function demandesEnAttente()
+    {
+        $user = Auth::user();
+        $demandesEnAttente = collect();
+        
+        // Demandes en attente pour le responsable hiérarchique
+        if (in_array($user->role, ['chef_projet', 'conducteur_travaux'])) {
+            $demandesEnAttente = DemandeDepense::with(['bu', 'user', 'responsableHierarchique', 'raf'])
+                ->where('responsable_hierarchique_id', $user->id)
+                ->where('statut', 'en_attente_responsable')
+                ->get();
+        }
+        // Demandes en attente pour le RAF
+        elseif (in_array($user->role, ['admin', 'dg'])) {
+            $demandesEnAttente = DemandeDepense::with(['bu', 'user', 'responsableHierarchique', 'raf'])
+                ->where('raf_id', $user->id)
+                ->where('statut', 'approuve_responsable')
+                ->get();
+        }
+        
+        return view('caisse.demandes-en-attente', compact('demandesEnAttente'));
     }
     
     public function voirDemandeDepensePDF($demandeId)

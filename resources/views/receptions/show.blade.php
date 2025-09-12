@@ -139,13 +139,13 @@
                                             @endphp
                                             <tr>
                                                 <td>
-                                                    <strong>{{ $ligne->article->designation }}</strong>
+                                                    <strong>{{ $ligne->article->nom }}</strong>
                                                     @if($ligne->article->description)
                                                         <br><small class="text-muted">{{ Str::limit($ligne->article->description, 50) }}</small>
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <code>{{ $ligne->article->reference_fournisseur ?? $ligne->article->code }}</code>
+                                                    <code>{{ $ligne->article->reference_fournisseur ?? $ligne->article->reference }}</code>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-primary fs-6">{{ $ligne->quantite }}</span>

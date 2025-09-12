@@ -13,9 +13,9 @@
                 <i class="fas fa-file-contract me-2"></i>Liste de Tous les Contrats
             </h2>
             <div class="app-card-actions">
-                <button type="button" class="app-btn app-btn-primary app-btn-icon" data-bs-toggle="modal" data-bs-target="#createContractModal">
+                <a href="{{ route('contrats.allcreate') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Créer un nouveau contrat
-                </button>
+                </a>
             </div>
         </div>
 
@@ -128,107 +128,6 @@
     </div>
 </div>
 
-<!-- Modal pour créer un nouveau contrat -->
-<div class="modal fade" id="createContractModal" tabindex="-1" aria-labelledby="createContractModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createContractModalLabel">
-                    <i class="fas fa-plus me-2"></i>Créer un nouveau contrat
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('contrats.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="projet_id" class="form-label">Projet <span class="text-danger">*</span></label>
-                                <select class="form-select" id="projet_id" name="projet_id" required>
-                                    <option value="">Sélectionner un projet</option>
-                                    @foreach($projets as $projet)
-                                        <option value="{{ $projet->id }}">{{ $projet->nom_projet }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nom_contrat" class="form-label">Nom du contrat <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="nom_contrat" name="nom_contrat" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="date_debut" class="form-label">Date de début <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="date_debut" name="date_debut" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="date_fin" class="form-label">Date de fin</label>
-                                <input type="date" class="form-control" id="date_fin" name="date_fin">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="montant" class="form-label">Montant <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="montant" name="montant" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="statut" class="form-label">Statut <span class="text-danger">*</span></label>
-                                <select class="form-select" id="statut" name="statut" required>
-                                    <option value="en cours">En cours</option>
-                                    <option value="terminé">Terminé</option>
-                                    <option value="annulé">Annulé</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="type_travaux" class="form-label">Type de travaux <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="type_travaux" name="type_travaux" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="taux_garantie" class="form-label">Taux de garantie (%) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="taux_garantie" name="taux_garantie" step="0.01" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
-                        <select class="form-select" id="client_id" name="client_id" required>
-                            <option value="">Sélectionner un client</option>
-                            <!-- Les clients seront chargés dynamiquement selon le projet sélectionné -->
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Créer le contrat
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -248,22 +147,6 @@ $(document).ready(function() {
         e.preventDefault();
         if (confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')) {
             this.submit();
-        }
-    });
-    
-    // Charger les clients selon le projet sélectionné
-    $('#projet_id').on('change', function() {
-        const projetId = $(this).val();
-        const clientSelect = $('#client_id');
-        
-        clientSelect.html('<option value="">Chargement...</option>');
-        
-        if (projetId) {
-            // Ici vous pouvez ajouter un appel AJAX pour charger les clients du projet
-            // Pour l'instant, on laisse vide
-            clientSelect.html('<option value="">Sélectionner un client</option>');
-        } else {
-            clientSelect.html('<option value="">Sélectionner un client</option>');
         }
     });
 });

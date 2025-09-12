@@ -82,7 +82,7 @@
                             <option value="">-- Sélectionner un fournisseur --</option>
                             @foreach($fournisseurs as $fournisseur)
                                 <option value="{{ $fournisseur->id }}" {{ old('reference_fournisseur') == $fournisseur->id ? 'selected' : '' }}>
-                                    {{ $fournisseur->nom_raison_sociale }}
+                                    {{ $fournisseur->nom_raison_sociale }}                                     {{ $fournisseur->prenoms }}
                                 </option>
                             @endforeach
                         </select>

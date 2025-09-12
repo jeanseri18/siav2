@@ -42,7 +42,7 @@
 
 :root {
     /* Palette de couleurs principale */
-    --primary: #033765;
+    --primary: #033d71;
     --primary-light: #0A8CFF;
     --primary-dark: #022445;
     --secondary: #6c757d;
@@ -1183,7 +1183,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    background-color: #012545;
+    background-color: #033d71;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1030;
     padding: 0;
@@ -1240,7 +1240,7 @@ body {
 
 .navbar-nav .nav-link.active {
     background-color: var(--warning);
-    color: #012545 !important;
+    color: #033d71 !important;
     font-weight: 600;
 }
 
@@ -1280,7 +1280,7 @@ body {
 
 .avatar-initials {
     background-color: #fff;
-    color: #012545;
+    color: #033d71;
     font-weight: bold;
     width: 35px;
     height: 35px;
@@ -1335,7 +1335,7 @@ body {
     .navbar-nav {
         flex-direction: column;
         width: 100%;
-        background-color: #012545;
+        background-color: #033d71;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         margin-top: 1rem;
         padding-top: 1rem;
@@ -1360,7 +1360,7 @@ body {
 
 /* Dropdown pour les sous-menus si nécessaire */
 .nav-item.dropdown .dropdown-menu {
-    background-color: #012545;
+    background-color: #033d71;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -1393,7 +1393,7 @@ body {
 
     <style>
     :root {
-        --primary-color: #012545;
+        --primary-color: #033d71;
         --secondary-color: #0A8CFF;
         --success-color: #28a745;
         --warning-color: #ffc107;
@@ -1712,7 +1712,7 @@ body {
 
     <!-- Main content -->
     <main class="app-main">
-        <div class="app-content-header">
+        <!-- <div class="app-content-header container">
             <div class="container-fluid"> 
                 <div class="row">
                     <div class="col-sm-6">
@@ -1730,7 +1730,7 @@ body {
                 </div>
             </div>
         </div>
-        
+         -->
         <div class="app-content">
             <div class="container-fluid fade-in">
                 <!-- Affichage des messages flash -->

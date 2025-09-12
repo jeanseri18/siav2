@@ -48,6 +48,23 @@
                             
                             <div class="app-form-col">
                                 <div class="app-form-group">
+                                    <label for="date_reception" class="app-form-label">
+                                        <i class="fas fa-calendar-check me-2"></i>Date de réception souhaitée
+                                    </label>
+                                    <input type="date" class="app-form-control @error('date_reception') is-invalid @enderror" 
+                                        id="date_reception" name="date_reception" value="{{ old('date_reception') }}">
+                                    @error('date_reception')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="app-form-row">
+                            <div class="app-form-col">
+                                <div class="app-form-group">
                                     <label for="projet_id" class="app-form-label">
                                         <i class="fas fa-project-diagram me-2"></i>Projet
                                     </label>
@@ -67,21 +84,19 @@
                                     @enderror
                                 </div>
                             </div>
+                            
+                            <div class="app-form-col">
+                                <div class="app-form-group">
+                                    <label for="initiateur" class="app-form-label">
+                                        <i class="fas fa-user me-2"></i>Initiateur (Chef de projet)
+                                    </label>
+                                    <input type="text" class="app-form-control" 
+                                        id="initiateur" name="initiateur" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="app-form-group">
-                            <label for="description" class="app-form-label">
-                                <i class="fas fa-align-left me-2"></i>Description
-                            </label>
-                            <textarea class="app-form-control @error('description') is-invalid @enderror" 
-                                id="description" name="description" rows="3">{{ old('description') }}</textarea>
-                            @error('description')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                            <div class="app-form-text">Description ou informations complémentaires sur cette demande</div>
-                        </div>
+
                         
                         <div class="app-card app-mt-4">
                             <div class="app-card-header">
@@ -94,7 +109,9 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th>Article <span class="text-danger">*</span></th>
+                                            <th>Réf Article <span class="text-danger">*</span></th>
+                                            <th>Désignation</th>
+                                            <th>Unité</th>
                                             <th>Quantité <span class="text-danger">*</span></th>
                                             <th>Commentaire</th>
                                             <th style="width: 80px;">Actions</th>
@@ -106,12 +123,21 @@
                                                 <select class="app-form-select article-select" name="article_id[]" required>
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
-                                                        <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}">
-                                                            {{ $article->code }} - {{ $article->designation }} 
+                                                        <option value="{{ $article->id }}" 
+                                                            data-unite="{{ $article->unite_mesure }}"
+                                        data-designation="{{ $article->nom }}"
+                                        data-code="{{ $article->reference }}">
+                                                            {{ $article->reference }} - {{ $article->nom }} 
                                                             ({{ $article->categorie->nom }})
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="app-form-control designation-field" name="designation[]" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="app-form-control unite-field" name="unite[]" readonly>
                                             </td>
                                             <td>
                                                 <input type="number" class="app-form-control" name="quantite_demandee[]" 
@@ -156,12 +182,21 @@
             <select class="app-form-select article-select" name="article_id[]" required>
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
-                    <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}">
-                        {{ $article->code }} - {{ $article->designation }} 
+                    <option value="{{ $article->id }}" 
+                        data-unite="{{ $article->unite_mesure }}"
+                        data-designation="{{ $article->nom }}"
+                        data-code="{{ $article->reference }}">
+                        {{ $article->reference }} - {{ $article->nom }} 
                         ({{ $article->categorie->nom }})
                     </option>
                 @endforeach
             </select>
+        </td>
+        <td>
+            <input type="text" class="app-form-control designation-field" name="designation[]" readonly>
+        </td>
+        <td>
+            <input type="text" class="app-form-control unite-field" name="unite[]" readonly>
         </td>
         <td>
             <input type="number" class="app-form-control" name="quantite_demandee[]" min="1" value="1" required>
@@ -191,6 +226,10 @@ function addArticle() {
     if (typeof $.fn.select2 !== 'undefined') {
         $('#articles_table tbody tr:last-child .article-select').select2();
     }
+    
+    // Ajouter l'événement change pour la nouvelle ligne
+    const newSelect = document.querySelector('#articles_table tbody tr:last-child .article-select');
+    newSelect.addEventListener('change', handleArticleChange);
 }
 
 function removeLine(button) {
@@ -204,11 +243,41 @@ function removeLine(button) {
     }
 }
 
+function handleArticleChange(event) {
+    const select = event.target;
+    const selectedOption = select.options[select.selectedIndex];
+    const row = select.closest('tr');
+    
+    if (selectedOption.value) {
+        // Récupérer les données de l'article sélectionné
+        const articleData = @json($articles->keyBy('id'));
+        const selectedArticle = articleData[selectedOption.value];
+        
+        if (selectedArticle) {
+            // Remplir automatiquement les champs
+            const designationField = row.querySelector('.designation-field');
+            designationField.value = selectedArticle.nom || '';
+            
+            const uniteField = row.querySelector('.unite-field');
+            uniteField.value = selectedArticle.unite_mesure || '';
+        }
+    } else {
+        // Vider les champs si aucun article sélectionné
+        row.querySelector('.designation-field').value = '';
+        row.querySelector('.unite-field').value = '';
+    }
+}
+
 // Initialiser Select2 au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof $.fn.select2 !== 'undefined') {
         $('.article-select').select2();
     }
+    
+    // Ajouter les événements change pour les selects existants
+    document.querySelectorAll('.article-select').forEach(function(select) {
+        select.addEventListener('change', handleArticleChange);
+    });
 });
 
 // Alternative avec jQuery si préféré
@@ -217,6 +286,28 @@ $(document).ready(function() {
     if (typeof $.fn.select2 !== 'undefined') {
         $('.article-select').select2();
     }
+    
+    // Gérer les changements d'articles avec jQuery (pour Select2)
+    $(document).on('change', '.article-select', function() {
+        const selectedOption = $(this).find('option:selected');
+        const row = $(this).closest('tr');
+        
+        if (selectedOption.val()) {
+            // Récupérer les données de l'article sélectionné
+            const articleData = @json($articles->keyBy('id'));
+            const selectedArticle = articleData[selectedOption.val()];
+            
+            if (selectedArticle) {
+                // Remplir automatiquement les champs
+                row.find('.designation-field').val(selectedArticle.nom || '');
+                row.find('.unite-field').val(selectedArticle.unite_mesure || '');
+            }
+        } else {
+            // Vider les champs si aucun article sélectionné
+            row.find('.designation-field').val('');
+            row.find('.unite-field').val('');
+        }
+    });
 });
 </script>
 @endpush

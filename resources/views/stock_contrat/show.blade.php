@@ -49,22 +49,22 @@
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Catégorie :</label>
-                            <span class="app-info-value">{{ $stock->article->categorie->nom_categorie ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->article->categorie->nom ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Sous-catégorie :</label>
-                            <span class="app-info-value">{{ $stock->article->sousCategorie->nom_sous_categorie ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->article->sousCategorie->nom ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Fournisseur :</label>
-                            <span class="app-info-value">{{ $stock->article->fournisseur->nom ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->article->fournisseur->nom_raison_sociale ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Référence fournisseur :</label>
-                            <span class="app-info-value">{{ $stock->article->ref_fournisseur ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->article->reference_fournisseur ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
@@ -82,7 +82,7 @@
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Contrat :</label>
-                            <span class="app-info-value">{{ $stock->projet->nom_projet ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->contrat->nom_contrat ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">
@@ -94,22 +94,22 @@
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Unité de mesure :</label>
-                            <span class="app-info-value">{{ $stock->uniteMesure->nom_unite ?? $stock->article->unite->nom_unite ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->uniteMesure->ref ?? $stock->article->uniteMesure->ref ?? 'N/A' }}</span>
                         </div>
                         
-                        <div class="app-info-item">
+                        <!-- <div class="app-info-item">
                             <label class="app-info-label">Coût moyen pondéré :</label>
                             <span class="app-info-value">
                                 {{ number_format($stock->article->cout_moyen_pondere ?? 0, 2, ',', ' ') }} €
                             </span>
-                        </div>
+                        </div> -->
                         
-                        <div class="app-info-item">
+                        <!-- <div class="app-info-item">
                             <label class="app-info-label">Valeur totale :</label>
                             <span class="app-info-value app-badge app-badge-info">
                                 {{ number_format(($stock->article->cout_moyen_pondere ?? 0) * $stock->quantite, 2, ',', ' ') }} €
                             </span>
-                        </div>
+                        </div> -->
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Dernière mise à jour :</label>
@@ -176,7 +176,7 @@
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-building me-2"></i>Contrat Destination</label>
-                                <select name="id_projet_destination" class="app-form-select" required>
+                                <select name="id_contrat_destination" class="app-form-select" required>
                                     <option value="">Sélectionner le contrat destination</option>
                                     @foreach(\App\Models\Contrat::all() as $contrat)
                                     <option value="{{ $contrat->id }}">{{ $contrat->nom_contrat }}</option>

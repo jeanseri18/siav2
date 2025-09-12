@@ -24,6 +24,7 @@ use App\Http\Controllers\TransfertsStockController;
 // Routes web.php
 use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\VenteController;
+use App\Http\Controllers\DevisController;
 use App\Http\Controllers\StatistiqueController;
 use App\Http\Controllers\PaysController;
 use App\Http\Controllers\VilleController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\ReceptionController;
 use App\Http\Controllers\DemandeAchatController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\DemandeCotationController;
+use App\Http\Controllers\DemandeRavitaillementController;
 use App\Http\Controllers\DQEController;
 use App\Http\Controllers\FraisGeneralController;
 use App\Http\Controllers\DebourseController;
@@ -288,11 +290,22 @@ Route::resource('bpus', BpuController::class);
 // Route::get('/bupn-general', [BpuController::class, 'index'])->name('bpu.index');
 
 Route::resource('prestations', PrestationController::class);
+
+// Routes supplémentaires pour les prestations
+Route::get('/prestations/{prestation}/artisans-disponibles', [PrestationController::class, 'getArtisansDisponibles'])->name('prestations.artisans-disponibles');
+Route::put('/prestations/{prestation}/affecter-artisan', [PrestationController::class, 'affecterArtisan'])->name('prestations.affecter-artisan');
+Route::get('/prestations/{prestation}/details', [PrestationController::class, 'getDetails'])->name('prestations.details');
+Route::post('/prestations/{prestation}/comptes', [PrestationController::class, 'ajouterCompte'])->name('prestations.ajouter-compte');
+Route::get('/prestations/{prestation}/decomptes', [PrestationController::class, 'getDecomptes'])->name('prestations.decomptes');
+Route::get('/prestations/{prestation}/artisan-info', [PrestationController::class, 'getArtisanInfo'])->name('prestations.artisan-info');
+Route::put('/prestations/{prestation}/remplacer-artisan', [PrestationController::class, 'remplacerArtisan'])->name('prestations.remplacer-artisan');
 Route::resource('factures', FactureController::class);
 // Routes supplémentaires pour les factures
 Route::get('/factures_statistics', [FactureController::class, 'statistics'])->name('factures.statistics');
 Route::get('/factures_pdf/{facture}/pdf', [FactureController::class, 'generatePDF'])->name('factures.generatePDF');
 Route::put('/factures_change/{facture}/change-status', [FactureController::class, 'changeStatus'])->name('factures.changeStatus');
+Route::get('/factures/artisan/{artisan}/decomptes', [FactureController::class, 'getDecomptesArtisan'])->name('factures.decomptes.artisan');
+
 Route::resource('documents', DocumentController::class)->except(['edit', 'update']);
 Route::get('/documents_contrat', [DocumentController::class, 'index_contrat'])->name('document_contrat.index');
 
@@ -360,6 +373,11 @@ Route::get('/ventes/create', [VenteController::class, 'create'])->name('ventes.c
 Route::post('/ventes', [VenteController::class, 'store'])->name('ventes.store'); // Enregistrer une vente
 Route::get('/ventes/{vente}', [VenteController::class, 'show'])->name('ventes.show'); // Voir une vente
 Route::delete('/ventes/{vente}', [VenteController::class, 'destroy'])->name('ventes.destroy'); // Supprimer une vente
+Route::get('/api/devis/client/{clientId}', [VenteController::class, 'getDevisForClient'])->name('api.devis.client');
+
+// Routes pour les devis
+Route::resource('devis', DevisController::class);
+Route::get('/api/devis/client/{clientId}', [DevisController::class, 'getDevisForClient'])->name('api.devis.client.controller');
 
 Route::prefix('caisse/')->group(function () {
     Route::get('brouillard', [CaisseController::class, 'showBrouillardCaisse'])->name('caisse.brouillard');
@@ -374,6 +392,13 @@ Route::post('annuler-demande/{demandeId}', [CaisseController::class, 'annulerDem
     ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg')
     ->name('caisse.annulerDemandeDepense');
     Route::get('voir-demande-depense-pdf/{demandeId}', [CaisseController::class, 'voirDemandeDepensePDF'])->name('caisse.voirDemandeDepensePDF');
+    Route::post('approuver-responsable/{demandeId}', [CaisseController::class, 'approuverParResponsable'])
+        ->middleware('role:chef_projet,conducteur_travaux,admin,dg')
+        ->name('caisse.approuverParResponsable');
+    Route::post('approuver-raf/{demandeId}', [CaisseController::class, 'approuverParRAF'])
+        ->middleware('role:admin,dg')
+        ->name('caisse.approuverParRAF');
+    Route::get('demandes-en-attente', [CaisseController::class, 'demandesEnAttente'])->name('caisse.demandesEnAttente');
 });
 Route::get('/demande-depense', [CaisseController::class, 'listerDemandesDepenses'])->name('caisse.demande-liste');
 
@@ -387,6 +412,7 @@ Route::get('articles_show/{article}/', [ArticleController::class, 'show'])->name
 Route::get('articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
 Route::put('articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
 Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+Route::get('articles/{article}/stock-details', [ArticleController::class, 'stockDetails'])->name('articles.stock-details');
 
 Route::prefix('stock')->group
 (function() {
@@ -401,7 +427,12 @@ Route::prefix('stock')->group
 Route::prefix('stock_contrat')->group(function() {
     Route::get('/', [StockProjetController::class, 'index_contrat'])->name('stock_contrat.index');
     Route::get('/create', [StockProjetController::class, 'create_contrat'])->name('stock_contrat.create');
+    Route::get('/historique', [StockProjetController::class, 'historique_contrat'])->name('stock_contrat.historique');
+     Route::get('/historique-complet', [StockProjetController::class, 'historiqueComplet'])->name('stock_contrat.historique_complet');
     Route::post('/', [StockProjetController::class, 'store_contrat'])->name('stock_contrat.store');
+    Route::post('/livraison', [StockProjetController::class, 'livraison'])->name('stock_contrat.livraison');
+    Route::post('/retour-chantier', [StockProjetController::class, 'retourChantier'])->name('stock_contrat.retour_chantier');
+    Route::post('/retour-projet', [StockProjetController::class, 'retourProjet'])->name('stock_contrat.retour_projet');
     Route::get('/{id}', [StockProjetController::class, 'show_contrat'])->name('stock_contrat.show');
     Route::get('/{id}/edit', [StockProjetController::class, 'edit_contrat'])->name('stock_contrat.edit');
     Route::put('/{id}', [StockProjetController::class, 'update_contrat'])->name('stock_contrat.update');
@@ -411,14 +442,17 @@ Route::prefix('stock_contrat')->group(function() {
 Route::prefix('contrats')->group(function() {
     Route::get('/', [ContratController::class, 'index'])->name('contrats.index');
     Route::get('/all', [ContratController::class, 'allContracts'])->name('contrats.all');
+    Route::get('/allcreate', [ContratController::class, 'allCreate'])->name('contrats.allcreate');
     Route::get('create', [ContratController::class, 'create'])->name('contrats.create');
     Route::post('store', [ContratController::class, 'store'])->name('contrats.store');
     Route::get('edit/{id}', [ContratController::class, 'edit'])->name('contrats.edit');
     Route::put('update/{id}', [ContratController::class, 'update'])->name('contrats.update');
     Route::delete('destroy/{id}', [ContratController::class, 'destroy'])->name('contrats.destroy');
     Route::post('duplicate/{id}', [ContratController::class, 'duplicate'])->name('contrats.duplicate');
+    Route::get('projet/{projetId}/clients', [ContratController::class, 'getClientsByProject'])->name('contrats.clients-by-project');
+    Route::get('{id}', [ContratController::class, 'show'])->name('contrats.show');
 });
-Route::get('/contrats/{id}', [ContratController::class, 'show'])->name('contrats.show');
+// Route::get('/contrats/{id}', [ContratController::class, 'show'])->name('contrats.show');
 
 Route::get('/config-global', [ConfigGlobalController::class, 'index'])->name('config-global.index');
 Route::get('/config-global/create', [ConfigGlobalController::class, 'create'])->name('config-global.create');
@@ -473,6 +507,8 @@ Route::put('/projets/{projet}', [ProjetController::class, 'update'])->name('proj
 Route::delete('/projets/{projet}', [ProjetController::class, 'destroy'])->name('projets.destroy');
 // Changer le projet en session
 Route::post('/projets/change-project', [ProjetController::class, 'changeProject'])->name('projets.change');
+// Sélectionner un projet pour créer un contrat
+Route::post('/projets/select-for-contract', [ProjetController::class, 'selectForContract'])->name('projets.select-for-contract');
 
 Route::get('sous_categories', [SousCategorieController::class, 'index'])->name('sous_categories.index'); // Liste des sous-catégories
 Route::get('sous_categories/create', [SousCategorieController::class, 'create'])->name('sous_categories.create'); // Formulaire de création
@@ -584,7 +620,13 @@ Route::get('/sublayouts_vente', function () {
     return view('sublayouts.vente');
 })->name('sublayouts_vente')->middleware('auth');
 
-
+// Routes pour les demandes de ravitaillement
+Route::middleware('auth')->group(function () {
+    Route::resource('demandes-ravitaillement', DemandeRavitaillementController::class);
+    Route::post('demandes-ravitaillement/{demandeRavitaillement}/approuver', [DemandeRavitaillementController::class, 'approuver'])->name('demandes-ravitaillement.approuver');
+    Route::post('demandes-ravitaillement/{demandeRavitaillement}/rejeter', [DemandeRavitaillementController::class, 'rejeter'])->name('demandes-ravitaillement.rejeter');
+    Route::post('demandes-ravitaillement/{demandeRavitaillement}/marquer-livree', [DemandeRavitaillementController::class, 'marquerLivree'])->name('demandes-ravitaillement.marquer-livree');
+});
 
 Route::get('/', function () {
     return view('auth.login');

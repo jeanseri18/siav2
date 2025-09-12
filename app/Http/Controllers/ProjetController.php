@@ -146,4 +146,20 @@ $request->merge([
 
         return redirect()->back()->with('success', 'Projet changé avec succès vers: ' . $projet->nom_projet);
     }
+
+    public function selectForContract(Request $request)
+    {
+        $request->validate([
+            'projet_id' => 'required|exists:projets,id'
+        ]);
+
+        $projet = Projet::findOrFail($request->projet_id);
+        
+        session([
+            'projet_id' => $projet->id,
+            'projet_nom' => $projet->nom_projet
+        ]);
+
+        return redirect()->route('contrats.create')->with('success', 'Projet sélectionné: ' . $projet->nom_projet);
+    }
 }

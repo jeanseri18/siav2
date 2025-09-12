@@ -92,7 +92,7 @@
                         
                         <div class="app-info-item">
                             <label class="app-info-label">Unité de mesure :</label>
-                            <span class="app-info-value">{{ $stock->uniteMesure->nom_unite ?? $stock->article->unite->nom_unite ?? 'N/A' }}</span>
+                            <span class="app-info-value">{{ $stock->uniteMesure->nom_unite ?? $stock->article->uniteMesure->nom_unite ?? 'N/A' }}</span>
                         </div>
                         
                         <div class="app-info-item">

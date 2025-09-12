@@ -1,9 +1,9 @@
 
-{{-- Page Edit - Modifier un produit du stock --}}
+{{-- Page Edit - Modifier un article du stock --}}
 @extends('layouts.app')
 
-@section('title', 'Modifier un produit du stock')
-@section('page-title', 'Modifier un produit du stock')
+@section('title', 'Modifier un article du stock')
+@section('page-title', 'Modifier un article du stock')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('projets.index') }}">Projets</a></li>
@@ -20,7 +20,7 @@
             <div class="app-card app-hover-shadow">
                 <div class="app-card-header">
                     <h2 class="app-card-title">
-                        <i class="fas fa-edit me-2"></i>Modifier le produit: {{ $stock->article->nom }}
+                        <i class="fas fa-edit me-2"></i>Modifier l'article: {{ $stock->article->nom }}
                     </h2>
                 </div>
                 
@@ -37,7 +37,7 @@
                                 <option value="">-- Sélectionnez un article --</option>
                                 @foreach($articles as $article)
                                     <option value="{{ $article->id }}" {{ $article->id == $stock->article_id ? 'selected' : '' }} 
-                                        data-unite-id="{{ $article->unite ? $article->unite->id : '' }}" data-unite-nom="{{ $article->unite ? $article->unite->nom : '' }}">
+                                        data-unite-id="{{ $article->uniteMesure ? $article->uniteMesure->id : '' }}" data-unite-nom="{{ $article->uniteMesure ? $article->uniteMesure->nom : '' }}">
                                         {{ $article->nom }} - {{ $article->reference }}
                                     </option>
                                 @endforeach
@@ -57,7 +57,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="app-form-text">Unité de mesure pour ce produit</div>
+                            <div class="app-form-text">Unité de mesure pour ce article</div>
                         </div>
                         
                         <div class="app-form-group">
@@ -67,7 +67,7 @@
                             <div class="input-group">
                                 <input type="number" class="app-form-control" id="quantite" name="quantite" value="{{ $stock->quantite }}" min="0" step="0.01" required>
                                 <span class="input-group-text" id="unite-display">
-                                    {{ $stock->uniteMesure ? $stock->uniteMesure->nom : ($stock->article->unite ? $stock->article->unite->nom : 'Unité') }}
+                                    {{ $stock->uniteMesure ? $stock->uniteMesure->nom : ($stock->article->uniteMesure ? $stock->article->uniteMesure->nom : 'Unité') }}
                                 </span>
                             </div>
                             <div class="app-form-text">Quantité actuellement en stock</div>
@@ -86,7 +86,7 @@
                             </label>
                             <select class="app-form-select" id="motif" name="motif">
                                 <option value="ajustement">Ajustement d'inventaire</option>
-                                <option value="retour">Retour de produit</option>
+                                <option value="retour">Retour d' article</option>
                                 <option value="perte">Perte ou détérioration</option>
                                 <option value="autre">Autre raison</option>
                             </select>

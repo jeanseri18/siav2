@@ -100,13 +100,13 @@
                     
                     <div class="app-form-group">
                         <label for="fonction" class="app-form-label">
-                            <i class="fas fa-briefcase me-2"></i>Fonction <span class="text-danger">*</span>
+                            <i class="fas fa-briefcase me-2"></i>Corps de métier (nom) <span class="text-danger">*</span>
                         </label>
                         <select name="fonction" id="fonction" class="app-form-select" required>
                             <option value="">-- Sélectionner --</option>
-                            <option value="Artisan">Artisan</option>
-                                <option value="Ouvrier">Ouvrier</option>
-                                <option value="Chef equipe">Chef equipe</option>
+                            @foreach($corpsMetier as $corps)
+                                <option value="{{ $corps->nom }}">{{ $corps->nom }}</option>
+                            @endforeach
                         </select>
                     </div>
                     
@@ -169,6 +169,16 @@
                             <i class="fas fa-envelope me-2"></i>Mail
                         </label>
                         <input type="email" name="mail" id="mail" class="app-form-control">
+                    </div>
+                    
+                    <div class="app-form-group">
+                        <div class="app-form-check">
+                            <input type="checkbox" name="ppsi" id="ppsi" class="app-form-check-input" value="1">
+                            <label for="ppsi" class="app-form-check-label">
+                                <i class="fas fa-shield-alt me-2"></i>PPSI (Protection et Prévention Sécurité Incendie)
+                            </label>
+                        </div>
+                        <div class="app-form-text">Cochez si l'artisan possède une certification PPSI</div>
                     </div>
                 </div>
                 

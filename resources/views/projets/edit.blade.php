@@ -83,7 +83,7 @@
                             </label>
                             <select id="client" name="client" class="app-form-select" required>
                                 @foreach($clients as $client)
-                                    <option value="{{ $client->id }}" {{ $projet->client == $client->prenoms ? 'selected' : '' }}>{{ $client->nom }}</option>
+                                    <option value="{{ $client->id }}" {{ $projet->client == $client->prenoms ? 'selected' : '' }}>{{ $client->nom_raison_sociale }}{{ $client->prenoms }}</option>
                                 @endforeach
                             </select>
                             <div class="app-form-text">Client pour lequel le projet est réalisé</div>

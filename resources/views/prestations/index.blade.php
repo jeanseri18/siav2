@@ -30,6 +30,7 @@
                     <tr>
                         <th>Artisan</th>
                         <th>Contrat</th>
+                        <th>Corps de Métier</th>
                         <th>Prestation</th>
                         <th>Montant</th>
                         <th>Avancement</th>
@@ -49,6 +50,14 @@
                             </div>
                         </td>
                         <td>{{ $prestation->contrat->nom_contrat }}</td>
+                        <td>
+                            <div class="app-d-flex app-align-items-center app-gap-2">
+                                <div class="item-icon">
+                                    <i class="fas fa-tools text-info"></i>
+                                </div>
+                                <span>{{ $prestation->corpMetier ? $prestation->corpMetier->nom : 'Non défini' }}</span>
+                            </div>
+                        </td>
                         <td>{{ $prestation->prestation_titre }}</td>
                         <td>{{ number_format($prestation->montant, 2, ',', ' ') }} FCFA</td>
                         <td>
@@ -72,23 +81,222 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('prestations.edit', $prestation->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('prestations.destroy', $prestation->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-primary app-btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $prestation->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cog me-1"></i>Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $prestation->id }}">
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="affecterArtisan({{ $prestation->id }})">
+                                            <i class="fas fa-user-plus me-2"></i>Affecter un artisan
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('prestations.edit', $prestation->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Définir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="voirDetails({{ $prestation->id }})">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="ajouterComptes({{ $prestation->id }})">
+                                            <i class="fas fa-calculator me-2"></i>Ajouter des comptes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="afficherDecomptes({{ $prestation->id }})">
+                                            <i class="fas fa-list-alt me-2"></i>Afficher les décomptes
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="remplacerArtisan({{ $prestation->id }})">
+                                            <i class="fas fa-user-edit me-2"></i>Remplacer l'artisan
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="supprimerPrestation({{ $prestation->id }})">
+                                            <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+ <!-- Modal pour affecter un artisan -->
+<div class="modal fade" id="affecterArtisanModal" tabindex="-1" aria-labelledby="affecterArtisanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="affecterArtisanModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Affecter un artisan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="affecterArtisanForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="artisan_select" class="form-label">Sélectionner un artisan</label>
+                        <select name="id_artisan" id="artisan_select" class="form-select" required>
+                            <option value="">-- Choisir un artisan --</option>
+                            <!-- Les artisans seront chargés dynamiquement via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_affectation" class="form-label">Date d'affectation</label>
+                        <input type="date" name="date_affectation" id="date_affectation" class="form-control" value="{{ date('Y-m-d') }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Affecter l'artisan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour remplacer un artisan -->
+<div class="modal fade" id="remplacerArtisanModal" tabindex="-1" aria-labelledby="remplacerArtisanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="remplacerArtisanModalLabel">
+                    <i class="fas fa-user-edit me-2"></i>Remplacer l'artisan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="remplacerArtisanForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Artisan actuel</label>
+                        <input type="text" id="artisan_actuel" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nouvel_artisan" class="form-label">Nouvel artisan</label>
+                        <select name="id_artisan" id="nouvel_artisan" class="form-select" required>
+                            <option value="">-- Choisir un nouvel artisan --</option>
+                            <!-- Les artisans seront chargés dynamiquement via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motif_remplacement" class="form-label">Motif du remplacement</label>
+                        <textarea name="motif_remplacement" id="motif_remplacement" class="form-control" rows="3" placeholder="Raison du changement d'artisan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning">Remplacer l'artisan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour voir les détails -->
+<div class="modal fade" id="voirDetailsModal" tabindex="-1" aria-labelledby="voirDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="voirDetailsModalLabel">
+                    <i class="fas fa-eye me-2"></i>Détails de la prestation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter des comptes -->
+<div class="modal fade" id="ajouterComptesModal" tabindex="-1" aria-labelledby="ajouterComptesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajouterComptesModalLabel">
+                    <i class="fas fa-calculator me-2"></i>Ajouter des comptes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ajouterComptesForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="type_compte" class="form-label">Type de compte</label>
+                                <select name="type_compte" id="type_compte" class="form-select" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="materiel">Matériel</option>
+                                    <option value="main_oeuvre">Main d'œuvre</option>
+                                    <option value="transport">Transport</option>
+                                    <option value="autres">Autres</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="montant_compte" class="form-label">Montant</label>
+                                <input type="number" step="0.01" name="montant" id="montant_compte" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description_compte" class="form-label">Description</label>
+                        <textarea name="description" id="description_compte" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_compte" class="form-label">Date</label>
+                        <input type="date" name="date_compte" id="date_compte" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Ajouter le compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour afficher les décomptes -->
+<div class="modal fade" id="afficherDecomptesModal" tabindex="-1" aria-labelledby="afficherDecomptesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="afficherDecomptesModalLabel">
+                    <i class="fas fa-list-alt me-2"></i>Décomptes de la prestation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="decomptesContent">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="imprimerDecomptes()">Imprimer</button>
+            </div>
         </div>
     </div>
 </div>
@@ -126,7 +334,219 @@
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
         
-        // Confirmation de suppression
+        // Fonctions pour les actions du menu déroulant
+        window.affecterArtisan = function(prestationId) {
+            // Configurer le formulaire pour l'affectation d'artisan
+            document.getElementById('affecterArtisanForm').action = `/prestations/${prestationId}/affecter-artisan`;
+            
+            // Charger la liste des artisans disponibles
+            fetch(`/prestations/${prestationId}/artisans-disponibles`)
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('artisan_select');
+                    select.innerHTML = '<option value="">-- Choisir un artisan --</option>';
+                    data.artisans.forEach(artisan => {
+                        select.innerHTML += `<option value="${artisan.id}">${artisan.nom}</option>`;
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+            
+            // Afficher la modale
+            new bootstrap.Modal(document.getElementById('affecterArtisanModal')).show();
+        };
+        
+        window.voirDetails = function(prestationId) {
+            // Charger les détails de la prestation
+            fetch(`/prestations/${prestationId}/details`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('detailsContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('voirDetailsModal')).show();
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    document.getElementById('detailsContent').innerHTML = '<div class="alert alert-danger">Erreur lors du chargement des détails.</div>';
+                    new bootstrap.Modal(document.getElementById('voirDetailsModal')).show();
+                });
+        };
+        
+        window.ajouterComptes = function(prestationId) {
+            // Configurer le formulaire pour l'ajout de comptes
+            document.getElementById('ajouterComptesForm').action = `/prestations/${prestationId}/comptes`;
+            
+            // Afficher la modale
+            new bootstrap.Modal(document.getElementById('ajouterComptesModal')).show();
+        };
+        
+        window.afficherDecomptes = function(prestationId) {
+            // Charger les décomptes de la prestation
+            fetch(`/prestations/${prestationId}/decomptes`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('decomptesContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('afficherDecomptesModal')).show();
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    document.getElementById('decomptesContent').innerHTML = '<div class="alert alert-danger">Erreur lors du chargement des décomptes.</div>';
+                    new bootstrap.Modal(document.getElementById('afficherDecomptesModal')).show();
+                });
+        };
+        
+        window.remplacerArtisan = function(prestationId) {
+            // Configurer le formulaire pour le remplacement d'artisan
+            document.getElementById('remplacerArtisanForm').action = `/prestations/${prestationId}/remplacer-artisan`;
+            
+            // Charger les informations de l'artisan actuel et la liste des artisans disponibles
+            fetch(`/prestations/${prestationId}/artisan-info`)
+                .then(response => response.json())
+                .then(data => {
+                    // Afficher l'artisan actuel
+                    document.getElementById('artisan_actuel').value = data.artisan_actuel || 'Aucun artisan assigné';
+                    
+                    // Charger la liste des artisans disponibles
+                    const select = document.getElementById('nouvel_artisan');
+                    select.innerHTML = '<option value="">-- Choisir un nouvel artisan --</option>';
+                    data.artisans_disponibles.forEach(artisan => {
+                        select.innerHTML += `<option value="${artisan.id}">${artisan.nom}</option>`;
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+            
+            // Afficher la modale
+            new bootstrap.Modal(document.getElementById('remplacerArtisanModal')).show();
+        };
+        
+        window.imprimerDecomptes = function() {
+             // Fonction pour imprimer les décomptes
+             const printContent = document.getElementById('decomptesContent').innerHTML;
+             const originalContent = document.body.innerHTML;
+             
+             document.body.innerHTML = printContent;
+             window.print();
+             document.body.innerHTML = originalContent;
+             location.reload();
+         };
+         
+         // Gestion des soumissions de formulaires AJAX
+         document.getElementById('affecterArtisanForm').addEventListener('submit', function(e) {
+             e.preventDefault();
+             const formData = new FormData(this);
+             
+             fetch(this.action, {
+                 method: 'POST',
+                 body: formData,
+                 headers: {
+                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                 }
+             })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.success) {
+                     bootstrap.Modal.getInstance(document.getElementById('affecterArtisanModal')).hide();
+                     location.reload();
+                 } else {
+                     alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                 }
+             })
+             .catch(error => {
+                 console.error('Erreur:', error);
+                 alert('Une erreur est survenue lors de l\'affectation de l\'artisan');
+             });
+         });
+         
+         document.getElementById('remplacerArtisanForm').addEventListener('submit', function(e) {
+             e.preventDefault();
+             const formData = new FormData(this);
+             
+             fetch(this.action, {
+                 method: 'POST',
+                 body: formData,
+                 headers: {
+                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                 }
+             })
+             .then(response => response.json())
+             .then(data => {
+                 if (data.success) {
+                     bootstrap.Modal.getInstance(document.getElementById('remplacerArtisanModal')).hide();
+                     location.reload();
+                 } else {
+                     alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                 }
+             })
+             .catch(error => {
+                 console.error('Erreur:', error);
+                 alert('Une erreur est survenue lors du remplacement de l\'artisan');
+             });
+         });
+         
+         document.getElementById('ajouterComptesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('ajouterComptesModal')).hide();
+                    alert('Compte ajouté avec succès!');
+                    
+                    // Mettre à jour le taux d'avancement dans le tableau
+                    if (data.taux_avancement !== undefined) {
+                        updateTauxAvancementDisplay(data.taux_avancement);
+                    }
+                    
+                    // Recharger la page pour afficher les changements
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de l\'ajout du compte');
+            });
+        });
+        
+        // Fonction pour mettre à jour l'affichage du taux d'avancement
+        function updateTauxAvancementDisplay(tauxAvancement) {
+            // Cette fonction peut être utilisée pour mettre à jour l'affichage en temps réel
+            // Pour l'instant, on recharge la page, mais on pourrait améliorer cela
+            console.log('Nouveau taux d\'avancement:', tauxAvancement + '%');
+        }
+        
+        window.supprimerPrestation = function(prestationId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette prestation ?')) {
+                // Créer un formulaire de suppression dynamique
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/prestations/' + prestationId;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+                
+                form.appendChild(csrfToken);
+                form.appendChild(methodField);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        };
+        
+        // Ancienne fonction de suppression (conservée pour compatibilité)
         $('.delete-btn').click(function(e) {
             e.preventDefault();
             

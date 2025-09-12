@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stock_projet', function (Blueprint $table) {
-            $table->unsignedBigInteger('unite_mesure_id')->nullable()->after('quantite');
-            $table->foreign('unite_mesure_id')->references('id')->on('unite_mesures')->onDelete('set null');
-        });
+        // This migration is intentionally empty
+        // The actual migration has been moved to 2025_02_05_112042_add_unite_mesure_id_to_stock_projet_table.php
     }
 
     /**
@@ -22,9 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stock_projet', function (Blueprint $table) {
-            $table->dropForeign(['unite_mesure_id']);
-            $table->dropColumn('unite_mesure_id');
-        });
+        // This migration is intentionally empty
     }
 };

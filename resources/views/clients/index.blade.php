@@ -42,8 +42,7 @@
                 <thead>
                     <tr>
                         <th>Code</th>
-                        <th>Nom</th>
-                        <th>Prénoms</th>
+                        <th>Nom Prénoms /Raison sociale</th>
                         <th>Délai paiement</th>
                         <th>Mode paiement</th>
                         <th>Régime</th>
@@ -63,10 +62,10 @@
                                 <div class="item-icon">
                                     <i class="fas fa-user text-primary"></i>
                                 </div>
-                                <span>{{ $client->nom_raison_sociale }}</span>
+                                <span>{{ $client->nom_raison_sociale }} {{ $client->prenoms }}</span>
                             </div>
                         </td>
-                        <td>{{ $client->prenoms }}</td>
+                        <!-- <td>{{ $client->prenoms }}</td> -->
                         <td>{{ $client->delai_paiement }} jours</td>
                         <td>{{ $client->mode_paiement }}</td>
                         <td>{{ $client->regime_imposition }}</td>
@@ -74,7 +73,8 @@
                         <td>{{ $client->email }}</td>
                         <td>{{ $client->telephone }}</td>
                         <td>
-                            @if($client->type == 'Particulier')
+                            
+                            @if($client->categorie === 'Particulier')
                                 <span class="app-badge app-badge-info app-badge-pill">
                                     <i class="fas fa-user me-1"></i> Particulier
                                 </span>
@@ -85,18 +85,32 @@
                             @endif
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('clients.edit', $client) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <form action="{{ route('clients.destroy', $client) }}" method="POST" class="delete-form" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('clients.show', $client->id) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('clients.edit', $client) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('clients.destroy', $client) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

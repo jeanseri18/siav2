@@ -37,8 +37,14 @@ class Article extends Model
         return $this->belongsTo(ClientFournisseur::class, 'reference_fournisseur');
     }
 
-    public function unite()
+    public function uniteMesure()
     {
         return $this->belongsTo(UniteMesure::class, 'unite_mesure');
+    }
+    
+    // Relation pour les lignes de demande de ravitaillement
+    public function lignesDemandeRavitaillement()
+    {
+        return $this->hasMany(LigneDemandeRavitaillement::class);
     }
 }

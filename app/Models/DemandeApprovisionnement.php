@@ -14,7 +14,8 @@ class DemandeApprovisionnement extends Model
     protected $fillable = [
         'reference',
         'date_demande',
-        'description',
+        'date_reception',
+        'initiateur',
         'projet_id',
         'user_id',
         'statut',
@@ -23,7 +24,8 @@ class DemandeApprovisionnement extends Model
     ];
 
     protected $casts = [
-        'date_demande' => 'date'
+        'date_demande' => 'date',
+        'date_reception' => 'date'
     ];
 
     public function projet()

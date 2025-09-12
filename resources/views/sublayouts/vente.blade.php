@@ -14,7 +14,7 @@
             <div class="card-icon">
                 <i class="fas fa-shopping-bag"></i>
             </div>
-            <div class="card-content">
+            <div class="card-content ">
                 <h3>Liste des Ventes</h3>
                 <p>Consulter toutes les ventes</p>
             </div>
@@ -25,7 +25,7 @@
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
             </div>
-            <div class="card-content">
+            <div class="card-content ">
                 <h3>Nouvelle Vente</h3>
                 <p>Enregistrer une nouvelle vente</p>
             </div>
@@ -36,7 +36,7 @@
             <div class="card-icon">
                 <i class="fas fa-chart-bar"></i>
             </div>
-            <div class="card-content">
+            <div class="card-content ">
                 <h3>Rapport des Ventes</h3>
                 <p>Analyses et statistiques</p>
             </div>
@@ -48,14 +48,14 @@
 <style>
 :root {
     /* Variables harmonisées avec app.blade.php */
-    --primary-color: var(--primary, #033765);
+    --primary-color: var(--primary, #033d71);
     --secondary-color: var(--primary-light, #0A8CFF);
     --success-color: var(--success, #28a745);
     --info-color: var(--info, #17a2b8);
     --warning-color: var(--warning, #ffc107);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
-    --gradient-success: linear-gradient(135deg,  var(--primary, #033765) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg,  var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
     --gradient-utilities: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
@@ -244,19 +244,19 @@
     transform: scale(1.15) rotateY(360deg);
 }
 
-.card-content {
+.card-content  {
     flex-grow: 1;
     margin-bottom: 1.5rem;
 }
 
-.card-content h3 {
+.card-content  h3 {
     font-size: 1.4rem;
     font-weight: 600;
     margin-bottom: 0.8rem;
     line-height: 1.3;
 }
 
-.card-content p {
+.card-content  p {
     opacity: 0.8;
     margin: 0;
     line-height: 1.5;
@@ -488,7 +488,7 @@
         font-size: 3.5rem;
     }
     
-    .card-content h3 {
+    .card-content  h3 {
         font-size: 1.3rem;
     }
 }
@@ -574,7 +574,7 @@
         color: #e2e8f0;
     }
     
-    .card-content p {
+    .card-content  p {
         opacity: 0.9;
     }
 }

@@ -1,10 +1,10 @@
 
 
-{{-- Page Create - Ajouter un produit au stock --}}
+{{-- Page Create - Ajouter un article au stock --}}
 @extends('layouts.app')
 
-@section('title', 'Ajouter un produit au stock')
-@section('page-title', 'Ajouter un produit au stock')
+@section('title', 'Ajouter un article au stock')
+@section('page-title', 'Ajouter un article au stock')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('projets.index') }}">Projets</a></li>
@@ -21,7 +21,7 @@
             <div class="app-card app-hover-shadow">
                 <div class="app-card-header">
                     <h2 class="app-card-title">
-                        <i class="fas fa-plus-circle me-2"></i>Ajouter un produit au stock
+                        <i class="fas fa-plus-circle me-2"></i>Ajouter un article au stock
                     </h2>
                 </div>
                 
@@ -38,7 +38,7 @@
                             <select class="app-form-select" id="article_id" name="article_id" required>
                                 <option value="">-- Sélectionnez un article --</option>
                                 @foreach($articles as $article)
-                                    <option value="{{ $article->id }}" data-unite-id="{{ $article->unite ? $article->unite->id : '' }}" data-unite-nom="{{ $article->unite ? $article->unite->nom : '' }}">
+                                    <option value="{{ $article->id }}" data-unite-id="{{ $article->uniteMesure ? $article->uniteMesure->id : '' }}" data-unite-nom="{{ $article->uniteMesure ? $article->uniteMesure->nom : '' }}">
                                         {{ $article->nom }} - {{ $article->reference }}
                                     </option>
                                 @endforeach
@@ -58,7 +58,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="app-form-text">Sélectionnez l'unité de mesure pour ce produit</div>
+                            <div class="app-form-text">Sélectionnez l'unité de mesure pour cet article</div>
                         </div>
                         
                         <div class="app-form-group">

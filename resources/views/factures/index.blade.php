@@ -29,27 +29,50 @@
             </div>
         </div>
         
-        <div class="app-card-body app-table-responsive">
-            <table id="Table" class="app-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Numéro de Facture</th>
-                        <th>Prestation</th>
-                        <th>Contrat</th>
-                        <th>Artisan</th>
-                        <th>Montant HT</th>
-                        <th>Montant Total</th>
-                        <th>Montant Réglé</th>
-                        <th>Reste à Régler</th>
-                        <th>Statut</th>
-                        <th>Date d'Émission</th>
-                        <th style="width: 100px;">Actions</th>
-                    </tr>
-                </thead>
+        <div class="app-card-body">
+            <!-- Filtres -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="filter-type" class="form-label">Filtrer par type :</label>
+                    <select id="filter-type" class="form-select">
+                        <option value="">Tous les types</option>
+                        <option value="prestation">Prestation</option>
+                        <option value="contrat">Contrat</option>
+                        <option value="artisan">Artisan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filter-statut" class="form-label">Filtrer par statut :</label>
+                    <select id="filter-statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="en attente">En attente</option>
+                        <option value="payée">Payée</option>
+                        <option value="annulée">Annulée</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="app-table-responsive">
+                <table id="Table" class="app-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Numéro de Facture</th>
+                            <th>Type / Référence</th>
+                            <th>Montant HT</th>
+                            <th>TVA (18%)</th>
+                            <th>Montant à régler HT</th>
+                            <th>Montant à régler TTC</th>
+                            <th>Montant Réglé</th>
+                            <th>Reste à Régler</th>
+                            <th>Statut</th>
+                            <th>Date d'Émission</th>
+                            <th style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
                 <tbody>
                     @foreach($factures as $facture)
-                        <tr>
+                        <tr data-type="{{ $facture->prestation ? 'prestation' : ($facture->contrat ? 'contrat' : ($facture->artisan ? 'artisan' : '')) }}" data-statut="{{ $facture->statut }}">
                             <td>{{ $facture->id }}</td>
                             <td>
                                 <div class="app-d-flex app-align-items-center app-gap-2">
@@ -59,11 +82,24 @@
                                     <span>{{ $facture->num }}</span>
                                 </div>
                             </td>
-                            <td>{{ $facture->prestation ? $facture->prestation->artisan->nom . ' - ' . $facture->prestation->montant : 'N/A' }}</td>
-                            <td>{{ $facture->contrat ? $facture->contrat->nom_contrat : 'N/A' }}</td>
-                            <td>{{ $facture->artisan ? $facture->artisan->nom : 'N/A' }}</td>
+                            <td>
+                                @if($facture->prestation)
+                                    <span class="app-badge app-badge-info app-badge-pill mb-1">Prestation</span><br>
+                                    <small>{{ $facture->prestation->artisan->nom ?? 'N/A' }} - {{ number_format($facture->prestation->montant ?? 0, 2) }} CFA</small>
+                                @elseif($facture->contrat)
+                                    <span class="app-badge app-badge-success app-badge-pill mb-1">Contrat</span><br>
+                                    <small>{{ $facture->contrat->nom_contrat }}</small>
+                                @elseif($facture->artisan)
+                                    <span class="app-badge app-badge-warning app-badge-pill mb-1">Artisan</span><br>
+                                    <small>{{ $facture->artisan->nom }}</small>
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
                             <td class="app-fw-bold">{{ number_format($facture->montant_ht, 2) }} CFA</td>
-                            <td class="app-fw-bold">{{ number_format($facture->montant_total, 2) }} CFA</td>
+                            <td class="app-fw-bold">{{ number_format($facture->tva ?? 0, 2) }} CFA</td>
+                            <td class="app-fw-bold">{{ number_format($facture->montant_ht, 2) }} CFA</td>
+                            <td class="app-fw-bold">{{ number_format($facture->montant_ttc ?? $facture->montant_total, 2) }} CFA</td>
                             <td>{{ number_format($facture->montant_reglement, 2) }} CFA</td>
                             <td>
                                 <span class="app-badge app-badge-{{ $facture->reste_a_regler > 0 ? 'warning' : 'success' }} app-badge-pill">
@@ -128,7 +164,7 @@
 <script>
     $(document).ready(function () {
         // Configuration DataTable
-        $('#Table').DataTable({
+        var table = $('#Table').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
             buttons: [
@@ -149,6 +185,77 @@
         
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
+        
+        // Filtrage par type
+        $('#filter-type').on('change', function() {
+            var selectedType = $(this).val();
+            
+            if (selectedType === '') {
+                // Afficher toutes les lignes
+                $('#Table tbody tr').show();
+            } else {
+                // Masquer toutes les lignes
+                $('#Table tbody tr').hide();
+                // Afficher seulement les lignes correspondant au type sélectionné
+                $('#Table tbody tr[data-type="' + selectedType + '"]').show();
+            }
+            
+            // Redessiner le tableau DataTable
+            table.draw();
+        });
+        
+        // Filtrage par statut
+        $('#filter-statut').on('change', function() {
+            var selectedStatut = $(this).val();
+            
+            if (selectedStatut === '') {
+                // Afficher toutes les lignes
+                $('#Table tbody tr').show();
+            } else {
+                // Masquer toutes les lignes
+                $('#Table tbody tr').hide();
+                // Afficher seulement les lignes correspondant au statut sélectionné
+                $('#Table tbody tr[data-statut="' + selectedStatut + '"]').show();
+            }
+            
+            // Redessiner le tableau DataTable
+            table.draw();
+        });
+        
+        // Filtrage combiné (type + statut)
+        function applyFilters() {
+            var selectedType = $('#filter-type').val();
+            var selectedStatut = $('#filter-statut').val();
+            
+            $('#Table tbody tr').each(function() {
+                var row = $(this);
+                var rowType = row.data('type');
+                var rowStatut = row.data('statut');
+                
+                var showRow = true;
+                
+                // Vérifier le filtre type
+                if (selectedType !== '' && rowType !== selectedType) {
+                    showRow = false;
+                }
+                
+                // Vérifier le filtre statut
+                if (selectedStatut !== '' && rowStatut !== selectedStatut) {
+                    showRow = false;
+                }
+                
+                if (showRow) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+            
+            table.draw();
+        }
+        
+        // Appliquer les filtres combinés lors du changement
+        $('#filter-type, #filter-statut').on('change', applyFilters);
         
         // Confirmation de suppression
         $('.delete-btn').click(function(e) {

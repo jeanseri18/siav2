@@ -53,7 +53,7 @@
                             <label for="raison_sociale" class="app-form-label">
                                 <i class="fas fa-building me-2"></i>Raison Sociale:
                             </label>
-                            <input type="text" name="raison_sociale" value="{{ old('raison_sociale', $client->raison_sociale) }}" class="app-form-control">
+                            <input type="text" name="nom_raison_sociale" value="{{ old('nom_raison_sociale', $client->nom_raison_sociale) }}" class="app-form-control">
                             
                             <label for="n_rccm" class="app-form-label app-mt-3">
                                 <i class="fas fa-file-alt me-2"></i>N° RCCM:
@@ -95,9 +95,9 @@
                                         <i class="fas fa-money-bill-wave me-2"></i>Mode de paiement:
                                     </label>
                                     <select name="mode_paiement" class="app-form-select" required>
-                                        <option value="Virement" {{ $client->mode_paiement == 'Virement' ? 'selected' : '' }}>Virement</option>
-                                        <option value="Chèque" {{ $client->mode_paiement == 'Chèque' ? 'selected' : '' }}>Chèque</option>
-                                        <option value="Espèces" {{ $client->mode_paiement == 'Espèces' ? 'selected' : '' }}>Espèces</option>
+                                        @foreach ($modesPaiement as $mode)
+                                            <option value="{{ $mode->nom }}" {{ $client->mode_paiement == $mode->nom ? 'selected' : '' }}>{{ $mode->nom }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -279,6 +279,16 @@
     let contactIndex = {{ $client->contactPersons->count() }};
     
     $(document).ready(function() {
+        // Initialiser l'état des champs selon la catégorie actuelle
+        const currentCategorie = $('#categorie').val();
+        if (currentCategorie === 'Entreprise') {
+            $('#particulier_fields input, #particulier_fields select').prop('disabled', true);
+            $('#entreprise_fields input, #entreprise_fields select').prop('disabled', false);
+        } else {
+            $('#particulier_fields input, #particulier_fields select').prop('disabled', false);
+            $('#entreprise_fields input, #entreprise_fields select').prop('disabled', true);
+        }
+        
         // Afficher/masquer les champs en fonction de la catégorie sélectionnée
         $('#categorie').change(function() {
             const particulierFields = document.getElementById('particulier_fields');
@@ -287,9 +297,29 @@
             if (this.value === 'Entreprise') {
                 particulierFields.style.display = 'none';
                 entrepriseFields.style.display = 'block';
+                
+                // Désactiver les champs particulier
+                $('#particulier_fields input, #particulier_fields select').prop('disabled', true);
+                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', false);
+                $('#particulier_fields input[name="prenoms"]').prop('required', false);
+                
+                // Activer les champs entreprise
+                $('#entreprise_fields input, #entreprise_fields select').prop('disabled', false);
+                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', true);
+                $('#entreprise_fields select[name="secteur_activite"]').prop('required', true);
             } else {
                 particulierFields.style.display = 'block';
                 entrepriseFields.style.display = 'none';
+                
+                // Désactiver les champs entreprise
+                $('#entreprise_fields input, #entreprise_fields select').prop('disabled', true);
+                $('#entreprise_fields input[name="nom_raison_sociale"]').prop('required', false);
+                $('#entreprise_fields select[name="secteur_activite"]').prop('required', false);
+                
+                // Activer les champs particulier
+                $('#particulier_fields input, #particulier_fields select').prop('disabled', false);
+                $('#particulier_fields input[name="nom_raison_sociale"]').prop('required', true);
+                $('#particulier_fields input[name="prenoms"]').prop('required', true);
             }
         });
         

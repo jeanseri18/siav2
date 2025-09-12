@@ -194,7 +194,7 @@
                                                     <option value="">-- Sélectionner un article --</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}">
-                                                            {{ $article->code }} - {{ $article->designation }}
+                                                            {{ $article->reference }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -255,7 +255,7 @@
                 <option value="">-- Sélectionner un article --</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}">
-                        {{ $article->code }} - {{ $article->designation }}
+                        {{ $article->reference }} - {{ $article->nom }}
                     </option>
                 @endforeach
             </select>

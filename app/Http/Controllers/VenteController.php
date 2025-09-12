@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vente;
+use App\Models\Devis;
 use App\Models\Article;
 use App\Models\ClientFournisseur;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class VenteController extends Controller
 {
     public function index()
     {
-        $ventes = Vente::with('client', 'articles')->get();
+        $ventes = Vente::with('client', 'articles', 'devis')->get();
         return view('ventes.index', compact('ventes'));
     }
 
@@ -21,57 +22,117 @@ class VenteController extends Controller
     {
         $clients = ClientFournisseur::where('type', 'Client')->get();
         $articles = Article::all();
-        return view('ventes.create', compact('clients', 'articles'));
+        $devis = Devis::nonUtilises()->with('client', 'articles')->get();
+        return view('ventes.create', compact('clients', 'articles', 'devis'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'client_id' => 'required|exists:client_fournisseurs,id',
+            'numero_client' => 'required|string|max:255',
+            'nom_client' => 'required|string|max:255',
+            'commentaire' => 'nullable|string',
+            'devis_id' => 'nullable|exists:devis,id',
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
         ]);
 
         DB::transaction(function () use ($request) {
+            $totalHT = 0;
+            $articles = [];
+
+            // Si un devis est sélectionné, utiliser ses articles
+            if ($request->devis_id) {
+                $devis = Devis::with('articles')->findOrFail($request->devis_id);
+                
+                // Marquer le devis comme utilisé
+                $devis->update(['utilise_pour_vente' => true]);
+                
+                foreach ($devis->articles as $article) {
+                    if ($article->quantite_stock < $article->pivot->quantite) {
+                        throw new \Exception("Stock insuffisant pour {$article->nom}");
+                    }
+                    
+                    $articles[] = [
+                        'id' => $article->id,
+                        'quantite' => $article->pivot->quantite,
+                        'prix_unitaire_ht' => $article->pivot->prix_unitaire_ht,
+                        'montant_total' => $article->pivot->montant_total
+                    ];
+                    
+                    $totalHT += $article->pivot->montant_total;
+                }
+            } else {
+                // Utiliser les articles sélectionnés manuellement
+                foreach ($request->articles as $articleData) {
+                    $article = Article::findOrFail($articleData['id']);
+
+                    if ($article->quantite_stock < $articleData['quantite']) {
+                        throw new \Exception("Stock insuffisant pour {$article->nom}");
+                    }
+
+                    $prixUnitaireHT = $article->cout_moyen_pondere;
+                    $montantTotal = $prixUnitaireHT * $articleData['quantite'];
+
+                    $articles[] = [
+                        'id' => $article->id,
+                        'quantite' => $articleData['quantite'],
+                        'prix_unitaire_ht' => $prixUnitaireHT,
+                        'montant_total' => $montantTotal
+                    ];
+
+                    $totalHT += $montantTotal;
+                }
+            }
+
+            $tva = $totalHT * 0.18;
+            $totalTTC = $totalHT + $tva;
+
             $vente = Vente::create([
                 'client_id' => $request->client_id,
-                'total' => 0,
+                'devis_id' => $request->devis_id,
+                'numero_client' => $request->numero_client,
+                'nom_client' => $request->nom_client,
+                'commentaire' => $request->commentaire,
+                'total_ht' => $totalHT,
+                'tva' => $tva,
+                'total_ttc' => $totalTTC,
                 'statut' => 'En attente'
             ]);
 
-            $total = 0;
-
-            foreach ($request->articles as $articleData) {
-                $article = Article::findOrFail($articleData['id']);
-
-                if ($article->quantite_stock < $articleData['quantite']) {
-                    throw new \Exception("Stock insuffisant pour {$article->nom}");
-                }
-
-                $sousTotal = $article->prix_unitaire * $articleData['quantite'];
-
-                $vente->articles()->attach($article->id, [
+            // Attacher les articles à la vente et décrémenter le stock
+            foreach ($articles as $articleData) {
+                $vente->articles()->attach($articleData['id'], [
                     'quantite' => $articleData['quantite'],
-                    'prix_unitaire' => $article->prix_unitaire,
-                    'sous_total' => $sousTotal
+                    'prix_unitaire_ht' => $articleData['prix_unitaire_ht'],
+                    'montant_total' => $articleData['montant_total']
                 ]);
 
+                $article = Article::findOrFail($articleData['id']);
                 $article->decrement('quantite_stock', $articleData['quantite']);
-                $total += $sousTotal;
             }
-
-            $vente->update(['total' => $total]);
         });
 
-        return redirect()->route('ventes.index')->with('success', 'Vente enregistrée avec succès.');
+     return redirect()->route('ventes.index')->with('success', 'Vente enregistrée avec succès.');
+    }
+
+    public function getDevisForClient($clientId)
+    {
+        $devis = Devis::where('client_id', $clientId)
+                     ->where('utilise_pour_vente', false)
+                     ->with('articles')
+                     ->get();
+        
+        return response()->json($devis);
     }
 
     public function show(Vente $vente)
     {
+        $vente->load('client', 'articles', 'devis');
         return view('ventes.show', compact('vente'));
     }
- 
     public function destroy(Vente $vente)
     {
         $vente->delete();

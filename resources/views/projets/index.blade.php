@@ -45,7 +45,7 @@
                     @foreach($projets as $projet)
                     <tr>
                         <td>
-                            <a href="{{ route('projets.show', $projet) }}" class="app-badge app-badge-primary text-decoration-none">
+                            <a href="{{ route('projets.show', ['projet' => $projet]) }}" class="app-badge app-badge-primary text-decoration-none">
                                 {{ $projet->ref_projet }}
                             </a>
                         </td>
@@ -81,7 +81,7 @@
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item" href="{{ route('projets.show', $projet) }}">
+                                        <a class="dropdown-item" href="{{ route('projets.show', ['projet' => $projet]) }}">
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>

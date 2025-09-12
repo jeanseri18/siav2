@@ -58,7 +58,7 @@
                     <tr>
                         <th>Projet Source</th>
                         <th>Projet Destination</th>
-                        <th>Produit</th>
+                        <th>Article</th>
                         <th>Quantité</th>
                         <th>Date de transfert</th>
                     </tr>

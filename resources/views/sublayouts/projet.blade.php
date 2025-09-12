@@ -1,56 +1,54 @@
 @extends('layouts.app')
 @section('content')
 
-<div class="project-theme">
-    <div class="project-dashboard-section">
-        <div class="section-header">
-            <h2 class="project-section-title">
-                <i class="fas fa-project-diagram"></i>
-                Gestion des Projets
-            </h2>
-        </div>
+<div class="dashboard-section projects">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-project-diagram"></i>
+            Gestion des Projets
+        </h2>
+    </div>
+    
+    <div class="dashboard-grid">
+        <a href="{{ route('projets.index') }}" class="dashboard-card primary">
+            <div class="card-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="card-content">
+                <h3>Liste des Projets</h3>
+                <p>Consulter tous les projets actifs</p>
+            </div>
+        </a>
         
-        <div class="project-dashboard-grid">
-            <a href="{{ route('projets.index') }}" class="project-dashboard-card primary">
-                <div class="project-card-icon">
-                    <i class="fas fa-list"></i>
-                </div>
-                <div class="project-card-content">
-                    <h3>Liste des Projets</h3>
-                    <p>Consulter tous les projets actifs</p>
-                </div>
-            </a>
-            
-            <a href="{{ route('projets.create') }}" class="project-dashboard-card success">
-                <div class="project-card-icon">
-                    <i class="fas fa-plus-square"></i>
-                </div>
-                <div class="project-card-content">
-                    <h3>Nouveau Projet</h3>
-                    <p>Créer un nouveau projet</p>
-                </div>
-            </a>
-            
-            <a href="{{ route('contrats.all') }}" class="project-dashboard-card contracts">
-                <div class="project-card-icon">
-                    <i class="fas fa-file-contract"></i>
-                </div>
-                <div class="project-card-content">
-                    <h3>Liste des Contrats</h3>
-                    <p>Consulter tous les contrats</p>
-                </div>
-            </a>
-            
-            <a href="{{ route('contrats.create') }}" class="project-dashboard-card warning">
-                <div class="project-card-icon">
-                    <i class="fas fa-plus-circle"></i>
-                </div>
-                <div class="project-card-content">
-                    <h3>Nouveau Contrat</h3>
-                    <p>Créer un nouveau contrat</p>
-                </div>
-            </a>
-        </div>
+        <a href="{{ route('projets.create') }}" class="dashboard-card success">
+            <div class="card-icon">
+                <i class="fas fa-plus-square"></i>
+            </div>
+            <div class="card-content">
+                <h3>Nouveau Projet</h3>
+                <p>Créer un nouveau projet</p>
+            </div>
+        </a>
+        
+        <a href="{{ route('contrats.all') }}" class="dashboard-card contracts">
+            <div class="card-icon">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <div class="card-content">
+                <h3>Liste des Contrats</h3>
+                <p>Consulter tous les contrats</p>
+            </div>
+        </a>
+        
+        <button type="button" class="dashboard-card warning" data-bs-toggle="modal" data-bs-target="#selectProjectModal" style="border: none; cursor: pointer;">
+            <div class="card-icon">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>Nouveau Contrat</h3>
+                <p>Créer un nouveau contrat</p>
+            </div>
+        </button>
     </div>
 </div>
 
@@ -58,52 +56,58 @@
  /* Encapsulez vos styles spécifiques dans des classes conteneurs */
 /* Au lieu de :root, utilisez un préfixe pour vos variables CSS */
 
-.project-theme {
-    --project-primary-color: #033765;
-    --project-secondary-color: #0A8CFF;
-    --project-success-color: #28a745;
-    --project-accent-color: #ffffff;
-    --project-gradient-primary: linear-gradient(135deg, #033765 0%, #0A8CFF 100%);
-    --project-gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    --project-gradient-card: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-    --project-shadow-card: 0 10px 30px rgba(3, 55, 101, 0.1);
-    --project-shadow-hover: 0 20px 40px rgba(3, 55, 101, 0.2);
-    --project-border-radius: 16px;
-    --project-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+:root {
+    /* Variables harmonisées avec app.blade.php */
+    --primary-color: var(--primary, #033d71);
+    --secondary-color: var(--primary-light, #0A8CFF);
+    --success-color: var(--success, #28a745);
+    --warning-color: var(--warning, #ffc107);
+    --info-color: var(--info, #17a2b8);
+    --accent-color: var(--white, #ffffff);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
+    --gradient-warning: linear-gradient(135deg, var(--warning, #ffc107) 0%, #fd7e14 100%);
+    --gradient-contracts: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
+    --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
+    --shadow-hover: var(--shadow-lg, 0 1rem 3rem rgba(0, 0, 0, 0.175));
+    --border-radius: var(--border-radius-lg, 1rem);
+    --transition: var(--transition-base, all 0.2s ease-in-out);
 }
 
 /* Section Gestion des Projets - Préfixez les classes pour éviter les conflits */
-.project-dashboard-section {
-    background: var(--project-gradient-primary);
-    border-radius: var(--project-border-radius);
+.dashboard-section.projects {
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius);
     padding: 3rem 2rem;
     margin: 2rem auto;
-    max-width: 2500px;
-    box-shadow: var(--project-shadow-card);
+    max-width: 1400px;
+    box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
 }
 
-.project-dashboard-section::before {
+.dashboard-section.projects::before {
     content: '';
     position: absolute;
-    top: -100px;
-    right: -100px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-    animation: project-rotate 20s linear infinite;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
 }
 
-@keyframes project-rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
 }
 
-.project-section-title {
+.section-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--project-accent-color);
+    color: var(--accent-color);
     margin-bottom: 2.5rem;
     text-align: center;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -111,7 +115,7 @@
     z-index: 1;
 }
 
-.project-section-title i {
+.section-title i {
     margin-right: 1rem;
     background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
     -webkit-background-clip: text;
@@ -119,7 +123,7 @@
     -webkit-text-fill-color: transparent;
 }
 
-.project-dashboard-grid {
+.dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 2rem;
@@ -127,14 +131,14 @@
     z-index: 1;
 }
 
-.project-dashboard-card {
-    background: var(--project-gradient-card);
-    border-radius: var(--project-border-radius);
+.dashboard-card {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius);
     padding: 2.5rem;
     text-decoration: none;
-    color: var(--project-primary-color);
-    transition: var(--project-transition);
-    box-shadow: var(--project-shadow-card);
+    color: var(--primary-color);
+    transition: var(--transition);
+    box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -144,77 +148,93 @@
     min-height: 150px;
 }
 
-.project-dashboard-card::before {
+.dashboard-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: -100%;
     width: 100%;
     height: 100%;
-    transition: var(--project-transition);
+    transition: var(--transition);
     z-index: -1;
 }
 
-.project-dashboard-card.primary::before {
-    background: var(--project-gradient-primary);
+.dashboard-card.primary::before {
+    background: var(--gradient-primary);
 }
 
-.project-dashboard-card.success::before {
-    background: var(--project-gradient-success);
+.dashboard-card.success::before {
+    background: var(--gradient-success);
 }
 
-.project-dashboard-card.contracts::before {
-    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+.dashboard-card.warning::before {
+    background: var(--gradient-warning);
 }
 
-.project-dashboard-card.warning::before {
-    background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
+.dashboard-card.info::before {
+    background: linear-gradient(135deg, var(--info-color) 0%, #20c997 100%);
 }
 
-.project-dashboard-card:hover {
+.dashboard-card.secondary::before {
+    background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);
+}
+
+.dashboard-card.contracts::before {
+    background: var(--gradient-contracts);
+}
+
+.dashboard-card:hover {
     transform: translateY(-10px) scale(1.02);
-    box-shadow: var(--project-shadow-hover);
+    box-shadow: var(--shadow-hover);
     color: white;
 }
 
-.project-dashboard-card:hover::before {
+.dashboard-card:hover::before {
     left: 0;
 }
 
-.project-card-icon {
-    font-size: 4rem;
+.card-icon {
+    font-size: 3.5rem;
     margin-bottom: 1.5rem;
-    transition: var(--project-transition);
+    transition: var(--transition);
 }
 
-.project-dashboard-card.primary .project-card-icon {
-    color: var(--project-primary-color);
+.dashboard-card.primary .card-icon {
+    color: var(--primary-color);
 }
 
-.project-dashboard-card.success .project-card-icon {
-    color: var(--project-success-color);
+.dashboard-card.success .card-icon {
+    color: var(--success-color);
 }
 
-.project-dashboard-card.contracts .project-card-icon {
+.dashboard-card.warning .card-icon {
+    color: var(--warning-color);
+}
+
+.dashboard-card.info .card-icon {
+    color: var(--info-color);
+}
+
+.dashboard-card.secondary .card-icon {
+    color: #6c757d;
+}
+
+.dashboard-card.contracts .card-icon {
     color: #4CAF50;
 }
 
-.project-dashboard-card.warning .project-card-icon {
-    color: #FF9800;
-}
-
-.project-dashboard-card:hover .project-card-icon {
+.dashboard-card:hover .card-icon {
     color: white;
     transform: scale(1.15) rotateY(360deg);
 }
 
-.project-card-content h3 {
+.card-content h3 {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 0.8rem;
 }
 
-.project-card-content p {
+.card-content p {
     opacity: 0.8;
     margin-bottom: 1.5rem;
 }
@@ -530,5 +550,54 @@
     }
 }
 </style>
+
+<!-- Modal de sélection de projet pour créer un contrat -->
+<div class="modal fade" id="selectProjectModal" tabindex="-1" aria-labelledby="selectProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content project-modern-modal">
+            <div class="modal-header project-modern-header">
+                <h5 class="modal-title" id="selectProjectModalLabel">
+                    <i class="fas fa-project-diagram"></i>
+                    Sélectionner un projet pour le contrat
+                </h5>
+                <button type="button" class="btn-close project-modern-close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body project-modern-body">
+                <form action="{{ route('projets.select-for-contract') }}" method="POST" id="selectProjectForm">
+                    @csrf
+                    <div class="project-form-group">
+                        <label for="projet_id">
+                            <i class="fas fa-folder-open"></i>
+                            Choisir le projet :
+                        </label>
+                        <select name="projet_id" id="projet_id" class="project-modern-select" required>
+                            <option value="">-- Sélectionner un projet --</option>
+                            @php
+                                $projets = \App\Models\Projet::all();
+                            @endphp
+                            @foreach($projets as $projet)
+                                <option value="{{ $projet->id }}">
+                                    {{ $projet->ref_projet }} - {{ $projet->nom_projet }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="project-form-actions">
+                        <button type="button" class="btn btn-secondary project-modern-btn" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i>
+                            Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary project-modern-btn">
+                            <i class="fas fa-check"></i>
+                            Continuer vers la création
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection

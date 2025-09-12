@@ -141,9 +141,10 @@
                                 <i class="fas fa-money-check-alt me-2"></i>Mode de paiement
                             </label>
                             <select name="mode_paiement" id="mode_paiement" class="app-form-select" required>
-                                <option value="Virement">Virement</option>
-                                <option value="Chèque">Chèque</option>
-                                <option value="Espèces">Espèces</option>
+                                <option value="">Sélectionner un mode de paiement</option>
+                                @foreach ($modesPaiement as $mode)
+                                    <option value="{{ $mode->nom }}" {{ old('mode_paiement') == $mode->nom ? 'selected' : '' }}>{{ $mode->nom }}</option>
+                                @endforeach
                             </select>
                             <div class="app-form-text">Méthode de règlement préférée</div>
                         </div>

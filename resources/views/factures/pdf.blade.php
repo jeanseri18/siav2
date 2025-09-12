@@ -37,7 +37,7 @@
         .invoice-title {
             font-size: 24px;
             font-weight: bold;
-            color: #033765;
+            color: #033d71;
             margin-bottom: 10px;
             text-align: center;
         }
@@ -117,7 +117,7 @@
         .total-highlight {
             font-size: 16px;
             font-weight: bold;
-            background-color: #033765;
+            background-color: #033d71;
             color: white;
         }
     </style>

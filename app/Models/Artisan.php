@@ -12,6 +12,7 @@ class Artisan extends Model {
     protected $fillable = [
         'reference',
         'nom',
+        'id_corpmetier',
         'civilite',
         'prenoms',
         'type_piece',
@@ -25,7 +26,8 @@ class Artisan extends Model {
         'boite_postale',
         'tel1',
         'tel2',
-        'mail'
+        'mail',
+        'ppsi'
     ];
 
     public function contrats() {

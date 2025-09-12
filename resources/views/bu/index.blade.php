@@ -69,7 +69,7 @@
 </div>
 <style>
     .custom-card {
-        border: 1px solid #033765; /* Bordure avec traits */
+        border: 1px solid #033d71; /* Bordure avec traits */
         border-radius: 8px; /* Coins arrondis */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Légère ombre */
         transition: transform 0.2s, box-shadow 0.2s;
@@ -85,13 +85,13 @@
     }
 
     .btn-success {
-        background-color: #033765;
-        border-color: #033765;
+        background-color: #033d71;
+            border-color: #033d71;
     }
 
     .btn-success:hover {
-        background-color: #033765;
-        border-color: #033765;
+        background-color: #033d71;
+            border-color: #033d71;
     }
 </style>
 @endsection

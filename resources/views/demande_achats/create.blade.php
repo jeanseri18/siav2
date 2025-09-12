@@ -9,7 +9,7 @@
 <li class="breadcrumb-item active">Nouvelle</li>
 @endsection
 
-
+@section('content')
 <div class="container app-fade-in">
     <div class="row justify-content-center">
         <div class="col-md-10">
@@ -148,8 +148,8 @@
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                                                            data-designation="{{ $article->designation }}">
-                                                            {{ $article->code }} - {{ $article->designation }}
+                                                            data-designation="{{ $article->nom }}">
+                                                            {{ $article->reference_fournisseur }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -215,8 +215,8 @@
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                        data-designation="{{ $article->designation }}">
-                        {{ $article->code }} - {{ $article->designation }}
+                        data-designation="{{ $article->nom }}">
+                        {{ $article->reference_fournisseur }} - {{ $article->nom }}
                     </option>
                 @endforeach
             </select>
@@ -252,6 +252,7 @@
         </td>
     </tr>
 </template>
+@endsection
 
 @push('scripts')
 <script>
@@ -312,4 +313,3 @@ $(document).ready(function() {
 });
 </script>
 @endpush
-@endsection

@@ -25,7 +25,7 @@ class ArticleController extends Controller
         // Récupérer tous les projets de la BU
         $projets_bu = Projet::where('bu_id', $bu_id)->pluck('id')->toArray();
         
-        $articles = Article::with(['categorie', 'sousCategorie', 'fournisseur'])->get();
+        $articles = Article::with(['categorie', 'sousCategorie', 'fournisseur','uniteMesure'])->get();
         return view('articles.index', compact('articles', 'projets_bu'));
     }
 
@@ -82,6 +82,7 @@ $request->merge([
 
     public function show(Article $article)
     {
+        $article->load(['categorie', 'sousCategorie', 'uniteMesure', 'fournisseur']);
         return view('articles.show', compact('article'));
     }
 
@@ -118,5 +119,36 @@ $request->merge([
     {
         $article->delete();
         return redirect()->route('articles.index')->with('success', 'Article supprimé avec succès.');
+    }
+
+    public function stockDetails(Article $article)
+    {
+        // Récupérer la BU actuelle depuis la session
+        $bu_id = session('selected_bu');
+        
+        if (!$bu_id) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner une BU avant d\'accéder à cette page.']);
+        }
+        
+        // Récupérer tous les projets de la BU
+        $projets_bu = \App\Models\Projet::where('bu_id', $bu_id)->pluck('id')->toArray();
+        
+        // Récupérer les stocks de l'article pour tous les projets de la BU
+        $stocksProjet = \App\Models\StockProjet::with(['projet'])
+            ->whereIn('id_projet', $projets_bu)
+            ->where('article_id', $article->id)
+            ->where('quantite', '>', 0)
+            ->get();
+            
+        return response()->json([
+            'article' => $article,
+            'stocks' => $stocksProjet->map(function($stock) {
+                return [
+                    'projet_nom' => $stock->projet->nom_projet ?? 'Projet inconnu',
+                    'quantite' => $stock->quantite,
+                    'unite_mesure' => $stock->uniteMesure->ref ?? $stock->article->uniteMesure->ref ?? 'N/A'
+                ];
+            })
+        ]);
     }
 }

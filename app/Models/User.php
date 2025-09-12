@@ -92,6 +92,23 @@ class User extends Authenticatable
     {
         return $query->where('status', 'actif');
     }
+    
+    // Relations pour les demandes de ravitaillement
+    public function demandesRavitaillementDemandees()
+    {
+        return $this->hasMany(DemandeRavitaillement::class, 'demandeur_id');
+    }
+    
+    public function demandesRavitaillementApprouvees()
+    {
+        return $this->hasMany(DemandeRavitaillement::class, 'approbateur_id');
+    }
+    
+    // Accessor pour le nom complet
+    public function getNameAttribute()
+    {
+        return $this->prenom . ' ' . $this->nom;
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

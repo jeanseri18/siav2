@@ -29,9 +29,13 @@ class FactureController extends Controller
             'id_contrat' => 'nullable',
             'id_artisan' => 'nullable',
             'montant_ht' => 'required|numeric',
+            'tva' => 'nullable|numeric',
+            'montant_ttc' => 'nullable|numeric',
             'montant_total' => 'required|numeric',
             'ca_realise' => 'nullable|numeric',
             'montant_reglement' => 'nullable|numeric',
+            'decompte' => 'nullable|numeric',
+            'num_decompte' => 'nullable|string',
             'date_emission' => 'required|date',
             'statut' => 'required|in:en attente,payée,annulée',
         ]);
@@ -43,12 +47,15 @@ class FactureController extends Controller
             'id_contrat' => $request->id_contrat,
             'id_artisan' => $request->id_artisan,
             'montant_ht' => $request->montant_ht,
+            'tva' => $request->tva ?? 0,
+            'montant_ttc' => $request->montant_ttc ?? 0,
             'montant_total' => $request->montant_total,
             'ca_realise' => $request->ca_realise ?? 0,
             'montant_reglement' => $request->montant_reglement ?? 0,
+            'decompte' => $request->decompte ?? 0,
+            'num_decompte' => $request->num_decompte,
             'statut' => $request->statut,
             'date_emission' => $request->date_emission,
-            'num_decompte' => $request->decompte ?? null,
             'taux_avancement' => $request->taux_avancement ?? 0
         ]);
     
@@ -89,9 +96,13 @@ class FactureController extends Controller
             'id_contrat' => 'nullable',
             'id_artisan' => 'nullable',
             'montant_ht' => 'required|numeric',
+            'tva' => 'nullable|numeric',
+            'montant_ttc' => 'nullable|numeric',
             'montant_total' => 'required|numeric',
             'ca_realise' => 'nullable|numeric',
             'montant_reglement' => 'nullable|numeric',
+            'decompte' => 'nullable|numeric',
+            'num_decompte' => 'nullable|string',
             'date_emission' => 'required|date',
             'statut' => 'required|in:en attente,payée,annulée',
         ]);
@@ -103,12 +114,15 @@ class FactureController extends Controller
             'id_contrat' => $request->id_contrat,
             'id_artisan' => $request->id_artisan,
             'montant_ht' => $request->montant_ht,
+            'tva' => $request->tva ?? 0,
+            'montant_ttc' => $request->montant_ttc ?? 0,
             'montant_total' => $request->montant_total,
             'ca_realise' => $request->ca_realise ?? 0,
             'montant_reglement' => $request->montant_reglement ?? 0,
+            'decompte' => $request->decompte ?? 0,
+            'num_decompte' => $request->num_decompte,
             'statut' => $request->statut,
             'date_emission' => $request->date_emission,
-            'num_decompte' => $request->decompte ?? null,
             'taux_avancement' => $request->taux_avancement ?? 0
         ]);
         
@@ -182,6 +196,25 @@ class FactureController extends Controller
         return redirect()->route('factures.show', $id)->with('success', 'Statut de la facture mis à jour avec succès');
     }
     
+    /**
+     * Récupérer les décomptes en cours (non réglés) d'un artisan
+     */
+    public function getDecomptesArtisan($artisanId)
+    {
+        $decomptes = Facture::where('id_artisan', $artisanId)
+                           ->where('statut', '!=', 'payée')
+                           ->whereNotNull('num_decompte')
+                           ->whereNotNull('decompte')
+                           ->where('decompte', '>', 0)
+                           ->select('id', 'num', 'num_decompte', 'decompte', 'montant_total', 'montant_reglement', 'date_emission', 'statut')
+                           ->orderBy('date_emission', 'desc')
+                           ->get();
+        
+        return response()->json([
+            'decomptes' => $decomptes
+        ]);
+    }
+
     /**
      * Mettre à jour le CA réalisé pour un contrat en fonction des factures payées
      */
