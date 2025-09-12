@@ -7,28 +7,52 @@ use App\Models\SousCategorieRubrique;
 use App\Models\Rubrique;
 use App\Models\Bpu;
 use App\Models\UniteMesure;
+use App\Models\CategoriesBpu;
 use Illuminate\Http\Request;
 
 class BpuController extends Controller
 {
     public function index()
     {
+        $contratId = session('contrat_id');
+        
+        $rubriques = Rubrique::all();
         $uniteMesures = UniteMesure::all();
-
+        
+        // Récupérer seulement les catégories qui ont des BPU utilitaires
         $categories = CategorieRubrique::with([
-            'sousCategories.rubriques.bpus'
-        ])->get();
+            'sousCategories.rubriques.bpus' => function($query) {
+                $query->where('contrat_id', null); // BPU utilitaires
+            }
+        ])->whereHas('sousCategories.rubriques.bpus', function($query) {
+            $query->where('contrat_id', null);
+        })->get();
 
-        return view('bpu.index', compact('categories', 'uniteMesures'));
+        if ($contratId) {
+            // Mode contrat : récupérer seulement les catégories qui ont des BPU de contrat
+            $categoriesContrat = CategorieRubrique::with([
+                'sousCategories.rubriques.bpus' => function($query) use ($contratId) {
+                    $query->where('contrat_id', $contratId);
+                }
+            ])->whereHas('sousCategories.rubriques.bpus', function($query) use ($contratId) {
+                $query->where('contrat_id', $contratId);
+            })->get();
+            
+            return view('bpu.index', compact('categories', 'categoriesContrat', 'rubriques', 'uniteMesures', 'contratId'));
+        } else {
+            // Mode utilitaires : afficher uniquement les BPU utilitaires
+            return view('bpu.index', compact('categories', 'rubriques', 'uniteMesures', 'contratId'));
+        }
     }
 
     public function indexuntil()
     {
         $uniteMesures = UniteMesure::all();
 
+        // Récupérer seulement les catégories qui ont des BPU
         $categories = CategorieRubrique::with([
             'sousCategories.rubriques.bpus'
-        ])->get();
+        ])->whereHas('sousCategories.rubriques.bpus')->get();
 
         return view('bpu.until', compact('categories', 'uniteMesures'));
     }
@@ -38,9 +62,10 @@ class BpuController extends Controller
     {
         $uniteMesures = UniteMesure::all();
 
+        // Récupérer seulement les catégories qui ont des BPU
         $categories = CategorieRubrique::with([
             'sousCategories.rubriques.bpus'
-        ])->get();
+        ])->whereHas('sousCategories.rubriques.bpus')->get();
 
         return view('bpu.print', compact('categories', 'uniteMesures'));
     }
@@ -169,6 +194,7 @@ class BpuController extends Controller
         'materiel' => $request->materiel,
         'unite' => $request->unite,
         'id_rubrique' => $request->id_rubrique,
+        'contrat_id' => $request->has('contrat_id') && $request->contrat_id ? $request->contrat_id : null,
     ]);
     
     // La méthode updateDerivedValues s'occupe de tous les calculs
@@ -211,5 +237,113 @@ public function update(Request $request, $id)
         $bpu->delete();
 
         return redirect()->route('bpu.index')->with('success', 'BPU supprimé avec succès.');
+    }
+
+    /**
+     * Dupliquer les BPU sélectionnés vers les utilitaires
+     */
+    public function duplicate(Request $request)
+    {
+        try {
+            $bpuIds = $request->input('bpu_ids', []);
+            
+            if (empty($bpuIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aucun BPU sélectionné pour la duplication.'
+                ]);
+            }
+
+            $duplicatedCount = 0;
+            
+            foreach ($bpuIds as $bpuId) {
+                $originalBpu = Bpu::find($bpuId);
+                
+                if ($originalBpu && $originalBpu->contrat_id) {
+                    // Créer une copie du BPU sans contrat_id (pour les utilitaires)
+                    $duplicatedBpu = $originalBpu->replicate();
+                    $duplicatedBpu->contrat_id = null;
+                    $duplicatedBpu->save();
+                    
+                    $duplicatedCount++;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'duplicated_count' => $duplicatedCount,
+                'message' => "$duplicatedCount BPU ont été dupliqués avec succès vers les utilitaires."
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la duplication: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Copier les BPU utilitaires sélectionnés vers le contrat
+     */
+    public function copyToContract(Request $request)
+    {
+        try {
+            $bpuIds = $request->input('bpu_ids', []);
+            $contratId = $request->input('contrat_id');
+            
+            if (empty($bpuIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aucun BPU sélectionné pour la copie.'
+                ]);
+            }
+
+            if (!$contratId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID du contrat manquant.'
+                ]);
+            }
+
+            $copiedCount = 0;
+            
+            foreach ($bpuIds as $bpuId) {
+                $originalBpu = Bpu::find($bpuId);
+                
+                if ($originalBpu && !$originalBpu->contrat_id) {
+                    // Vérifier si ce BPU exact n'existe pas déjà dans le contrat
+                    $existingBpu = Bpu::where('contrat_id', $contratId)
+                        ->where('designation', $originalBpu->designation)
+                        ->where('id_rubrique', $originalBpu->id_rubrique)
+                        ->where('qte', $originalBpu->qte)
+                        ->where('materiaux', $originalBpu->materiaux)
+                        ->where('main_oeuvre', $originalBpu->main_oeuvre)
+                        ->where('materiel', $originalBpu->materiel)
+                        ->first();
+                    
+                    if (!$existingBpu) {
+                        // Créer une copie du BPU avec contrat_id
+                        $copiedBpu = $originalBpu->replicate();
+                        $copiedBpu->contrat_id = $contratId;
+                        $copiedBpu->save();
+                        
+                        $copiedCount++;
+                    }
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'copied_count' => $copiedCount,
+                'message' => "$copiedCount BPU ont été copiés avec succès vers le contrat."
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la copie: ' . $e->getMessage()
+            ]);
+        }
     }
 }

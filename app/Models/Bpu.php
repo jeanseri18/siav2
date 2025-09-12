@@ -13,7 +13,7 @@ class Bpu extends Model
     
     protected $fillable = [
         'designation', 'qte', 'materiaux', 'unite', 'main_oeuvre', 'materiel',
-        'debourse_sec', 'frais_chantier', 'frais_general', 'marge_nette', 'pu_ht', 'pu_ttc', 'id_rubrique'
+        'debourse_sec', 'frais_chantier', 'frais_general', 'marge_nette', 'pu_ht', 'pu_ttc', 'id_rubrique', 'contrat_id'
     ];
     
     public function rubrique()
@@ -27,6 +27,30 @@ class Bpu extends Model
     public function dqeLignes()
     {
         return $this->hasMany(DQELigne::class, 'bpu_id');
+    }
+    
+    /**
+     * Relation avec le contrat
+     */
+    public function contrat()
+    {
+        return $this->belongsTo(Contrat::class);
+    }
+    
+    /**
+     * Scope pour les BPU utilitaires (globaux)
+     */
+    public function scopeUtilitaires($query)
+    {
+        return $query->whereNull('contrat_id');
+    }
+    
+    /**
+     * Scope pour les BPU d'un contrat spécifique
+     */
+    public function scopeContrat($query, $contratId)
+    {
+        return $query->where('contrat_id', $contratId);
     }
     
     /**

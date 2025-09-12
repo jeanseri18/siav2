@@ -264,8 +264,10 @@ Route::post('/bpus', [BpuController::class, 'store'])->name('bpus.store');
 Route::get('/bpus/{bpu}/edit', [BpuController::class, 'edit'])->name('bpus.edit');
 Route::put('/bpus/{bpu}', [BpuController::class, 'update'])->name('bpus.update');
 Route::delete('/bpus/{bpu}', [BpuController::class, 'destroy'])->name('bpus.destroy');
+Route::post('/bpus/duplicate', [BpuController::class, 'duplicate'])->name('bpus.duplicate');
+Route::post('/bpus/copy-to-contract', [BpuController::class, 'copyToContract'])->name('bpus.copyToContract');
 
-// Routes pour les catégories
+// Routes pour les catégories BPU
 Route::post('/categoriesbpu', [CategorieBpuController::class, 'store'])->name('categoriesbpu.store');
 Route::put('/categoriesbpu/{categorie}', [CategorieBpuController::class, 'update'])->name('categoriesbpu.update');
 Route::delete('/categoriesbpu/{categorie}', [CategorieBpuController::class, 'destroy'])->name('categoriesbpu.destroy');

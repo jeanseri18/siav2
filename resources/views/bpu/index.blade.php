@@ -19,6 +19,25 @@
 
 <div class="container-fluid" style="font-size: 12px;">
     <h2 class="mb-4">Bordereaux de prix unitaires</h2>
+    
+    @if($contratId)
+        <div class="alert alert-info mb-3">
+            <strong>Mode Contrat:</strong> Vous visualisez les BPU spécifiques au contrat et les BPU utilitaires.
+        </div>
+        
+        <!-- Navigation entre les sections -->
+        <ul class="nav nav-tabs mb-3" id="bpuTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab">BPU Contrat</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="utilitaires-tab" data-bs-toggle="tab" data-bs-target="#utilitaires" type="button" role="tab">BPU Utilitaires</button>
+            </li>
+        </ul>
+    @else
+        <h3 class="text-primary mb-3">BPU Utilitaires (Modèles)</h3>
+    @endif
+    
     <button class="btn btn-secondary mb-2" onclick="toggleForm('formCategorie')">Ajouter Catégorie</button>
     <a href="{{ route('bpu.print') }}" class="btn btn-secondary mb-2" target="blank">Afficher le BPU complet</a>
     <a href="{{ route('import.index') }}" class="btn btn-secondary mb-2">Importer un fichier excel</a>
@@ -38,7 +57,26 @@
         </div>
     </form>
 
-    @foreach ($categories as $categorie)
+    @if($contratId)
+        <div class="tab-content" id="bpuTabsContent">
+            <!-- Section BPU Contrat -->
+            <div class="tab-pane fade show active" id="contrat" role="tabpanel">
+                <h4 class="text-success mb-3">BPU Spécifiques au Contrat (Modifiables)</h4>
+                @foreach ($categoriesContrat as $categorie)
+                    @include('bpu.partials.categorie-table', ['categorie' => $categorie, 'type' => 'contrat'])
+                @endforeach
+            </div>
+            
+            <!-- Section BPU Utilitaires -->
+            <div class="tab-pane fade" id="utilitaires" role="tabpanel">
+                <h4 class="text-info mb-3">BPU Utilitaires (Lecture seule)</h4>
+                @foreach ($categories as $categorie)
+                    @include('bpu.partials.categorie-table', ['categorie' => $categorie, 'type' => 'utilitaires'])
+                @endforeach
+            </div>
+        </div>
+    @else
+        @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
             <tr bgcolor="#5EB3F6" height="40px">
                 <td colspan="12">
@@ -239,6 +277,7 @@
         </table>
         <br>
     @endforeach
+    @endif
 </div>
 
 <script>
@@ -283,5 +322,77 @@
             }).then(() => location.reload());
         }
     }
+
+    // Fonctions pour la sélection et duplication des BPU
+    function toggleAllBpu(rubriqueId) {
+        const selectAllCheckbox = document.getElementById(`selectAll_${rubriqueId}`);
+        const bpuCheckboxes = document.querySelectorAll(`input[data-rubrique="${rubriqueId}"].bpu-checkbox`);
+        
+        bpuCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const selectedCheckboxes = document.querySelectorAll('.bpu-checkbox:checked');
+        const countElement = document.getElementById('selectedCount');
+        if (countElement) {
+            countElement.textContent = `${selectedCheckboxes.length} BPU sélectionné(s)`;
+        }
+    }
+
+    function copySelectedBpuToContract() {
+        const selectedCheckboxes = document.querySelectorAll('.bpu-checkbox:checked');
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            alert('Veuillez sélectionner au moins un BPU à copier.');
+            return;
+        }
+        
+        // Récupérer l'ID du contrat depuis la session Laravel
+        const contratId = '{{ session("contrat_id") }}';
+        
+        if (!contratId || contratId === '') {
+            alert('Erreur: ID du contrat non trouvé. Veuillez sélectionner un contrat.');
+            return;
+        }
+        
+        if (confirm(`Êtes-vous sûr de vouloir copier ${selectedIds.length} BPU vers le contrat ?`)) {
+            fetch('{{ route("bpus.copyToContract") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    bpu_ids: selectedIds,
+                    contrat_id: contratId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${data.copied_count} BPU ont été copiés avec succès vers le contrat.`);
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la copie: ' + (data.message || 'Erreur inconnue'));
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la copie des BPU.');
+            });
+        }
+    }
+
+    // Écouter les changements sur les cases à cocher individuelles
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('bpu-checkbox')) {
+            updateSelectedCount();
+        }
+    });
 </script>
 @endsection

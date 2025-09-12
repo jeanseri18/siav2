@@ -32,10 +32,14 @@ public function index()
                ->orderBy('created_at', 'desc')
                ->get();
     
-    // Ajouter les catégories pour le modal de génération de DQE
+    // Ajouter seulement les catégories qui ont des BPU liés au contrat
     $categories = CategorieRubrique::with([
-        'sousCategories.rubriques.bpus'
-    ])->get();
+        'sousCategories.rubriques.bpus' => function($query) use ($contratId) {
+            $query->where('contrat_id', $contratId);
+        }
+    ])->whereHas('sousCategories.rubriques.bpus', function($query) use ($contratId) {
+        $query->where('contrat_id', $contratId);
+    })->get();
     
     return view('dqe.index', compact('contrat', 'dqes', 'categories'));
 }
@@ -70,9 +74,14 @@ public function index()
     }
     
     $contrat = Contrat::findOrFail($contratId);
+    // Récupérer seulement les catégories qui ont des BPU liés au contrat
     $categories = CategorieRubrique::with([
-        'sousCategories.rubriques.bpus'
-    ])->get();
+        'sousCategories.rubriques.bpus' => function($query) use ($contratId) {
+            $query->where('contrat_id', $contratId);
+        }
+    ])->whereHas('sousCategories.rubriques.bpus', function($query) use ($contratId) {
+        $query->where('contrat_id', $contratId);
+    })->get();
     
     return view('dqe.create', compact('contrat', 'categories'));
 }
@@ -126,9 +135,16 @@ $request->merge([
             'lignes.bpu.rubrique.sousCategorie.categorie'
         ])->findOrFail($id);
         $contrat = $dqe->contrat;
+        $contratId = $contrat->id;
+        
+        // Récupérer seulement les catégories qui ont des BPU liés au contrat
         $categories = CategorieRubrique::with([
-            'sousCategories.rubriques.bpus'
-        ])->get();
+            'sousCategories.rubriques.bpus' => function($query) use ($contratId) {
+                $query->where('contrat_id', $contratId);
+            }
+        ])->whereHas('sousCategories.rubriques.bpus', function($query) use ($contratId) {
+            $query->where('contrat_id', $contratId);
+        })->get();
         
         // Organiser les lignes par hiérarchie
         $lignesOrganisees = $this->organiserLignesParHierarchie($dqe->lignes);
@@ -307,18 +323,38 @@ $request->merge([
 
     // Récupérer les BPU sélectionnés
     $bpuIds = $request->bpu_ids ?? [];
-    $bpus = Bpu::whereIn('id', $bpuIds)->get();
+    $bpusUtilitaires = Bpu::whereIn('id', $bpuIds)->utilitaires()->get();
 
-    // Créer les lignes de DQE
-    foreach ($bpus as $bpu) {
+    // Créer les lignes de DQE avec copie des BPU utilitaires vers BPU contrat
+    foreach ($bpusUtilitaires as $bpuUtilitaire) {
+        // Créer une copie du BPU utilitaire pour ce contrat
+        $bpuContrat = $bpuUtilitaire->replicate();
+        $bpuContrat->contrat_id = $contratId;
+        $bpuContrat->save();
+        
+        // Créer la ligne DQE avec le nouveau BPU contrat
+        DQELigne::create([
+            'dqe_id' => $dqe->id,
+            'bpu_id' => $bpuContrat->id,
+            'designation' => $bpuContrat->designation,
+            'quantite' => 1, // Quantité par défaut
+            'unite' => $bpuContrat->unite,
+            'pu_ht' => $bpuContrat->pu_ht,
+            'montant_ht' => $bpuContrat->pu_ht, // Montant initial = prix unitaire × 1
+        ]);
+    }
+    
+    // Gérer aussi les BPU déjà spécifiques au contrat (s'ils existent)
+    $bpusContrat = Bpu::whereIn('id', $bpuIds)->contrat($contratId)->get();
+    foreach ($bpusContrat as $bpu) {
         DQELigne::create([
             'dqe_id' => $dqe->id,
             'bpu_id' => $bpu->id,
             'designation' => $bpu->designation,
-            'quantite' => 1, // Quantité par défaut
+            'quantite' => 1,
             'unite' => $bpu->unite,
             'pu_ht' => $bpu->pu_ht,
-            'montant_ht' => $bpu->pu_ht, // Montant initial = prix unitaire × 1
+            'montant_ht' => $bpu->pu_ht,
         ]);
     }
 
