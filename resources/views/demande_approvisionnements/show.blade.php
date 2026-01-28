@@ -61,7 +61,7 @@
                                 </tr>
                                 <tr>
                                     <th>Demandeur</th>
-                                    <td>{{ $demandeApprovisionnement->user ? $demandeApprovisionnement->user->name : 'N/A' }}</td>
+                                    <td>{{ $demandeApprovisionnement->user ? $demandeApprovisionnement->user->nom : 'N/A' }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -144,11 +144,12 @@
                     <table class="app-table">
                         <thead>
                             <tr>
-                                <th>Référence</th>
-                                <th>Désignation</th>
-                                <th>Quantité demandée</th>
+                                <th style="width: 15%;">Référence</th>
+                                <th style="width: 30%;">Désignation</th>
+                                <th style="width: 12%;">Unité</th>
+                                <th style="width: 10%;">Quantité demandée</th>
                                 @if($demandeApprovisionnement->statut == 'approuvée')
-                                    <th>Quantité approuvée</th>
+                                    <th style="width: 10%;">Quantité approuvée</th>
                                 @endif
                                 <th>Commentaire</th>
                             </tr>
@@ -158,10 +159,11 @@
                                 <tr>
                                     <td>{{ $ligne->article->reference }}</td>
                                     <td>{{ $ligne->article->nom }}</td>
-                                    <td class="app-fw-bold">{{ $ligne->quantite_demandee }} {{ $ligne->article->unite_mesure }}</td>
+                                    <td>{{ $ligne->article->uniteMesure->ref ?? '' }}</td>
+                                    <td class="app-fw-bold">{{ trim($ligne->quantite_demandee) }} </td>
                                     @if($demandeApprovisionnement->statut == 'approuvée')
-                                        <td class="app-fw-bold">{{ $ligne->quantite_approuvee }} {{ $ligne->article->unite_mesure }}</td>
-                                    @endif
+                                        <td class="app-fw-bold">{{ $ligne->quantite_approuvee }} </td>
+                                    @endif 
                                     <td>{{ $ligne->commentaire }}</td>
                                 </tr>
                             @endforeach
@@ -182,26 +184,80 @@
                                     <i class="fas fa-trash me-2"></i> Supprimer
                                 </button>
                             </div>
-                            <div>
-                                @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'chef_chantier', 'admin', 'dg']))
-                                    <button type="button" class="app-btn app-btn-success app-btn-icon" data-bs-toggle="modal" data-bs-target="#approveModal">
-                                        <i class="fas fa-check me-2"></i> Approuver
-                                    </button>
-                                    <button type="button" class="app-btn app-btn-danger app-btn-icon" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                        <i class="fas fa-times me-2"></i> Rejeter
-                                    </button>
-                                @endif
-                            </div>
                         </div>
                     </div>
                 </div>
+                
+                @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'chef_chantier', 'admin', 'dg']))
+                    <!-- Section d'approbation -->
+                    <div class="app-card app-mt-4 no-print">
+                        <div class="app-card-header">
+                            <h3 class="app-card-title">
+                                <i class="fas fa-check-circle me-2"></i>Approbation de la demande
+                            </h3>
+                        </div>
+                        <div class="app-card-body">
+                            <form action="{{ route('demande-approvisionnements.approve', $demandeApprovisionnement) }}" method="POST" class="app-mb-4">
+                                @csrf
+                                <h5 class="app-mb-3">Quantités à approuver :</h5>
+                                <div class="app-table-responsive">
+                                    <table class="app-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 15%;">Référence</th>
+                                                <th style="width: 30%;">Désignation</th>
+                                                <th style="width: 10%;">Quantité demandée</th>
+                                                <th style="width: 10%;">Quantité approuvée</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($demandeApprovisionnement->lignes as $index => $ligne)
+                                                <tr>
+                                                    <td>{{ $ligne->article->reference }}</td>
+                                                    <td>{{ $ligne->article->nom }}</td>
+                                                    <td>{{ trim($ligne->quantite_demandee) }} {{ $ligne->article->uniteMesure->ref ?? '' }}</td>
+                                                    <td>
+                                                        <input type="hidden" name="ligne_ids[{{ $index }}]" value="{{ $ligne->id }}">
+                                                        <input type="number" name="quantite_approuvee[{{ $index }}]" class="app-form-control" 
+                                                            min="0" value="{{ trim($ligne->quantite_demandee) }}" style="width: 120px;">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="app-mt-3">
+                                    <button type="submit" class="app-btn app-btn-success">
+                                        <i class="fas fa-check me-2"></i>Approuver la demande
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <hr class="app-my-4">
+                            
+                            <form action="{{ route('demande-approvisionnements.reject', $demandeApprovisionnement) }}" method="POST">
+                                @csrf
+                                <h5 class="app-mb-3">Ou rejeter la demande :</h5>
+                                <div class="app-form-group app-mb-3">
+                                    <label for="motif_rejet" class="app-form-label">
+                                        <i class="fas fa-comment-alt me-2"></i>Motif du rejet <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="motif_rejet" id="motif_rejet" class="app-form-control" rows="3" required placeholder="Veuillez indiquer la raison du rejet de cette demande..."></textarea>
+                                </div>
+                                <button type="submit" class="app-btn app-btn-danger">
+                                    <i class="fas fa-times me-2"></i>Rejeter la demande
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
 </div>
 
 <!-- Modal de suppression -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel">
     <div class="modal-dialog">
         <div class="app-modal">
             <div class="app-modal-header">
@@ -232,97 +288,7 @@
     </div>
 </div>
 
-<!-- Modal d'approbation -->
-<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="app-modal">
-            <div class="app-modal-header">
-                <h3 class="app-modal-title" id="approveModalLabel">
-                    <i class="fas fa-check-circle me-2"></i>Approuver la demande
-                </h3>
-                <button type="button" class="app-modal-close" data-bs-dismiss="modal" aria-label="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form action="{{ route('demande-approvisionnements.approve', $demandeApprovisionnement) }}" method="POST">
-                @csrf
-                <div class="app-modal-body">
-                    <p>Veuillez spécifier les quantités approuvées pour chaque article :</p>
-                    
-                    <div class="app-table-responsive">
-                        <table class="app-table">
-                            <thead>
-                                <tr>
-                                    <th>Référence</th>
-                                    <th>Désignation</th>
-                                    <th>Quantité demandée</th>
-                                    <th>Quantité approuvée</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($demandeApprovisionnement->lignes as $index => $ligne)
-                                    <tr>
-                                        <td>{{ $ligne->article->reference }}</td>
-                                        <td>{{ $ligne->article->nom }}</td>
-                                        <td>{{ $ligne->quantite_demandee }} {{ $ligne->article->unite_mesure }}</td>
-                                        <td>
-                                            <input type="number" name="quantite_approuvee[{{ $index }}]" class="app-form-control" 
-                                                min="0" max="{{ $ligne->quantite_demandee }}" value="{{ $ligne->quantite_demandee }}">
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="app-modal-footer">
-                    <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Annuler
-                    </button>
-                    <button type="submit" class="app-btn app-btn-success">
-                        <i class="fas fa-check me-2"></i>Approuver
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Modal de rejet -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="app-modal">
-            <div class="app-modal-header">
-                <h3 class="app-modal-title" id="rejectModalLabel">
-                    <i class="fas fa-times-circle me-2"></i>Rejeter la demande
-                </h3>
-                <button type="button" class="app-modal-close" data-bs-dismiss="modal" aria-label="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form action="{{ route('demande-approvisionnements.reject', $demandeApprovisionnement) }}" method="POST">
-                @csrf
-                <div class="app-modal-body">
-                    <div class="app-form-group">
-                        <label for="motif_rejet" class="app-form-label">
-                            <i class="fas fa-comment-alt me-2"></i>Motif du rejet <span class="text-danger">*</span>
-                        </label>
-                        <textarea name="motif_rejet" id="motif_rejet" class="app-form-control" rows="3" required></textarea>
-                        <div class="app-form-text">Veuillez indiquer la raison du rejet de cette demande.</div>
-                    </div>
-                </div>
-                <div class="app-modal-footer">
-                    <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Annuler
-                    </button>
-                    <button type="submit" class="app-btn app-btn-danger">
-                        <i class="fas fa-ban me-2"></i>Rejeter
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <style>
     @media print {
@@ -358,4 +324,17 @@
         }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gérer l'accessibilité du modal de suppression
+    const deleteModal = document.querySelector('#deleteModal');
+    if (deleteModal) {
+        // Quand le modal s'ouvre, supprimer aria-hidden
+        deleteModal.addEventListener('shown.bs.modal', function() {
+            this.removeAttribute('aria-hidden');
+        });
+    }
+});
+</script>
 @endsection

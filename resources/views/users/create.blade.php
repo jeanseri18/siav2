@@ -73,7 +73,7 @@
                                         <i class="fas fa-user-tag me-2"></i>Rôle
                                     </label>
                                     <select name="role" id="role" class="app-form-select">
-                                        <option value="utilisateur">Utilisateur</option>
+                                        <option value="employe">employe</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                     <div class="app-form-text">Niveau d'accès de l'utilisateur</div>

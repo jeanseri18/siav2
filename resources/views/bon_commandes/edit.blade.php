@@ -75,6 +75,27 @@
                                 <div class="app-form row">
                                     <div class="app-form col-6">
                                         <div class="app-form-group">
+                                            <label for="demande_cotation_id" class="app-form-label">
+                                                <i class="fas fa-file-invoice me-2"></i>Demande de cotation
+                                            </label>
+                                            <select class="app-form-select @error('demande_cotation_id') is-invalid @enderror" 
+                                                id="demande_cotation_id" name="demande_cotation_id">
+                                                <option value="">-- Sélectionner une demande de cotation --</option>
+                                                @foreach($demandesCotation ?? [] as $demande)
+                                                    <option value="{{ $demande->id }}" 
+                                                        {{ old('demande_cotation_id', $bonCommande->demande_cotation_id) == $demande->id ? 'selected' : '' }}>
+                                                        {{ $demande->reference }} ({{ $demande->date_demande->format('d/m/Y') }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('demande_cotation_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="app-form-text">Demande de cotation liée</div>
+                                        </div>
+                                    </div>
+                                    <div class="app-form col-6">
+                                        <div class="app-form-group">
                                             <label for="fournisseur_id" class="app-form-label">
                                                 <i class="fas fa-building me-2"></i>Fournisseur
                                                 <span class="text-danger">*</span>
@@ -85,7 +106,7 @@
                                                 @foreach($fournisseurs as $fournisseur)
                                                     <option value="{{ $fournisseur->id }}" 
                                                         {{ old('fournisseur_id', $bonCommande->fournisseur_id) == $fournisseur->id ? 'selected' : '' }}>
-                                                        {{ $fournisseur->nom }}
+                                                        {{ $fournisseur->nom }}   {{ $fournisseur->prenoms }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -95,19 +116,89 @@
                                             <div class="app-form-text">Fournisseur auprès duquel commander</div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="app-form row">
                                     <div class="app-form col-6">
                                         <div class="app-form-group">
-                                            <label for="conditions_paiement" class="app-form-label">
-                                                <i class="fas fa-credit-card me-2"></i>Conditions de paiement
+                                            <label for="mode_reglement" class="app-form-label">
+                                                <i class="fas fa-credit-card me-2"></i>Mode de règlement
+                                                <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" class="app-form-control @error('conditions_paiement') is-invalid @enderror" 
-                                                id="conditions_paiement" name="conditions_paiement" 
-                                                value="{{ old('conditions_paiement', $bonCommande->conditions_paiement) }}" 
-                                                placeholder="Ex: 30 jours net">
-                                            @error('conditions_paiement')
+                                            <select class="app-form-select @error('mode_reglement') is-invalid @enderror" 
+                                                id="mode_reglement" name="mode_reglement" required>
+                                                <option value="">-- Sélectionner un mode de règlement --</option>
+                                                @foreach($modesPaiement ?? [] as $mode)
+                                                    <option value="{{ $mode->nom }}" 
+                                                        {{ old('mode_reglement', $bonCommande->mode_reglement) == $mode->nom ? 'selected' : '' }}>
+                                                        {{ $mode->nom }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('mode_reglement')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Modalités de paiement convenues</div>
+                                            <div class="app-form-text">Mode de règlement convenu</div>
+                                        </div>
+                                    </div>
+                                    <div class="app-form col-6">
+                                        <div class="app-form-group">
+                                            <label for="delai_reglement" class="app-form-label">
+                                                <i class="fas fa-clock me-2"></i>Délai de règlement
+                                            </label>
+                                            <select class="app-form-select @error('delai_reglement') is-invalid @enderror" 
+                                                id="delai_reglement" name="delai_reglement">
+                                                <option value="">-- Sélectionner un délai --</option>
+                                                <option value="0" {{ old('delai_reglement', $bonCommande->delai_reglement) == '0' ? 'selected' : '' }}>Comptant</option>
+                                                <option value="15" {{ old('delai_reglement', $bonCommande->delai_reglement) == '15' ? 'selected' : '' }}>15 jours</option>
+                                                <option value="30" {{ old('delai_reglement', $bonCommande->delai_reglement) == '30' ? 'selected' : '' }}>30 jours</option>
+                                                <option value="45" {{ old('delai_reglement', $bonCommande->delai_reglement) == '45' ? 'selected' : '' }}>45 jours</option>
+                                                <option value="60" {{ old('delai_reglement', $bonCommande->delai_reglement) == '60' ? 'selected' : '' }}>60 jours</option>
+                                                <option value="90" {{ old('delai_reglement', $bonCommande->delai_reglement) == '90' ? 'selected' : '' }}>90 jours</option>
+                                            </select>
+                                            @error('delai_reglement')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="app-form-text">Délai accordé pour le règlement</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="app-form row">
+                                    <div class="app-form col-6">
+                                        <div class="app-form-group">
+                                            <label for="projet_id" class="app-form-label">
+                                                <i class="fas fa-project-diagram me-2"></i>Projet
+                                            </label>
+                                            <select class="app-form-select @error('projet_id') is-invalid @enderror" 
+                                                id="projet_id" name="projet_id">
+                                                <option value="">-- Sélectionner un projet --</option>
+                                                @foreach($projets ?? [] as $projet)
+                                                    <option value="{{ $projet->id }}" 
+                                                        {{ old('projet_id', $bonCommande->projet_id) == $projet->id ? 'selected' : '' }}>
+                                                        {{ $projet->nom_projet }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('projet_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="app-form-text">Projet auquel rattacher la commande</div>
+                                        </div>
+                                    </div>
+                                    <div class="app-form col-6">
+                                        <div class="app-form-group">
+                                            <label for="lieu_livraison" class="app-form-label">
+                                                <i class="fas fa-map-marker-alt me-2"></i>Lieu de livraison
+                                            </label>
+                                            <input type="text" class="app-form-control @error('lieu_livraison') is-invalid @enderror" 
+                                                id="lieu_livraison" name="lieu_livraison" 
+                                                value="{{ old('lieu_livraison', $bonCommande->lieu_livraison) }}" 
+                                                placeholder="Adresse de livraison">
+                                            @error('lieu_livraison')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="app-form-text">Adresse où livrer la commande</div>
                                         </div>
                                     </div>
                                 </div>
@@ -187,22 +278,34 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 30%;">Article <span class="text-danger">*</span></th>
-                                            <th style="width: 15%;">Quantité <span class="text-danger">*</span></th>
-                                            <th style="width: 15%;">Prix unitaire <span class="text-danger">*</span></th>
-                                            <th style="width: 15%;">Total</th>
-                                            <th style="width: 20%;">Commentaire</th>
-                                            <th style="width: 5%;">Actions</th>
+                                            <th style="width: 8%;">N° Ligne</th>
+                                            <th style="width: 12%;">Ref article</th>
+                                            <th style="width: 20%;">Article <span class="text-danger">*</span></th>
+                                            <th style="width: 10%;">Quantité <span class="text-danger">*</span></th>
+                                            <th style="width: 8%;">Unité</th>
+                                            <th style="width: 10%;">Prix unitaire <span class="text-danger">*</span></th>
+                                            <th style="width: 8%;">% Remise</th>
+                                            <th style="width: 10%;">Montant HT</th>
+                                            <th style="width: 10%;">Commentaire</th>
+                                            <th style="width: 4%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($bonCommande->lignes as $ligne)
+                                        @foreach($bonCommande->lignes as $index => $ligne)
                                         <tr>
                                             <td>
-                                                <select class="app-form-select article-select" name="article_id[]" required>
+                                                <span class="ligne-numero">{{ $index + 1 }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="article-reference">{{ $ligne->article->reference ?? '-' }}</span>
+                                            </td>
+                                            <td>
+                                                <select class="app-form-select article-select" name="article_id[]" required onchange="updateArticleInfo(this)">
                                                     <option value="">-- Sélectionner un article --</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" 
+                                                            data-reference="{{ $article->reference }}" 
+                                                            data-unite="{{ $article->uniteMesure->ref ?? 'Unité' }}"
                                                             {{ $ligne->article_id == $article->id ? 'selected' : '' }}>
                                                             {{ $article->reference }} - {{ $article->nom }}
                                                         </option>
@@ -214,12 +317,19 @@
                                                     min="1" value="{{ $ligne->quantite }}" required oninput="calculerLigneTotal(this.closest('tr'))">
                                             </td>
                                             <td>
+                                                <span class="article-unite">{{ $ligne->article->uniteMesure->ref ?? '-' }}</span>
+                                            </td>
+                                            <td>
                                                 <input type="number" step="0.01" class="app-form-control prix_unitaire" 
                                                     name="prix_unitaire[]" min="0" value="{{ $ligne->prix_unitaire }}" required oninput="calculerLigneTotal(this.closest('tr'))">
                                             </td>
                                             <td>
+                                                <input type="number" step="0.01" class="app-form-control remise" name="remise[]" 
+                                                    min="0" max="100" value="{{ $ligne->remise ?? 0 }}" oninput="calculerLigneTotal(this.closest('tr'))">
+                                            </td>
+                                            <td>
                                                 <input type="text" class="app-form-control ligne_total bg-light" 
-                                                    value="{{ number_format($ligne->quantite * $ligne->prix_unitaire, 2) }}" readonly>
+                                                    value="{{ number_format($ligne->montant_avec_remise, 2) }}" readonly>
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control" name="commentaire[]" 
@@ -234,13 +344,32 @@
                                         @endforeach
                                     </tbody>
                                     <tfoot>
+                                        <tr>
+                                            <td colspan="7" class="text-end app-fw-bold">Montant total HT :</td>
+                                            <td class="app-fw-bold"><span id="montant_total_ht">{{ number_format($bonCommande->montant_total, 2) }}</span> FCFA</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="7" class="text-end app-fw-bold">Remise totale :</td>
+                                            <td class="app-fw-bold"><span id="remise_totale">0.00</span> FCFA</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="7" class="text-end app-fw-bold">Montant net HT :</td>
+                                            <td class="app-fw-bold"><span id="montant_net_ht">{{ number_format($bonCommande->montant_total, 2) }}</span> FCFA</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="7" class="text-end app-fw-bold">TVA (18%) :</td>
+                                            <td class="app-fw-bold"><span id="tva_montant">{{ number_format($bonCommande->montant_total * 0.18, 2) }}</span> FCFA</td>
+                                            <td colspan="2"></td>
+                                        </tr>
                                         <tr class="table-active">
-                                            <td colspan="3" class="text-end app-fw-bold">
-                                                <i class="fas fa-calculator me-2"></i>Montant Total :
+                                            <td colspan="7" class="text-end app-fw-bold">
+                                                <i class="fas fa-calculator me-2"></i>Total TTC :
                                             </td>
-                                            <td colspan="3" class="app-fw-bold text-success h5" id="montant_total">
-                                                {{ number_format($bonCommande->montant_total, 2) }} FCFA
-                                            </td>
+                                            <td class="app-fw-bold text-success h5"><span id="total_ttc">{{ number_format($bonCommande->montant_total * 1.18, 2) }}</span> FCFA</td>
+                                            <td colspan="2"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -266,10 +395,18 @@
 <template id="article-row-template">
     <tr>
         <td>
-            <select class="app-form-select article-select" name="article_id[]" required>
+            <span class="ligne-numero"></span>
+        </td>
+        <td>
+            <span class="article-reference">-</span>
+        </td>
+        <td>
+            <select class="app-form-select article-select" name="article_id[]" required onchange="updateArticleInfo(this)">
                 <option value="">-- Sélectionner un article --</option>
                 @foreach($articles as $article)
-                    <option value="{{ $article->id }}">
+                    <option value="{{ $article->id }}" 
+                        data-reference="{{ $article->reference }}" 
+                        data-unite="{{ $article->uniteMesure->ref ?? 'Unité' }}">
                         {{ $article->reference }} - {{ $article->nom }}
                     </option>
                 @endforeach
@@ -280,8 +417,15 @@
                 min="1" value="1" required oninput="calculerLigneTotal(this.closest('tr'))">
         </td>
         <td>
+            <span class="article-unite">-</span>
+        </td>
+        <td>
             <input type="number" step="0.01" class="app-form-control prix_unitaire" 
                 name="prix_unitaire[]" min="0" value="0" required oninput="calculerLigneTotal(this.closest('tr'))">
+        </td>
+        <td>
+            <input type="number" step="0.01" class="app-form-control remise" name="remise[]" 
+                min="0" max="100" value="0" oninput="calculerLigneTotal(this.closest('tr'))">
         </td>
         <td>
             <input type="text" class="app-form-control ligne_total bg-light" readonly>
@@ -303,7 +447,12 @@
 function calculerLigneTotal(row) {
     const quantite = parseFloat(row.querySelector('.quantite').value) || 0;
     const prix = parseFloat(row.querySelector('.prix_unitaire').value) || 0;
-    const total = quantite * prix;
+    const remise = parseFloat(row.querySelector('.remise').value) || 0;
+    
+    const montantBrut = quantite * prix;
+    const montantRemise = montantBrut * (remise / 100);
+    const total = montantBrut - montantRemise;
+    
     row.querySelector('.ligne_total').value = total.toFixed(2);
     
     // Recalculer le montant total
@@ -312,11 +461,58 @@ function calculerLigneTotal(row) {
 
 // Fonction pour calculer le montant total
 function calculerMontantTotal() {
-    let montantTotal = 0;
-    document.querySelectorAll('.ligne_total').forEach(function(element) {
-        montantTotal += parseFloat(element.value) || 0;
+    let montantTotalHT = 0;
+    let remiseTotale = 0;
+    
+    document.querySelectorAll('#articles_table tbody tr').forEach(function(row) {
+        const quantite = parseFloat(row.querySelector('.quantite').value) || 0;
+        const prix = parseFloat(row.querySelector('.prix_unitaire').value) || 0;
+        const remise = parseFloat(row.querySelector('.remise').value) || 0;
+        
+        const montantBrut = quantite * prix;
+        const montantRemise = montantBrut * (remise / 100);
+        
+        montantTotalHT += montantBrut;
+        remiseTotale += montantRemise;
     });
-    document.getElementById('montant_total').textContent = montantTotal.toFixed(2) + ' FCFA';
+    
+    const montantNetHT = montantTotalHT - remiseTotale;
+    const tvaMontant = montantNetHT * 0.18; // TVA 18%
+    const totalTTC = montantNetHT + tvaMontant;
+    
+    // Mise à jour des affichages
+    document.getElementById('montant_total_ht').textContent = montantTotalHT.toFixed(2);
+    document.getElementById('remise_totale').textContent = remiseTotale.toFixed(2);
+    document.getElementById('montant_net_ht').textContent = montantNetHT.toFixed(2);
+    document.getElementById('tva_montant').textContent = tvaMontant.toFixed(2);
+    document.getElementById('total_ttc').textContent = totalTTC.toFixed(2);
+}
+
+// Fonction pour mettre à jour les informations de l'article
+function updateArticleInfo(select) {
+    const row = select.closest('tr');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption.value) {
+        const reference = selectedOption.getAttribute('data-reference');
+        const unite = selectedOption.getAttribute('data-unite');
+        
+        row.querySelector('.article-reference').textContent = reference || '-';
+        row.querySelector('.article-unite').textContent = unite || '-';
+    } else {
+        row.querySelector('.article-reference').textContent = '-';
+        row.querySelector('.article-unite').textContent = '-';
+    }
+}
+
+// Fonction pour mettre à jour les numéros de ligne
+function updateLineNumbers() {
+    document.querySelectorAll('#articles_table tbody tr').forEach((row, index) => {
+        const numeroSpan = row.querySelector('.ligne-numero');
+        if (numeroSpan) {
+            numeroSpan.textContent = index + 1;
+        }
+    });
 }
 
 // Ajouter une ligne
@@ -325,6 +521,9 @@ function addArticle() {
     const clone = template.content.cloneNode(true);
     
     document.querySelector('#articles_table tbody').appendChild(clone);
+    
+    // Mettre à jour les numéros de ligne
+    updateLineNumbers();
     
     // Calculer le total de la nouvelle ligne
     const newRow = document.querySelector('#articles_table tbody tr:last-child');
@@ -338,6 +537,7 @@ function removeLine(button) {
     
     if (rowCount > 1) {
         button.closest('tr').remove();
+        updateLineNumbers();
         calculerMontantTotal();
     } else {
         alert('Vous devez avoir au moins une ligne d\'article');

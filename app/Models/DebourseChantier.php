@@ -2,57 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DebourseChantier extends Model
 {
-    use HasFactory;
-
-    protected $table = 'debourse_chantier';
+    protected $table = 'debourse_chantiers';
 
     protected $fillable = [
-        'reference', 'projet_id', 'contrat_id', 'dqe_id', 'montant_total', 'statut', 'notes'
+        'parent_id',
+        'rubrique_id',
+        'designation',
+        'unite',
+        'quantite',
+        'pu_ht',
+        'montant_ht',
     ];
 
-    /**
-     * Relation avec le projet
-     */
-    public function projet()
+    protected $casts = [
+        'quantite' => 'decimal:2',
+        'pu_ht' => 'decimal:2',
+        'montant_ht' => 'decimal:2',
+    ];
+
+    public function parent(): BelongsTo
     {
-        return $this->belongsTo(Projet::class);
+        return $this->belongsTo(DebourseChantierParent::class, 'parent_id');
     }
 
-    /**
-     * Relation avec le contrat
-     */
-    public function contrat()
+    public function rubrique(): BelongsTo
     {
-        return $this->belongsTo(Contrat::class);
-    }
-
-    /**
-     * Relation avec le DQE
-     */
-    public function dqe()
-    {
-        return $this->belongsTo(DQE::class);
-    }
-
-    /**
-     * Relation avec les détails du déboursé chantier
-     */
-    public function details()
-    {
-        return $this->hasMany(DebourseChantierDetail::class, 'debourse_chantier_id');
-    }
-
-    /**
-     * Mettre à jour le montant total
-     */
-    public function updateTotal()
-    {
-        $this->montant_total = $this->details->sum('montant_total');
-        $this->save();
+        return $this->belongsTo(Rubrique::class);
     }
 }

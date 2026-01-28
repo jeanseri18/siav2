@@ -46,7 +46,7 @@ class FournisseurController extends Controller {
             'n_rccm' => 'nullable|string|max:255',
             'n_cc' => 'nullable|string|max:255',
             'secteur_activite' => 'nullable|string|max:255',
-            'delai_paiement' => 'required|integer',
+            'delai_paiement' => 'required|string',
             'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
@@ -144,7 +144,7 @@ $request->merge([
             'n_rccm' => 'nullable|string|max:255',
             'n_cc' => 'nullable|string|max:255',
             'regime_imposition' => 'nullable|string|max:255',
-            'delai_paiement' => 'required|integer',
+            'delai_paiement' => 'required|string',
             'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'secteur_activite' => 'nullable|string|max:255',
             'boite_postale' => 'required|string',
@@ -206,7 +206,7 @@ $request->merge([
 
     public function show($id)
     {
-        $fournisseur = ClientFournisseur::with(['contactPersons', ])->findOrFail($id);
+        $fournisseur = ClientFournisseur::with(['contactPersons', 'demandesRavitaillement', 'bus'])->findOrFail($id);
         return view('fournisseurs.show', compact('fournisseur'));
     }
 

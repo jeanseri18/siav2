@@ -79,7 +79,7 @@
         @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
             <tr bgcolor="#5EB3F6" height="40px">
-                <td colspan="12">
+                <td colspan="16">
                     <div class="row">
                         <div class="col-md-8">
                             <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
@@ -101,7 +101,7 @@
 
             <!-- Formulaire d'ajout de sous-catégorie -->
             <tr>
-                <td colspan="12">
+                <td colspan="16">
                     <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
                         @csrf
                         <div class="row">
@@ -119,7 +119,7 @@
 
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
-                    <td colspan="12">
+                    <td colspan="16">
                         <div class="row">
                             <div class="col-md-8">
                                 <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
@@ -140,7 +140,7 @@
 
                 <!-- Formulaire d'ajout de rubrique -->
                 <tr>
-                    <td colspan="12">
+                    <td colspan="16">
                         <form action="{{ route('rubriques.store') }}" method="POST">
                             @csrf
                             <div class="row">
@@ -158,7 +158,7 @@
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     <tr bgcolor="#3A6B8C" class="text-white" height="40px">
-                        <td colspan="12">
+                        <td colspan="16">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
@@ -179,37 +179,46 @@
 
                     <tr>
                         <td>Désignation</td>
-                        <td>Quantité</td>
-                        <td>Matériaux</td>
                         <td>Unité</td>
-                        <td>Main d'oeuvre</td>
+                        <td>Matériaux</td>
+                        <td>Taux MO (%)</td>
+                        <td>Main d'œuvre</td>
+                        <td>Taux MAT (%)</td>
                         <td>Matériel</td>
-                        <td>Déboursé sec</td>
-                        <td>Frais de chantier</td>
+                        <td>DS</td>
+                        <td>Taux FC (%)</td>
+                        <td>FC</td>
+                        <td>Taux FG (%)</td>
                         <td>Frais généraux</td>
+                        <td>Taux Bénéfice (%)</td>
                         <td>Bénéfice</td>
-                        <td>Prix HT</td>
+                        <td>Prix unitaire HT</td>
                         <td>Action</td>
                     </tr>
                     
                     @foreach ($rubrique->bpus as $bpu)
                         <tr>
                             <td>{{ $bpu->designation }}</td>
-                            <td>{{ $bpu->qte }}</td>
-                            <td>{{ $bpu->materiaux }}</td>
                             <td>{{ $bpu->unite }}</td>
-                            <td>{{ $bpu->main_oeuvre }}</td>
-                            <td>{{ $bpu->materiel }}</td>
-                            <td>{{ $bpu->debourse_sec }}</td>
-                            <td>{{ $bpu->frais_chantier }}</td>
-                            <td>{{ $bpu->frais_general }}</td>
-                            <td>{{ $bpu->marge_nette }}</td>
-                            <td>{{ $bpu->pu_ht }}</td>
+                            <td>{{ number_format($bpu->materiaux, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_mo, 2) }}%</td>
+                            <td>{{ number_format($bpu->main_oeuvre, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_mat, 2) }}%</td>
+                            <td>{{ number_format($bpu->materiel, 2) }}</td>
+                            <td>{{ number_format($bpu->debourse_sec, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_fc, 2) }}%</td>
+                            <td>{{ number_format($bpu->frais_chantier, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_fg, 2) }}%</td>
+                            <td>{{ number_format($bpu->frais_general, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_benefice, 2) }}%</td>
+                            <td>{{ number_format($bpu->marge_nette, 2) }}</td>
+                            <td>{{ number_format($bpu->pu_ht, 2) }}</td>
                             <td>
                                 <a href="{{ route('bpus.edit', $bpu->id) }}" class="btn btn-warning btn-sm">Modifier</a>
                                 <form action="{{ route('bpus.destroy', $bpu->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
+                                    <input type="hidden" name="redirect_to" value="bpu.index">
                                     <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </td>
@@ -217,7 +226,7 @@
                     @endforeach
 
                     <tr>
-                        <td colspan="12">
+                        <td colspan="16">
                             @if(session('success'))
                                 <div class="alert alert-success">
                                     {{ session('success') }}
@@ -233,6 +242,7 @@
                             <form action="{{ route('bpus.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="id_rubrique" value="{{ $rubrique->id }}">
+                                <input type="hidden" name="redirect_to" value="bpu.index">
 
                                 <div class="row mb-3">
                                     <div class="col">
@@ -395,4 +405,6 @@
         }
     });
 </script>
+
+<script src="{{ asset('js/bpu-calculator.js') }}"></script>
 @endsection

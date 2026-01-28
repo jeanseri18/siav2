@@ -82,9 +82,15 @@
                                         <i class="fas fa-calendar me-2"></i>Délai de paiement:
                                     </label>
                                     <select name="delai_paiement" class="app-form-select" required>
+                                        <option value="CASH" {{ $client->delai_paiement == 'CASH' ? 'selected' : '' }}>CASH</option>
+                                        <option value="15" {{ $client->delai_paiement == 15 ? 'selected' : '' }}>15 jours</option>
                                         <option value="30" {{ $client->delai_paiement == 30 ? 'selected' : '' }}>30 jours</option>
+                                        <option value="45" {{ $client->delai_paiement == 45 ? 'selected' : '' }}>45 jours</option>
                                         <option value="60" {{ $client->delai_paiement == 60 ? 'selected' : '' }}>60 jours</option>
+                                        <option value="75" {{ $client->delai_paiement == 75 ? 'selected' : '' }}>75 jours</option>
                                         <option value="90" {{ $client->delai_paiement == 90 ? 'selected' : '' }}>90 jours</option>
+                                        <option value="120" {{ $client->delai_paiement == 120 ? 'selected' : '' }}>120 jours</option>
+                                        <option value="180" {{ $client->delai_paiement == 180 ? 'selected' : '' }}>180 jours</option>
                                     </select>
                                 </div>
                             </div>

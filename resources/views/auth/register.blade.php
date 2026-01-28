@@ -9,7 +9,7 @@
         <div class="col-md-8 col-lg-6">
             <div class="auth-card">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('assets/logo.png') }}" alt="SIA" class="logo mb-3">
+                    <img src="{{ asset('Logo_XBTP_Png/Logo_Noir.png') }}" alt="XBTP" class="logo mb-3">
                     <h2 class="auth-title">Inscription</h2>
                     <p class="auth-subtitle">Créez votre compte pour commencer</p>
                 </div>

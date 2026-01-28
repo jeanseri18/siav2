@@ -30,8 +30,7 @@
     <!-- Sweetalert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" crossorigin="anonymous">
     
-    <!-- Chart.js -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" crossorigin="anonymous">
+    <!-- Chart.js (JavaScript library only, no CSS needed) -->
 
     @stack('styles') {{-- Inclure les styles spécifiques à une page --}}
     
@@ -1590,6 +1589,13 @@ body {
 .dark-mode .user-profile-navbar .dropdown-divider {
     border-top-color: var(--gray-200);
 }
+
+/* Style pour le logo dans la navbar */
+.navbar-logo {
+    height: 40px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
     </style>
 </head>
 
@@ -1610,9 +1616,8 @@ body {
     <nav class="navbar navbar-expand-lg app-navbar">
         <div class="container-fluid">
             <!-- Brand/Logo -->
-            <a class="navbar-brand" href="{{ route('statistiques.index') }}">
-                <i class="fas fa-chart-line me-2"></i>
-                Gestion Pro
+            <a class="navbar-brand" href="{{ route('dashboard') }}">
+                <img src="{{ asset('Logo_XBTP_Png/Logo_Blanc.png') }}" alt="XBTP" class="navbar-logo">
             </a>
 
             <!-- Mobile toggle button -->
@@ -1625,7 +1630,7 @@ body {
                 <!-- Main navigation -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('statistiques.index') ? 'active' : '' }}" href="{{ route('statistiques.index') }}">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('statistiques.index') }}">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -1720,7 +1725,7 @@ body {
                     </div>
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-end">
-                            <li class="breadcrumb-item"><a href="{{ route('statistiques.index') }}">Accueil</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
                             @yield('breadcrumb')
                             <li class="breadcrumb-item active" aria-current="page">
                                 @yield('page-title', 'Dashboard')
@@ -1788,6 +1793,11 @@ body {
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
     // Configuration Toastr

@@ -42,6 +42,16 @@
             </div>
 
         </a>
+        
+        <a href="{{ route('clients.index') }}" class="dashboard-card warning">
+            <div class="card-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content ">
+                <h3>Liste des Clients</h3>
+                <p>Gérer la liste des clients</p>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -168,6 +178,13 @@
     -webkit-text-fill-color: transparent;
 }
 
+.warning .section-title i {
+    background: linear-gradient(45deg, #ffc107, #ff9800);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -213,6 +230,7 @@
 .dashboard-card.primary::before { background: var(--gradient-primary); }
 .dashboard-card.success::before { background: var(--gradient-success); }
 .dashboard-card.info::before { background: var(--gradient-info); }
+.dashboard-card.warning::before { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); }
 .dashboard-card.import::before { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 .dashboard-card.config::before { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
 
@@ -236,6 +254,7 @@
 .dashboard-card.primary .card-icon { color: var(--primary-color); }
 .dashboard-card.success .card-icon { color: var(--success-color); }
 .dashboard-card.info .card-icon { color: var(--info-color); }
+.dashboard-card.warning .card-icon { color: #ffc107; }
 .dashboard-card.import .card-icon { color: #667eea; }
 .dashboard-card.config .card-icon { color: #f5576c; }
 
@@ -253,12 +272,14 @@
     font-size: 1.4rem;
     font-weight: 600;
     margin-bottom: 0.8rem;
+    color: black;
     line-height: 1.3;
 }
 
 .card-content  p {
     opacity: 0.8;
     margin: 0;
+     color: black;
     line-height: 1.5;
 }
 

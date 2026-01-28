@@ -44,33 +44,85 @@
                             <label for="bu_name" class="app-form-label">
                                 <i class="fas fa-building me-2"></i>Business Unit
                             </label>
-                            <input type="text" class="app-form-control" value="{{ $configGlobal->businessUnit->name }}" disabled>
+                            <input type="text" class="app-form-control" value="{{ $configGlobal->businessUnit->nom }}" disabled>
                             <div class="app-form-text">Business Unit associée à cette configuration</div>
                         </div>
                         
                         <div class="app-form-group">
-                            <label for="entete" class="app-form-label">
-                                <i class="fas fa-heading me-2"></i>Entête
+                            <label for="nom_entreprise" class="app-form-label">
+                                <i class="fas fa-building me-2"></i>Nom de l'entreprise
                             </label>
-                            <input type="text" class="app-form-control" name="entete" value="{{ $configGlobal->entete }}" required>
-                            <div class="app-form-text">En-tête qui apparaîtra sur les documents</div>
+                            <input type="text" class="app-form-control" name="nom_entreprise" value="{{ $configGlobal->nom_entreprise }}">
+                            <div class="app-form-text">Nom officiel de l'entreprise</div>
                         </div>
                         
                         <div class="app-form-group">
-                            <label for="numdepatfacture" class="app-form-label">
-                                <i class="fas fa-sort-numeric-up me-2"></i>Numéro Départ Facture
+                            <label for="localisation" class="app-form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>Localisation
                             </label>
-                            <input type="text" class="app-form-control" name="numdepatfacture" value="{{ $configGlobal->numdepatfacture }}" required>
-                            <div class="app-form-text">Numéro à partir duquel les factures seront numérotées</div>
+                            <input type="text" class="app-form-control" name="localisation" value="{{ $configGlobal->localisation }}">
+                            <div class="app-form-text">Localisation de l'entreprise</div>
                         </div>
                         
                         <div class="app-form-group">
-                            <label for="pieddepage" class="app-form-label">
-                                <i class="fas fa-paragraph me-2"></i>Pied de Page
+                            <label for="adresse_postale" class="app-form-label">
+                                <i class="fas fa-envelope me-2"></i>Adresse postale
                             </label>
-                            <textarea class="app-form-control" name="pieddepage" rows="3" required>{{ $configGlobal->pieddepage }}</textarea>
-                            <div class="app-form-text">Pied de page qui apparaîtra sur les documents</div>
+                            <textarea class="app-form-control" name="adresse_postale" rows="3">{{ $configGlobal->adresse_postale }}</textarea>
+                            <div class="app-form-text">Adresse postale complète</div>
                         </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="app-form-group">
+                                    <label for="rccm" class="app-form-label">
+                                        <i class="fas fa-certificate me-2"></i>N° RCCM
+                                    </label>
+                                    <input type="text" class="app-form-control" name="rccm" value="{{ $configGlobal->rccm }}">
+                                    <div class="app-form-text">Numéro RCCM</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="app-form-group">
+                                    <label for="cc" class="app-form-label">
+                                        <i class="fas fa-id-card me-2"></i>N° CC
+                                    </label>
+                                    <input type="text" class="app-form-control" name="cc" value="{{ $configGlobal->cc }}">
+                                    <div class="app-form-text">Numéro CC</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="app-form-group">
+                                    <label for="tel1" class="app-form-label">
+                                        <i class="fas fa-phone me-2"></i>Téléphone 1
+                                    </label>
+                                    <input type="text" class="app-form-control" name="tel1" value="{{ $configGlobal->tel1 }}">
+                                    <div class="app-form-text">Numéro de téléphone principal</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="app-form-group">
+                                    <label for="tel2" class="app-form-label">
+                                        <i class="fas fa-phone me-2"></i>Téléphone 2
+                                    </label>
+                                    <input type="text" class="app-form-control" name="tel2" value="{{ $configGlobal->tel2 }}">
+                                    <div class="app-form-text">Numéro de téléphone secondaire</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="app-form-group">
+                            <label for="email" class="app-form-label">
+                                <i class="fas fa-at me-2"></i>Email
+                            </label>
+                            <input type="email" class="app-form-control" name="email" value="{{ $configGlobal->email }}">
+                            <div class="app-form-text">Adresse email de l'entreprise</div>
+                        </div>
+                        
+
                         
                         <div class="app-form-group">
                             <label for="logo" class="app-form-label">

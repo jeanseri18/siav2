@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('sublayouts.contrat')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -114,18 +115,28 @@
                                 <div class="card-body">
                                     <table class="table table-borderless">
                                         <tr>
-                                            <td><strong>Contrat:</strong></td>
-                                            <td>
-                                                @if($demandeRavitaillement->contrat)
-                                                    {{ $demandeRavitaillement->contrat->ref_contrat }}
-                                                    @if($demandeRavitaillement->contrat->client)
-                                                        <br><small class="text-muted">{{ $demandeRavitaillement->contrat->client->nom_raison_sociale }} {{ $demandeRavitaillement->contrat->client->prenoms }}</small>
+                                                <td><strong>Contrat:</strong></td>
+                                                <td>
+                                                    @if($demandeRavitaillement->contrat)
+                                                        {{ $demandeRavitaillement->contrat->ref_contrat }}
+                                                        @if($demandeRavitaillement->contrat->client)
+                                                            <br><small class="text-muted">{{ $demandeRavitaillement->contrat->client->nom_raison_sociale }} {{ $demandeRavitaillement->contrat->client->prenoms }}</small>
+                                                        @endif
+                                                    @else
+                                                        N/A
                                                     @endif
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </td>
-                                        </tr>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Projet:</strong></td>
+                                                <td>
+                                                    @if($demandeRavitaillement->contrat && $demandeRavitaillement->contrat->projet)
+                                                        {{ $demandeRavitaillement->contrat->projet->nom }}
+                                                    @else
+                                                        Aucun projet
+                                                    @endif
+                                                </td>
+                                            </tr>
                                         <tr>
                                             <td><strong>Demandeur:</strong></td>
                                             <td>
@@ -142,22 +153,7 @@
                                                 <td>{{ $demandeRavitaillement->approbateur->nom }} {{ $demandeRavitaillement->approbateur->prenom }}</td>
                                             </tr>
                                         @endif
-                                        @if($demandeRavitaillement->fournisseur)
-                                            <tr>
-                                                <td><strong>Fournisseur:</strong></td>
-                                                <td>{{ $demandeRavitaillement->fournisseur->nom_raison_sociale }} {{ $demandeRavitaillement->fournisseur->prenoms }}</td>
-                                            </tr>
-                                        @endif
-                                        <tr>
-                                            <td><strong>Montant estimé:</strong></td>
-                                            <td>
-                                                @if($demandeRavitaillement->montant_estime)
-                                                    <strong>{{ number_format($demandeRavitaillement->montant_estime, 0, ',', ' ') }} FCFA</strong>
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </td>
-                                        </tr>
+                                        
                                         @if($demandeRavitaillement->montant_reel)
                                             <tr>
                                                 <td><strong>Montant réel:</strong></td>
@@ -170,21 +166,7 @@
                         </div>
                     </div>
 
-                    <!-- Description -->
-                    @if($demandeRavitaillement->description)
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Description</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-0">{{ $demandeRavitaillement->description }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                    
 
                     <!-- Articles demandés -->
                     <div class="row mb-4">
@@ -203,9 +185,6 @@
                                                     <th>Quantité approuvée</th>
                                                     <th>Quantité livrée</th>
                                                     <th>Unité</th>
-                                                    <th>Prix unitaire estimé</th>
-                                                    <th>Montant estimé</th>
-                                                    <th>Description</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -245,25 +224,11 @@
                                                                 -
                                                             @endif
                                                         </td>
-                                                        <td>
-                                                            @if($ligne->prix_unitaire_estime)
-                                                                {{ number_format($ligne->prix_unitaire_estime, 0, ',', ' ') }} FCFA
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                        <td>
-                                                            @if($ligne->montant_estime)
-                                                                {{ number_format($ligne->montant_estime, 0, ',', ' ') }} FCFA
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                        <td>{{ $ligne->description ?? '-' }}</td>
+                                                        
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="8" class="text-center">Aucun article trouvé</td>
+                                                        <td colspan="5" class="text-center">Aucun article trouvé</td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>

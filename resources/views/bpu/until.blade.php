@@ -41,7 +41,7 @@
     @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
             <tr bgcolor="#5EB3F6" height="40px">
-                <td colspan="12">
+                <td colspan="16">
                     <div class="row">
                         <div class="col-md-8">
                             <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
@@ -63,7 +63,7 @@
 
             <!-- Formulaire d'ajout de sous-catégorie -->
             <tr>
-                <td colspan="12">
+                <td colspan="16">
                     <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
                         @csrf
                         <div class="row">
@@ -81,7 +81,7 @@
 
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
-                    <td colspan="12">
+                    <td colspan="16">
                         <div class="row">
                             <div class="col-md-8">
                                 <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
@@ -102,7 +102,7 @@
 
                 <!-- Formulaire d'ajout de rubrique -->
                 <tr>
-                    <td colspan="12">
+                    <td colspan="16">
                         <form action="{{ route('rubriques.store') }}" method="POST">
                             @csrf
                             <div class="row">
@@ -120,7 +120,7 @@
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     <tr bgcolor="#3A6B8C" class="text-white" height="40px">
-                        <td colspan="12">
+                        <td colspan="16">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
@@ -141,37 +141,46 @@
 
                     <tr>
                         <td>Désignation</td>
-                        <td>Quantité</td>
-                        <td>Matériaux</td>
                         <td>Unité</td>
-                        <td>Main d'oeuvre</td>
+                        <td>Matériaux</td>
+                        <td>Taux MO (%)</td>
+                        <td>Main d'œuvre</td>
+                        <td>Taux MAT (%)</td>
                         <td>Matériel</td>
-                        <td>Déboursé sec</td>
-                        <td>Frais de chantier</td>
+                        <td>DS</td>
+                        <td>Taux FC (%)</td>
+                        <td>FC</td>
+                        <td>Taux FG (%)</td>
                         <td>Frais généraux</td>
+                        <td>Taux Bénéfice (%)</td>
                         <td>Bénéfice</td>
-                        <td>Prix HT</td>
+                        <td>Prix unitaire HT</td>
                         <td>Action</td>
                     </tr>
                     
                     @foreach ($rubrique->bpus as $bpu)
                         <tr>
                             <td>{{ $bpu->designation }}</td>
-                            <td>{{ $bpu->qte }}</td>
-                            <td>{{ $bpu->materiaux }}</td>
                             <td>{{ $bpu->unite }}</td>
-                            <td>{{ $bpu->main_oeuvre }}</td>
-                            <td>{{ $bpu->materiel }}</td>
-                            <td>{{ $bpu->debourse_sec }}</td>
-                            <td>{{ $bpu->frais_chantier }}</td>
-                            <td>{{ $bpu->frais_general }}</td>
-                            <td>{{ $bpu->marge_nette }}</td>
-                            <td>{{ $bpu->pu_ht }}</td>
+                            <td>{{ number_format($bpu->materiaux, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_mo, 2) }}%</td>
+                            <td>{{ number_format($bpu->main_oeuvre, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_mat, 2) }}%</td>
+                            <td>{{ number_format($bpu->materiel, 2) }}</td>
+                            <td>{{ number_format($bpu->debourse_sec, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_fc, 2) }}%</td>
+                            <td>{{ number_format($bpu->frais_chantier, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_fg, 2) }}%</td>
+                            <td>{{ number_format($bpu->frais_general, 2) }}</td>
+                            <td>{{ number_format($bpu->taux_benefice, 2) }}%</td>
+                            <td>{{ number_format($bpu->marge_nette, 2) }}</td>
+                            <td>{{ number_format($bpu->pu_ht, 2) }}</td>
                             <td>
-                                <a href="{{ route('bpus.edit', $bpu->id) }}" class="btn btn-warning btn-sm">Modifier</a>
+                                <a href="{{ route('bpus.edit', $bpu->id) }}?from=until" class="btn btn-warning btn-sm">Modifier</a>
                                 <form action="{{ route('bpus.destroy', $bpu->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
+                                    <input type="hidden" name="redirect_to" value="bpu.indexuntil">
                                     <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </td>
@@ -179,7 +188,7 @@
                     @endforeach
 
                     <tr>
-                        <td colspan="12">
+                        <td colspan="16">
                             @if(session('success'))
                                 <div class="alert alert-success">
                                     {{ session('success') }}
@@ -195,42 +204,66 @@
                             <form action="{{ route('bpus.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="id_rubrique" value="{{ $rubrique->id }}">
+                                <input type="hidden" name="redirect_to" value="bpu.indexuntil">
 
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="designation" class="form-label">Désignation</label>
-                                        <input type="text" name="designation" class="form-control" required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="qte" class="form-label">Quantité</label>
-                                        <input type="number" step="0.01" name="qte" class="form-control" required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="materiaux" class="form-label">Matériaux</label>
-                                        <input type="number" step="0.01" name="materiaux" class="form-control" required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="main_oeuvre" class="form-label">Main d'œuvre</label>
-                                        <input type="number" step="0.01" name="main_oeuvre" class="form-control" required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="materiel" class="form-label">Matériel</label>
-                                        <input type="number" step="0.01" name="materiel" class="form-control" required>
-                                    </div>
-                                    <div class="col">
-                                        <label for="unite" class="form-label">Unité</label>
-                                        <select name="unite" class="form-control" required>
-                                            <option value="">Choisir</option>
-                                            @foreach ($uniteMesures as $uniteMesure)
-                                                <option value="{{ $uniteMesure->ref }}">{{ $uniteMesure->nom }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                            <div class="d-flex gap-3 mb-2 align-items-center" style="font-size: 14px;">
+                                <div class="d-flex flex-column">
+                                    <small>Désignation</small>
+                                    <input type="text" name="designation" class="form-control form-control-sm" placeholder="Désignation" style="width: 220px; font-size: 14px; height: 38px;" required>
                                 </div>
+                                <div class="d-flex flex-column">
+                                    <small>Unité</small>
+                                    <select name="unite" class="form-select form-select-sm" style="width: 110px; font-size: 14px; height: 38px;" required>
+                                        <option value="" style="font-size: 14px;">Choisir</option>
+                                        @foreach ($uniteMesures as $uniteMesure)
+                                            <option value="{{ $uniteMesure->ref }}">{{ $uniteMesure->nom }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>Matériaux</small>
+                                    <input type="number" name="materiaux" class="form-control form-control-sm" placeholder="Mat." step="0.01" value="0" style="width: 110px; font-size: 14px; height: 38px;" required>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>T.MO (%)</small>
+                                    <input type="number" name="taux_mo" class="form-control form-control-sm" placeholder="T.MO" step="0.01" value="0" style="width: 95px; font-size: 14px; height: 38px;">
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>T.MAT (%)</small>
+                                    <input type="number" name="taux_mat" class="form-control form-control-sm" placeholder="T.MAT" step="0.01" value="0" style="width: 100px; font-size: 14px; height: 38px;">
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>T.FC (%)</small>
+                                    <input type="number" name="taux_fc" class="form-control form-control-sm" placeholder="T.FC" step="0.01" value="0" style="width: 95px; font-size: 14px; height: 38px;">
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>T.FG (%)</small>
+                                    <input type="number" name="taux_fg" class="form-control form-control-sm" placeholder="T.FG" step="0.01" value="0" style="width: 95px; font-size: 14px; height: 38px;">
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <small>T.BEN (%)</small>
+                                    <input type="number" name="taux_benefice" class="form-control form-control-sm" placeholder="T.BEN" step="0.01" value="0" style="width: 100px; font-size: 14px; height: 38px;">
+                                </div>
+                                <!-- <button type="submit" class="btn btn-primary btn-sm" style="height: 35px; font-size: 12px; padding: 0 8px;">Ajouter</button> -->
+                            </div>
 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">Ajouter une ligne</button>
-                                </div>
+                                {{-- Affichage des valeurs calculées en temps réel --}}
+                         <div class="mb-2">
+                             <small class="text-muted">Aperçu :</small>
+                             <div class="d-flex gap-2 align-items-center" style="font-size: 10px; background-color: #f8f9fa; padding: 5px; border-radius: 3px;">
+                                 <span>MO: <strong id="main_oeuvre_calc">0.00</strong></span>
+                                 <span>MAT: <strong id="materiel_calc">0.00</strong></span>
+                                 <span>DS: <strong id="debourse_sec_calc">0.00</strong></span>
+                                 <span>FC: <strong id="frais_chantier_calc">0.00</strong></span>
+                                 <span>FG: <strong id="frais_generaux_calc">0.00</strong></span>
+                                 <span>BEN: <strong id="benefice_calc">0.00</strong></span>
+                                 <span class="text-primary">| PU HT: <strong id="pu_ht_calc">0.00</strong></span>
+                             </div>
+                         </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Ajouter une ligne</button>
+                        </div>
                             </form>
                         </td>
                     </tr>
@@ -284,4 +317,6 @@
         }
     }
 </script>
+
+<script src="{{ asset('js/bpu-calculator.js') }}"></script>
 @endsection

@@ -48,7 +48,7 @@
                                     <small class="text-muted">
                                         {{ $mouvement->created_at->format('d/m/Y à H:i') }}
                                         @if($mouvement->user)
-                                            par {{ $mouvement->user->name }}
+                                            par {{ $mouvement->user->nom }}
                                         @endif
                                     </small>
                                 </div>

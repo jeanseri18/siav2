@@ -81,7 +81,25 @@
                         </td>
                         <td>
                             @if($article->type)
-                                <span class="app-badge app-badge-info">{{ $article->type }}</span>
+                                @php
+                                    $badgeClass = 'app-badge';
+                                    switch(strtolower($article->type)) {
+                                        case 'matériau':
+                                        case 'materiau':
+                                            $badgeClass .= ' app-badge-success';
+                                            break;
+                                        case 'outil':
+                                            $badgeClass .= ' app-badge-warning';
+                                            break;
+                                        case 'matériel':
+                                        case 'materiel':
+                                            $badgeClass .= ' app-badge-primary';
+                                            break;
+                                        default:
+                                            $badgeClass .= ' app-badge-info';
+                                    }
+                                @endphp
+                                <span class="{{ $badgeClass }}">{{ $article->type }}</span>
                             @else
                                 -
                             @endif

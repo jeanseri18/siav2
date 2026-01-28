@@ -180,6 +180,11 @@ $(document).ready(function() {
                         const selected = '{{ old("client_id") }}' == client.id ? 'selected' : '';
                         clientSelect.append(`<option value="${client.id}" ${selected}>${nomComplet}</option>`);
                     });
+                    
+                    // Si il n'y a qu'un seul client (le client du projet), le sélectionner automatiquement
+                    if (clients.length === 1) {
+                        clientSelect.val(clients[0].id);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error('Erreur AJAX:', error);

@@ -153,7 +153,7 @@
                                 <div class="item-icon">
                                     <i class="fas fa-user text-secondary"></i>
                                 </div>
-                                <span>{{ $demande->user ? $demande->user->name : 'N/A' }}</span>
+                                <span>{{ $demande->user ? $demande->user->nom : 'N/A' }}</span>
                             </div>
                         </td>
                         <td class="text-center">

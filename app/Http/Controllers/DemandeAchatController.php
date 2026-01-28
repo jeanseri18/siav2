@@ -22,14 +22,18 @@ class DemandeAchatController extends Controller
     public function create()
     {
         $projets = Projet::all();
-        $articles = Article::with('categorie')->get();
-        return view('demande_achats.create', compact('projets', 'articles'));
+        $articles = Article::with(['categorie', 'uniteMesure'])->get();
+        $demandesApprovisionnement = \App\Models\DemandeApprovisionnement::with(['projet', 'lignes.article.uniteMesure'])
+            ->where('statut', 'approuvée')
+            ->get();
+        return view('demande_achats.create', compact('projets', 'articles', 'demandesApprovisionnement'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'date_demande' => 'required|date',
+            'demande_approvisionnement_id' => 'nullable|exists:demande_approvisionnements,id',
             'projet_id' => 'nullable|exists:projets,id',
             'description' => 'nullable|string',
             'priorite' => 'required|in:basse,normale,haute,urgente',
@@ -61,6 +65,7 @@ class DemandeAchatController extends Controller
         $demande = DemandeAchat::create([
             'reference' => $newReference,
             'date_demande' => $request->date_demande,
+            'demande_approvisionnement_id' => $request->demande_approvisionnement_id,
             'projet_id' => $request->projet_id,
             'description' => $request->description,
             'priorite' => $request->priorite,
@@ -78,7 +83,7 @@ class DemandeAchatController extends Controller
                     'designation' => $request->designation[$i],
                     'quantite' => $request->quantite[$i],
                     'unite_mesure' => $request->unite_mesure[$i],
-                    'prix_estime' => $request->prix_estime[$i],
+                    'prix_estime' => isset($request->prix_estime[$i]) ? $request->prix_estime[$i] : null,
                     'specifications' => $request->specifications[$i] ?? null,
                     'commentaire' => $request->commentaire[$i] ?? null
                 ]);
@@ -109,7 +114,7 @@ class DemandeAchatController extends Controller
         }
 
         $projets = Projet::all();
-        $articles = Article::with('categorie')->get();
+        $articles = Article::with(['categorie', 'uniteMesure'])->get();
         $demandeAchat->load(['lignes.article']);
         
         return view('demande_achats.edit', compact('demandeAchat', 'projets', 'articles'));
@@ -163,15 +168,36 @@ class DemandeAchatController extends Controller
                     'designation' => $request->designation[$i],
                     'quantite' => $request->quantite[$i],
                     'unite_mesure' => $request->unite_mesure[$i],
-                    'prix_estime' => $request->prix_estime[$i],
+                    'prix_estime' => isset($request->prix_estime[$i]) ? $request->prix_estime[$i] : null,
                     'specifications' => $request->specifications[$i] ?? null,
                     'commentaire' => $request->commentaire[$i] ?? null
                 ]);
             }
         }
 
-        return redirect()->route('demande-achats.show', $demandeAchat)
+        return redirect()->route('demande-achats.index')
             ->with('success', 'Demande d\'achat mise à jour avec succès');
+    }
+
+    /**
+     * API pour récupérer les articles d'une demande d'achat
+     */
+    public function getArticles($id)
+    {
+        $demandeAchat = DemandeAchat::with('lignes.article')->findOrFail($id);
+        
+        $articles = $demandeAchat->lignes->map(function($ligne) {
+            return [
+                'article_id' => $ligne->article_id,
+                'designation' => $ligne->designation,
+                'quantite' => $ligne->quantite,
+                'unite_mesure' => $ligne->unite_mesure,
+                'specifications' => $ligne->specifications,
+                'reference' => $ligne->article ? $ligne->article->reference : null
+            ];
+        });
+        
+        return response()->json(['articles' => $articles]);
     }
 
     public function destroy(DemandeAchat $demandeAchat)

@@ -20,7 +20,7 @@ class DemandeRavitaillementController extends Controller
      */
     public function index()
     {
-        $demandes = DemandeRavitaillement::with(['contrat', 'demandeur', 'approbateur', 'fournisseur'])
+        $demandes = DemandeRavitaillement::with(['contrat', 'demandeur', 'approbateur'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
             
@@ -32,12 +32,18 @@ class DemandeRavitaillementController extends Controller
      */
     public function create()
     {
+        $contratSessionId = session('contrat_id');
+        
+        if (!$contratSessionId) {
+            return redirect()->route('demandes-ravitaillement.index')
+                ->with('error', 'Aucun contrat sélectionné en session. Veuillez sélectionner un contrat.');
+        }
+        
         $contrats = Contrat::with('client')->get();
-        $fournisseurs = ClientFournisseur::where('type', 'fournisseur')->get();
         $articles = Article::with('uniteMesure')->get();
         $unitesMesure = UniteMesure::all();
         
-        return view('demandes_ravitaillement.create', compact('contrats', 'fournisseurs', 'articles', 'unitesMesure'));
+        return view('demandes_ravitaillement.create', compact('contrats', 'articles', 'unitesMesure', 'contratSessionId'));
     }
 
     /**
@@ -45,6 +51,12 @@ class DemandeRavitaillementController extends Controller
      */
     public function store(Request $request)
     {
+        $contratId = session('contrat_id');
+        
+        if (!$contratId) {
+            return back()->withInput()->withErrors(['error' => 'Aucun contrat sélectionné en session.']);
+        }
+        
         $request->validate([
             'reference' => 'required|string|max:255|unique:demandes_ravitaillement',
             'objet' => 'required|string|max:255',
@@ -52,16 +64,18 @@ class DemandeRavitaillementController extends Controller
             'priorite' => 'required|in:basse,normale,haute,urgente',
             'date_demande' => 'required|date',
             'date_livraison_souhaitee' => 'nullable|date|after:date_demande',
-            'contrat_id' => 'required|exists:contrats,id',
-            'fournisseur_id' => 'nullable|exists:client_fournisseurs,id',
             'commentaires' => 'nullable|string',
             'lignes' => 'required|array|min:1',
             'lignes.*.article_id' => 'required|exists:articles,id',
             'lignes.*.quantite_demandee' => 'required|numeric|min:0.001',
-            'lignes.*.prix_unitaire_estime' => 'nullable|numeric|min:0',
-            'lignes.*.unite_mesure_id' => 'nullable|exists:unite_mesures,id',
-            'lignes.*.description' => 'nullable|string'
+            'lignes.*.unite_mesure_id' => 'nullable|exists:unite_mesures,id'
         ]);
+        
+        $contratId = session('contrat_id');
+        
+        if (!$contratId) {
+            return back()->withInput()->withErrors(['error' => 'Aucun contrat sélectionné en session.']);
+        }
         
         DB::beginTransaction();
         
@@ -74,29 +88,22 @@ class DemandeRavitaillementController extends Controller
                 'priorite' => $request->priorite,
                 'date_demande' => $request->date_demande,
                 'date_livraison_souhaitee' => $request->date_livraison_souhaitee,
-                'contrat_id' => $request->contrat_id,
+                'contrat_id' => $contratId,
                 'demandeur_id' => Auth::id(),
-                'fournisseur_id' => $request->fournisseur_id,
                 'commentaires' => $request->commentaires
             ]);
             
             foreach ($request->lignes as $ligne) {
-                $montantEstime = $ligne['quantite_demandee'] * ($ligne['prix_unitaire_estime'] ?? 0);
-                
                 LigneDemandeRavitaillement::create([
                     'demande_ravitaillement_id' => $demande->id,
                     'article_id' => $ligne['article_id'],
                     'quantite_demandee' => $ligne['quantite_demandee'],
-                    'prix_unitaire_estime' => $ligne['prix_unitaire_estime'] ?? null,
-                    'montant_estime' => $montantEstime,
-                    'unite_mesure_id' => $ligne['unite_mesure_id'] ?? null,
-                    'description' => $ligne['description'] ?? null
+                    'unite_mesure_id' => $ligne['unite_mesure_id'] ?? null
                 ]);
             }
             
-            // Calculer le montant total estimé
-            $montantTotal = $demande->lignes()->sum('montant_estime');
-            $demande->update(['montant_estime' => $montantTotal]);
+            // Pas de calcul de montant pour les demandes internes
+            $demande->update(['montant_estime' => 0]);
             
             DB::commit();
             
@@ -115,7 +122,7 @@ class DemandeRavitaillementController extends Controller
     public function show($id)
     {
         try {
-            $demandeRavitaillement = DemandeRavitaillement::with(['contrat.client', 'demandeur', 'approbateur', 'fournisseur', 'lignes.article.uniteMesure', 'lignes.uniteMesure'])
+            $demandeRavitaillement = DemandeRavitaillement::with(['contrat.client', 'demandeur', 'approbateur', 'lignes.article.uniteMesure', 'lignes.uniteMesure'])
                 ->findOrFail($id);
             
             return view('demandes_ravitaillement.show', compact('demandeRavitaillement'));
@@ -139,11 +146,11 @@ class DemandeRavitaillementController extends Controller
                     ->with('error', 'Seules les demandes en attente peuvent être modifiées.');
             }
             $contrats = Contrat::with('client')->get();
-            $fournisseurs = ClientFournisseur::where('type', 'fournisseur')->get();
             $articles = Article::with('uniteMesure')->get();
             $unitesMesure = UniteMesure::all();
+            $contratSessionId = session('contrat_id');
             
-            return view('demandes_ravitaillement.edit', compact('demandeRavitaillement', 'contrats', 'fournisseurs', 'articles', 'unitesMesure'));
+            return view('demandes_ravitaillement.edit', compact('demandeRavitaillement', 'contrats', 'articles', 'unitesMesure', 'contratSessionId'));
         } catch (\Exception $e) {
             return redirect()->route('demandes-ravitaillement.index')
                 ->with('error', 'Erreur lors du chargement de la demande: ' . $e->getMessage());
@@ -162,6 +169,12 @@ class DemandeRavitaillementController extends Controller
                 ->with('error', 'Seules les demandes en attente peuvent être modifiées.');
         }
         
+        $contratId = session('contrat_id');
+        
+        if (!$contratId) {
+            return back()->withInput()->withErrors(['error' => 'Aucun contrat sélectionné en session.']);
+        }
+        
         $request->validate([
             'reference' => 'required|string|max:255|unique:demandes_ravitaillement,reference,' . $demandeRavitaillement->id,
             'objet' => 'required|string|max:255',
@@ -169,15 +182,11 @@ class DemandeRavitaillementController extends Controller
             'priorite' => 'required|in:basse,normale,haute,urgente',
             'date_demande' => 'required|date',
             'date_livraison_souhaitee' => 'nullable|date|after:date_demande',
-            'contrat_id' => 'required|exists:contrats,id',
-            'fournisseur_id' => 'nullable|exists:client_fournisseurs,id',
             'commentaires' => 'nullable|string',
             'lignes' => 'required|array|min:1',
             'lignes.*.article_id' => 'required|exists:articles,id',
             'lignes.*.quantite_demandee' => 'required|numeric|min:0.001',
-            'lignes.*.prix_unitaire_estime' => 'nullable|numeric|min:0',
-            'lignes.*.unite_mesure_id' => 'nullable|exists:unite_mesures,id',
-            'lignes.*.description' => 'nullable|string'
+            'lignes.*.unite_mesure_id' => 'nullable|exists:unite_mesures,id'
         ]);
         
         DB::beginTransaction();
@@ -190,8 +199,7 @@ class DemandeRavitaillementController extends Controller
                 'priorite' => $request->priorite,
                 'date_demande' => $request->date_demande,
                 'date_livraison_souhaitee' => $request->date_livraison_souhaitee,
-                'contrat_id' => $request->contrat_id,
-                'fournisseur_id' => $request->fournisseur_id,
+                'contrat_id' => $contratId,
                 'commentaires' => $request->commentaires
             ]);
             
@@ -200,22 +208,16 @@ class DemandeRavitaillementController extends Controller
             
             // Créer les nouvelles lignes
             foreach ($request->lignes as $ligne) {
-                $montantEstime = $ligne['quantite_demandee'] * ($ligne['prix_unitaire_estime'] ?? 0);
-                
                 LigneDemandeRavitaillement::create([
                     'demande_ravitaillement_id' => $demandeRavitaillement->id,
                     'article_id' => $ligne['article_id'],
                     'quantite_demandee' => $ligne['quantite_demandee'],
-                    'prix_unitaire_estime' => $ligne['prix_unitaire_estime'] ?? null,
-                    'montant_estime' => $montantEstime,
-                    'unite_mesure_id' => $ligne['unite_mesure_id'] ?? null,
-                    'description' => $ligne['description'] ?? null
+                    'unite_mesure_id' => $ligne['unite_mesure_id'] ?? null
                 ]);
             }
             
-            // Recalculer le montant total estimé
-            $montantTotal = $demandeRavitaillement->lignes()->sum('montant_estime');
-            $demandeRavitaillement->update(['montant_estime' => $montantTotal]);
+            // Pas de calcul de montant pour les demandes internes
+            $demandeRavitaillement->update(['montant_estime' => 0]);
             
             DB::commit();
             

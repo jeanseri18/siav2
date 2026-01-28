@@ -35,21 +35,21 @@
     @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
             <tr bgcolor="#5EB3F6" height="40px">
-                <td colspan="10">
+                <td colspan="16">
                     <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
                 </td>
             </tr>
 
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
-                    <td colspan="10">
+                    <td colspan="16">
                         <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
                     </td>
                 </tr>
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     <tr bgcolor="#3A6B8C" class="text-white" height="40px">
-                        <td colspan="11">
+                        <td colspan="16">
                             <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
                         </td>
                     </tr>
@@ -59,13 +59,18 @@
                         <th>Désignation</th>
                         <th>Unité</th>
                         <th>Matériaux</th>
-                        <th>Main d'oeuvre</th>
+                        <th>T.MO (%)</th>
+                        <th>Main d'œuvre</th>
+                        <th>T.MAT (%)</th>
                         <th>Matériel</th>
-                        <th>Déboursé sec</th>
-                        <th>Frais</th>
+                        <th>DS</th>
+                        <th>T.FC (%)</th>
+                        <th>FC</th>
+                        <th>T.FG (%)</th>
+                        <th>FG</th>
+                        <th>T.BEN (%)</th>
                         <th>Bénéfice</th>
                         <th>Prix HT</th>
-                        <th>Prix TTC</th>
                     </tr>
                     
                     @foreach ($rubrique->bpus as $bpu)
@@ -73,14 +78,19 @@
                             <td>{{ $categorie->id }}.{{ $sousCategorie->id }}.{{ $rubrique->id }}.{{ $bpu->id }}</td>
                             <td class="text-start">{{ $bpu->designation }}</td>
                             <td>{{ $bpu->unite }}</td>
-                            <td>{{ number_format($bpu->materiaux, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->main_oeuvre, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->materiel, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->debourse_sec, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->frais_chantier + $bpu->frais_general, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->marge_nette, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->pu_ht, 0, ',', ' ') }}</td>
-                            <td>{{ number_format($bpu->pu_ttc, 0, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->materiaux, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->taux_mo, 2, ',', ' ') }}%</td>
+                            <td>{{ number_format($bpu->main_oeuvre, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->taux_mat, 2, ',', ' ') }}%</td>
+                            <td>{{ number_format($bpu->materiel, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->debourse_sec, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->taux_fc, 2, ',', ' ') }}%</td>
+                            <td>{{ number_format($bpu->frais_chantier, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->taux_fg, 2, ',', ' ') }}%</td>
+                            <td>{{ number_format($bpu->frais_general, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->taux_benefice, 2, ',', ' ') }}%</td>
+                            <td>{{ number_format($bpu->marge_nette, 2, ',', ' ') }}</td>
+                            <td>{{ number_format($bpu->pu_ht, 2, ',', ' ') }}</td>
                         </tr>
                     @endforeach
                 @endforeach

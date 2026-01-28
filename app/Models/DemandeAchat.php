@@ -14,6 +14,7 @@ class DemandeAchat extends Model
     protected $fillable = [
         'reference',
         'date_demande',
+        'demande_approvisionnement_id',
         'description',
         'projet_id',
         'user_id',
@@ -57,5 +58,10 @@ class DemandeAchat extends Model
     public function bonCommandes()
     {
         return $this->hasMany(BonCommande::class, 'demande_achat_id');
+    }
+
+    public function demandeApprovisionnement()
+    {
+        return $this->belongsTo(DemandeApprovisionnement::class, 'demande_approvisionnement_id');
     }
 }

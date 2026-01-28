@@ -123,7 +123,7 @@
                                 </tr>
                                 <tr>
                                     <th>Demandeur</th>
-                                    <td>{{ $demandeAchat->user ? $demandeAchat->user->name : 'N/A' }}</td>
+                                    <td>{{ $demandeAchat->user ? $demandeAchat->user->nom : 'N/A' }}</td>
                                 </tr>
                                 @if($demandeAchat->statut == 'approuvée' || $demandeAchat->statut == 'rejetée')
                                     <tr>

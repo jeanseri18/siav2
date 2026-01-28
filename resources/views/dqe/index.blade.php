@@ -13,9 +13,7 @@
             <a href="{{ route('dqe.create', $contrat->id) }}" class="btn btn-primary">
                 <i class="fas fa-plus-circle"></i> Nouveau DQE
             </a>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateDQEModal">
-                <i class="fas fa-magic"></i> Générer depuis BPU
-            </button>
+   
         </div>
     </div>
 
@@ -55,25 +53,86 @@
                             <td style="text-align: center;">
                                 @if($dqe->statut == 'brouillon')
                                     <span class="badge bg-warning">Brouillon</span>
+                                @elseif($dqe->statut == 'soumis')
+                                    <span class="badge bg-info">Soumis</span>
+                                @elseif($dqe->statut == 'approuvé')
+                                    <span class="badge bg-primary">Approuvé</span>
                                 @elseif($dqe->statut == 'validé')
                                     <span class="badge bg-success">Validé</span>
+                                @elseif($dqe->statut == 'rejeté')
+                                    <span class="badge bg-danger">Rejeté</span>
                                 @else
                                     <span class="badge bg-secondary">Archivé</span>
                                 @endif
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ route('dqe.edit', $dqe->id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i> Éditer
-                                    </a>
+                                    @if($dqe->statut == 'brouillon')
+                                        <a href="{{ route('dqe.edit', $dqe->id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Éditer
+                                        </a>
+                                        <form action="{{ route('dqe.soumettre', $dqe->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Êtes-vous sûr de vouloir soumettre ce DQE pour approbation ?')">
+                                                <i class="fas fa-paper-plane"></i> Soumettre
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('dqe.rejeter', $dqe->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce DQE ?')">
+                                                <i class="fas fa-times"></i> Rejeter
+                                            </button>
+                                        </form>
+                                    @elseif($dqe->statut == 'soumis')
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fas fa-lock"></i> Éditer
+                                        </button>
+                                        <form action="{{ route('dqe.approuver', $dqe->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Êtes-vous sûr de vouloir approuver ce DQE ?')">
+                                                <i class="fas fa-thumbs-up"></i> Approuver
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('dqe.rejeter', $dqe->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce DQE ?')">
+                                                <i class="fas fa-times"></i> Rejeter
+                                            </button>
+                                        </form>
+                                    @elseif($dqe->statut == 'approuvé')
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fas fa-lock"></i> Éditer
+                                        </button>
+                                        <form action="{{ route('dqe.valider', $dqe->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Êtes-vous sûr de vouloir valider ce DQE ?')">
+                                                <i class="fas fa-check"></i> Valider
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fas fa-lock"></i> Actions verrouillées
+                                        </button>
+                                    @else
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fas fa-lock"></i> Éditer
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="fas fa-lock"></i> Actions verrouillées
+                                        </button>
+                                    @endif
                                     @if($dqe->statut != 'archivé')
                                         <div class="btn-group ms-1" role="group">
                                             <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
                                                 <i class="fas fa-calculator"></i> Générer
                                             </button>
                                             <ul class="dropdown-menu">
+
+                                            
                                                 <li>
-                                                    <form action="{{ route('debourses.generate_sec', $dqe->id) }}" method="POST" class="d-inline">
+
+
+
+                                                    <form action="{{ route('debourse-sec.generate', $dqe) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
                                                             <i class="fas fa-cube"></i> Déboursé sec
@@ -81,7 +140,7 @@
                                                     </form>
                                                 </li>
                                                 <li>
-                                                    <form action="{{ route('debourses.generate_frais_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                                    <form action="{{ route('frais-chantier.generate', $dqe) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
                                                             <i class="fas fa-tools"></i> Frais de chantier
@@ -89,19 +148,28 @@
                                                     </form>
                                                 </li>
                                                 <li>
-                                                    <form action="{{ route('debourses.generate_chantier', $dqe->id) }}" method="POST" class="d-inline">
+                                                    <form action="{{ route('frais-generaux.generate', $dqe) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
-                                                            <i class="fas fa-hard-hat"></i> Déboursé chantier
+                                                            <i class="fas fa-hard-hat"></i> Frais généraux
                                                         </button>
                                                     </form>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
-                                                    <form action="{{ route('debourses.generate', $dqe->id) }}" method="POST" class="d-inline">
+                                                    <form action="{{ route('ligne-benefice.generate', $dqe) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
-                                                            <i class="fas fa-calculator"></i> Tous les déboursés
+                                                            <i class="fas fa-calculator"></i> Bénéfice
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form action="{{ route('facture-contrat.generate', $dqe) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-file-invoice"></i> Facture contrat
                                                         </button>
                                                     </form>
                                                 </li>
@@ -288,6 +356,105 @@
             
             document.querySelectorAll(`.bpu-item[data-rubrique="${rubriqueId}"]`).forEach(item => {
                 item.checked = isChecked;
+            });
+        });
+    });
+
+    // Gérer la soumission du formulaire de génération DQE via AJAX
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateForm = document.querySelector('#generateDQEModal form');
+        if (generateForm) {
+            generateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                
+                // Désactiver le bouton pendant la requête
+                submitButton.disabled = true;
+                submitButton.textContent = 'Génération en cours...';
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Fermer le modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('generateDQEModal'));
+                        modal.hide();
+                        
+                        // Afficher un message de succès
+                        alert(data.message);
+                        
+                        // Recharger la page pour afficher le nouveau DQE
+                        location.reload();
+                    } else {
+                        alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Une erreur est survenue lors de la génération du DQE.');
+                })
+                .finally(() => {
+                    // Réactiver le bouton
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                });
+            });
+        }
+        
+        // Gérer la soumission des formulaires de génération dans le dropdown menu (Déboursé sec, Frais de chantier, etc.)
+        document.querySelectorAll('.dropdown-menu form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                
+                // Désactiver le bouton pendant la requête
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération en cours...';
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Afficher un message de succès
+                        alert(data.message);
+                        
+                        // Recharger la page pour afficher les changements
+                        location.reload();
+                    } else {
+                        alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Une erreur est survenue lors de la génération.');
+                })
+                .finally(() => {
+                    // Réactiver le bouton
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                });
             });
         });
     });

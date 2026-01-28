@@ -14,7 +14,8 @@ class Contrat extends Model
     
     protected $fillable = [
         'ref_contrat', 'nom_contrat','id_projet', 'nom_projet', 'date_debut', 'date_fin',
-        'type_travaux', 'taux_garantie', 'client_id', 'chef_chantier_id', 'montant', 'statut', 'decompte'
+        'type_travaux', 'taux_garantie', 'client_id', 'chef_chantier_id', 'montant', 'statut', 'decompte',
+        'tva_18', 'retenue_decennale', 'avance_demarrage'
     ];
     
     public function client()
@@ -55,7 +56,7 @@ public function fraisGeneraux()
      */
     public function debourses()
     {
-        return $this->hasMany(Debourse::class, 'contrat_id');
+        return $this->hasMany(DebourseSec::class, 'contrat_id');
     }
     
     /**

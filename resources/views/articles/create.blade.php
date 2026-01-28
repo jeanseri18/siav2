@@ -8,6 +8,38 @@
 <li class="breadcrumb-item active">Ajouter</li>
 @endsection
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorieSelect = document.getElementById('categorie_id');
+    const sousCategorieSelect = document.getElementById('sous_categorie_id');
+    const originalSousCategories = Array.from(sousCategorieSelect.options);
+    
+    function filterSousCategories() {
+        const selectedCategorie = categorieSelect.value;
+        
+        // Réinitialiser les options
+        sousCategorieSelect.innerHTML = '<option value="">Aucune</option>';
+        
+        if (selectedCategorie) {
+            // Filtrer et ajouter les sous-catégories correspondantes
+            originalSousCategories.forEach(option => {
+                if (option.value === '' || option.dataset.categorie === selectedCategorie) {
+                    sousCategorieSelect.appendChild(option.cloneNode(true));
+                }
+            });
+        }
+    }
+    
+    // Filtrer au chargement de la page
+    filterSousCategories();
+    
+    // Filtrer quand la catégorie change
+    categorieSelect.addEventListener('change', filterSousCategories);
+});
+</script>
+@endpush
+
 @section('content')
 
 <div class="app-fade-in">
@@ -64,7 +96,7 @@
                             <select name="sous_categorie_id" id="sous_categorie_id" class="app-form-select">
                                 <option value="">Aucune</option>
                                 @foreach ($sousCategories as $sousCategorie)
-                                    <option value="{{ $sousCategorie->id }}">{{ $sousCategorie->nom }}</option>
+                                    <option value="{{ $sousCategorie->id }}" data-categorie="{{ $sousCategorie->categorie_id }}">{{ $sousCategorie->nom }}</option>
                                 @endforeach
                             </select>
                             <div class="app-form-text">Sous-catégorie optionnelle</div>

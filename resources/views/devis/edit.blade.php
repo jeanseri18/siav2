@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row g-3 mb-4 align-items-center justify-content-between">
             <div class="col-auto">
-                <h1 class="app-page-title mb-0">Modifier le Devis #{{ $devis->id }}</h1>
+                <h1 class="app-page-title mb-0">Modifier le Devis #{{ $devi->id }}</h1>
             </div>
         </div>
 
@@ -21,7 +21,7 @@
 
         <div class="app-card app-card-settings shadow-sm p-4">
             <div class="app-card-body">
-                <form action="{{ route('devis.update', $devis->id) }}" method="POST" id="devisForm" class="app-form">
+                <form action="{{ route('devis.update', $devi->id) }}" method="POST" id="devisForm" class="app-form">
                     @csrf
                     @method('PUT')
                     
@@ -33,7 +33,7 @@
                         <select name="client_id" id="client_id" class="app-form-select @error('client_id') is-invalid @enderror" required>
                             <option value="">Sélectionner un client</option>
                             @foreach($clients as $client)
-                                <option value="{{ $client->id }}" {{ (old('client_id') ?? $devis->client_id) == $client->id ? 'selected' : '' }}>
+                                <option value="{{ $client->id }}" {{ (old('client_id') ?? $devi->client_id) == $client->id ? 'selected' : '' }}>
                                     {{ $client->nom ?? $client->nom_raison_sociale }}
                                 </option>
                             @endforeach
@@ -48,7 +48,7 @@
                         <div class="col-md-6">
                             <div class="app-form-group">
                                 <label for="numero_client" class="app-form-label">Numéro Client *</label>
-                                <input type="text" name="numero_client" id="numero_client" class="app-form-control @error('numero_client') is-invalid @enderror" value="{{ old('numero_client') ?? $devis->numero_client }}" required>
+                                <input type="text" name="numero_client" id="numero_client" class="app-form-control @error('numero_client') is-invalid @enderror" value="{{ old('numero_client') ?? $devi->numero_client }}" required>
                                 @error('numero_client')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -57,7 +57,7 @@
                         <div class="col-md-6">
                             <div class="app-form-group">
                                 <label for="nom_client" class="app-form-label">Nom Client *</label>
-                                <input type="text" name="nom_client" id="nom_client" class="app-form-control @error('nom_client') is-invalid @enderror" value="{{ old('nom_client') ?? $devis->nom_client }}" required>
+                                <input type="text" name="nom_client" id="nom_client" class="app-form-control @error('nom_client') is-invalid @enderror" value="{{ old('nom_client') ?? $devi->nom_client }}" required>
                                 @error('nom_client')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -81,7 +81,7 @@
                         <div class="app-card-body">
                             <!-- Zone dynamique pour les articles -->
                             <div id="articles-container" class="app-gap-3">
-                                @if($devis->articles->count() == 0)
+                                @if($devi->articles->count() == 0)
                                     <div class="text-center text-muted py-4" id="no-articles-message">
                                         <i class="fas fa-box-open fa-3x mb-3"></i>
                                         <p>Aucun article ajouté. Cliquez sur "Ajouter un article" pour commencer.</p>
@@ -100,28 +100,36 @@
                     <div class="app-card mt-4">
                         <div class="app-card-body">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">Total HT :</h5>
                                         <h4 class="mb-0 text-info">
-                                            <span id="total-ht">{{ number_format($devis->total_ht, 0, ',', ' ') }}</span> FCFA
+                                            <span id="total-ht">{{ number_format($devi->total_ht, 0, ',', ' ') }}</span> FCFA
                                         </h4>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="app-d-flex app-justify-content-between app-align-items-center">
+                                        <h5 class="mb-0">Remise :</h5>
+                                        <h4 class="mb-0 text-danger">
+                                            <span id="total-remise">0</span> FCFA
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">TVA (18%) :</h5>
                                         <h4 class="mb-0 text-warning">
-                                            <span id="total-tva">{{ number_format($devis->tva, 0, ',', ' ') }}</span> FCFA
+                                            <span id="total-tva">{{ number_format($devi->tva, 0, ',', ' ') }}</span> FCFA
                                         </h4>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">Total TTC :</h5>
                                         <h4 class="mb-0 text-success">
                                             <i class="fas fa-coins me-2"></i>
-                                            <span id="total-ttc">{{ number_format($devis->total_ttc, 0, ',', ' ') }}</span> FCFA
+                                            <span id="total-ttc">{{ number_format($devi->total_ttc, 0, ',', ' ') }}</span> FCFA
                                         </h4>
                                     </div>
                                 </div>
@@ -130,7 +138,7 @@
                     </div>
 
                     <div class="app-card-footer">
-                        <a href="{{ route('devis.show', $devis->id) }}" class="app-btn app-btn-secondary">
+                        <a href="{{ route('devis.show', $devi->id) }}" class="app-btn app-btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Retour
                         </a>
                         <button type="submit" class="app-btn app-btn-primary">
@@ -147,7 +155,7 @@
 <script>
     let articles = @json($articles);
     let clients = @json($clients);
-    let devisArticles = @json($devis->articles);
+    let devisArticles = @json($devi->articles);
     let articlesContainer = document.getElementById("articles-container");
     let noArticlesMessage = document.getElementById("no-articles-message");
     let articleIndex = 0;
@@ -161,7 +169,7 @@
         if (clientId) {
             const selectedClient = clients.find(client => client.id == clientId);
             if (selectedClient) {
-                numeroClientInput.value = selectedClient.numero_client || selectedClient.id;
+                numeroClientInput.value = selectedClient.code || selectedClient.numero_client || selectedClient.id;
                 nomClientInput.value = selectedClient.nom || selectedClient.nom_raison_sociale || '';
             }
         } else {
@@ -172,14 +180,14 @@
 
     // Charger les articles existants du devis
     devisArticles.forEach(function(devisArticle) {
-        addArticleRow(devisArticle.id, devisArticle.pivot.quantite, devisArticle.pivot.prix_unitaire);
+        addArticleRow(devisArticle.id, devisArticle.pivot.quantite, devisArticle.pivot.prix_unitaire_ht, devisArticle.pivot.remise || 0);
     });
 
     document.getElementById("add-article-btn").addEventListener("click", function () {
         addArticleRow();
     });
 
-    function addArticleRow(selectedArticleId = null, selectedQuantity = 1, selectedPrice = 0) {
+    function addArticleRow(selectedArticleId = null, selectedQuantity = 1, selectedPrice = 0, selectedRemise = 0) {
         // Masquer le message "aucun article"
         noArticlesMessage.style.display = 'none';
         
@@ -189,7 +197,7 @@
         div.innerHTML = `
             <div class="app-card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="app-form-group">
                             <label class="app-form-label">
                                 <i class="fas fa-box me-2"></i>Article
@@ -198,12 +206,12 @@
                                 <option value="">-- Sélectionner un article --</option>
                                 ${articles.map(article => {
                                     let selected = selectedArticleId == article.id ? 'selected' : '';
-                                    return `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure || 'Unité'}" ${selected}>${article.nom} - ${article.cout_moyen_pondere || article.prix_unitaire} FCFA HT</option>`;
+                                    return `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure ? article.unite_mesure.ref : 'Unité'}" ${selected}>${article.nom} - ${article.cout_moyen_pondere || article.prix_unitaire} FCFA HT</option>`;
                                 }).join('')}
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="app-form-group">
                             <label class="app-form-label">Unité</label>
                             <div class="app-form-control bg-light article-unite">-</div>
@@ -220,15 +228,21 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">
-                                <i class="fas fa-euro-sign me-2"></i>Prix Unitaire HT
+                                <i class="fas fa-coins me-2"></i>Prix Unitaire HT
                             </label>
                             <input type="number" name="articles[${articleIndex}][prix_unitaire]" class="app-form-control price-input" min="0" step="0.01" value="${selectedPrice}" required>
                         </div>
                     </div>
                     <div class="col-md-1">
                         <div class="app-form-group">
+                            <label class="app-form-label">Remise %</label>
+                            <input type="number" name="articles[${articleIndex}][remise]" class="app-form-control remise-input" min="0" max="100" step="0.01" value="${selectedRemise}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="app-form-group">
                             <label class="app-form-label">Montant Total</label>
-                            <div class="app-form-control bg-light article-price">0 FCFA</div>
+                            <div class="app-form-control bg-light article-price" style="min-width: 120px;">0 FCFA</div>
                         </div>
                     </div>
                     <div class="col-md-1">
@@ -261,6 +275,7 @@
         let select = div.querySelector(".article-select");
         let quantityInput = div.querySelector(".quantity-input");
         let priceInput = div.querySelector(".price-input");
+        let remiseInput = div.querySelector(".remise-input");
         let priceSpan = div.querySelector(".article-price");
         let uniteSpan = div.querySelector(".article-unite");
 
@@ -269,7 +284,10 @@
             let unite = selectedOption.dataset.unite || '-';
             let price = parseFloat(priceInput.value) || 0;
             let quantity = parseInt(quantityInput.value) || 1;
-            let subtotal = price * quantity;
+            let remise = parseFloat(remiseInput.value) || 0;
+            let subtotalHT = price * quantity;
+            let montantRemise = subtotalHT * (remise / 100);
+            let subtotal = subtotalHT - montantRemise;
             
             uniteSpan.textContent = unite;
             priceSpan.textContent = subtotal.toLocaleString() + " FCFA";
@@ -291,6 +309,10 @@
         });
         quantityInput.addEventListener("input", updateSubtotal);
         priceInput.addEventListener("input", updateSubtotal);
+        remiseInput.addEventListener("input", updateSubtotal);
+        
+        // Initialiser l'affichage de l'unité et du prix
+        updateSubtotal();
         
         // Initialiser les valeurs si c'est un article existant
         if (selectedArticleId) {
@@ -302,16 +324,21 @@
 
     function updateTotal() {
         let totalHT = 0;
+        let totalRemise = 0;
 
         document.querySelectorAll(".article-item").forEach(function (item) {
-            let select = item.querySelector(".article-select");
             let quantityInput = item.querySelector(".quantity-input");
+            let priceInput = item.querySelector(".price-input");
+            let remiseInput = item.querySelector(".remise-input");
             
-            if (select && quantityInput) {
-                let selectedOption = select.options[select.selectedIndex];
-                let price = parseFloat(selectedOption.dataset.price || 0);
+            if (quantityInput && priceInput) {
+                let price = parseFloat(priceInput.value) || 0;
                 let quantity = parseInt(quantityInput.value) || 1;
-                totalHT += price * quantity;
+                let remise = parseFloat(remiseInput.value) || 0;
+                let subtotalHT = price * quantity;
+                let montantRemise = subtotalHT * (remise / 100);
+                totalHT += subtotalHT - montantRemise;
+                totalRemise += montantRemise;
             }
         });
 
@@ -321,6 +348,12 @@
         document.getElementById("total-ht").textContent = totalHT.toLocaleString();
         document.getElementById("total-tva").textContent = tva.toLocaleString();
         document.getElementById("total-ttc").textContent = totalTTC.toLocaleString();
+        
+        // Afficher la remise totale si elle existe
+        const remiseElement = document.getElementById("total-remise");
+        if (remiseElement) {
+            remiseElement.textContent = totalRemise.toLocaleString();
+        }
     }
 </script>
 @endpush

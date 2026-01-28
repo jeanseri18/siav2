@@ -212,7 +212,8 @@
                 <th>Article</th>
                 <th class="text-center">Quantité</th>
                 <th class="text-right">Prix unitaire</th>
-                <th class="text-right">Total</th>
+                <th class="text-center">% Remise</th>
+                <th class="text-right">Montant HT</th>
                 <th class="text-center">Qté livrée</th>
             </tr>
         </thead>
@@ -222,12 +223,25 @@
                 <td>{{ $ligne->article ? $ligne->article->nom : 'Article supprimé' }}</td>
                 <td class="text-center">{{ $ligne->quantite }}</td>
                 <td class="text-right">{{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA</td>
-                <td class="text-right">{{ number_format($ligne->quantite * $ligne->prix_unitaire, 2, ',', ' ') }} FCFA</td>
+                <td class="text-center">{{ $ligne->remise ?? 0 }}%</td>
+                <td class="text-right">
+                    @php
+                        $montantBrut = $ligne->quantite * $ligne->prix_unitaire;
+                        $montantRemise = $montantBrut * (($ligne->remise ?? 0) / 100);
+                        $montantFinal = $montantBrut - $montantRemise;
+                    @endphp
+                    @if($ligne->remise > 0)
+                        <span style="text-decoration: line-through; color: #999;">{{ number_format($montantBrut, 2, ',', ' ') }} FCFA</span><br>
+                        {{ number_format($montantFinal, 2, ',', ' ') }} FCFA
+                    @else
+                        {{ number_format($montantFinal, 2, ',', ' ') }} FCFA
+                    @endif
+                </td>
                 <td class="text-center">{{ $ligne->quantite_livree }}</td>
             </tr>
             @endforeach
             <tr class="total-row">
-                <td colspan="3" class="text-right">Total général</td>
+                <td colspan="4" class="text-right">Total général</td>
                 <td class="text-right">{{ number_format($bonCommande->montant_total, 2, ',', ' ') }} FCFA</td>
                 <td></td>
             </tr>
@@ -252,7 +266,7 @@
         <h3>Informations de validation</h3>
         <div class="info-row">
             <div class="info-label">Créé par:</div>
-            <div class="info-value">{{ $bonCommande->user ? $bonCommande->user->name : 'N/A' }}</div>
+            <div class="info-value">{{ $bonCommande->user ? $bonCommande->user->nom_complet : 'N/A' }}</div>
         </div>
         <div class="info-row">
             <div class="info-label">Date de création:</div>

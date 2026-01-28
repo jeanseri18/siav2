@@ -11,7 +11,7 @@ class SousCategorieRubrique extends Model
     
     protected $table = 'souscategorierubriques';
     
-    protected $fillable = ['nom', 'type', 'id_session'];
+    protected $fillable = ['nom', 'type', 'id_session', 'contrat_id', 'id_qe'];
     
     public function categorie()
     {
@@ -21,5 +21,15 @@ class SousCategorieRubrique extends Model
     public function rubriques()
     {
         return $this->hasMany(Rubrique::class, 'id_soussession');
+    }
+    
+    public function contrat()
+    {
+        return $this->belongsTo(Contrat::class);
+    }
+    
+    public function dqe()
+    {
+        return $this->belongsTo(DQE::class, 'id_qe');
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('n_rccm')->nullable(); // Uniquement pour Entreprise
             $table->string('n_cc')->nullable(); // Uniquement pour Entreprise
             $table->string('regime_imposition')->nullable();
-            $table->integer('delai_paiement')->nullable();
+            $table->string('delai_paiement')->nullable();
             $table->enum('mode_paiement', ['Virement', 'Chèque', 'Espèces'])->nullable();
             $table->string('adresse_localisation')->nullable();
             $table->string('boite_postale')->nullable();

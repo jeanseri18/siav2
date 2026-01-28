@@ -19,6 +19,11 @@ class LigneDemandeApprovisionnement extends Model
         'commentaire'
     ];
 
+    protected $casts = [
+        'quantite_demandee' => 'integer',
+        'quantite_approuvee' => 'integer',
+    ];
+
     public function demandeApprovisionnement()
     {
         return $this->belongsTo(DemandeApprovisionnement::class, 'demande_approvisionnement_id');

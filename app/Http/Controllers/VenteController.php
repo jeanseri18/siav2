@@ -21,7 +21,7 @@ class VenteController extends Controller
     public function create()
     {
         $clients = ClientFournisseur::where('type', 'Client')->get();
-        $articles = Article::all();
+        $articles = Article::with('uniteMesure')->get();
         $devis = Devis::nonUtilises()->with('client', 'articles')->get();
         return view('ventes.create', compact('clients', 'articles', 'devis'));
     }
@@ -37,6 +37,10 @@ class VenteController extends Controller
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
+            'prestations' => 'nullable|array',
+            'prestations.*.nom' => 'required_with:prestations|string|max:255',
+            'prestations.*.quantite' => 'required_with:prestations|integer|min:1',
+            'prestations.*.montant' => 'required_with:prestations|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -51,27 +55,19 @@ class VenteController extends Controller
                 $devis->update(['utilise_pour_vente' => true]);
                 
                 foreach ($devis->articles as $article) {
-                    if ($article->quantite_stock < $article->pivot->quantite) {
-                        throw new \Exception("Stock insuffisant pour {$article->nom}");
-                    }
-                    
                     $articles[] = [
                         'id' => $article->id,
                         'quantite' => $article->pivot->quantite,
-                        'prix_unitaire_ht' => $article->pivot->prix_unitaire_ht,
-                        'montant_total' => $article->pivot->montant_total
+                        'prix_unitaire' => $article->pivot->prix_unitaire,
+                        'sous_total' => $article->pivot->sous_total
                     ];
                     
-                    $totalHT += $article->pivot->montant_total;
+                    $totalHT += $article->pivot->sous_total;
                 }
             } else {
                 // Utiliser les articles sélectionnés manuellement
                 foreach ($request->articles as $articleData) {
                     $article = Article::findOrFail($articleData['id']);
-
-                    if ($article->quantite_stock < $articleData['quantite']) {
-                        throw new \Exception("Stock insuffisant pour {$article->nom}");
-                    }
 
                     $prixUnitaireHT = $article->cout_moyen_pondere;
                     $montantTotal = $prixUnitaireHT * $articleData['quantite'];
@@ -79,14 +75,23 @@ class VenteController extends Controller
                     $articles[] = [
                         'id' => $article->id,
                         'quantite' => $articleData['quantite'],
-                        'prix_unitaire_ht' => $prixUnitaireHT,
-                        'montant_total' => $montantTotal
+                        'prix_unitaire' => $prixUnitaireHT,
+                        'sous_total' => $montantTotal
                     ];
 
                     $totalHT += $montantTotal;
                 }
             }
 
+            // Calculer le total des prestations
+            $totalPrestations = 0;
+            if ($request->has('prestations') && !empty($request->prestations)) {
+                foreach ($request->prestations as $prestation) {
+                    $totalPrestations += $prestation['quantite'] * $prestation['montant'];
+                }
+            }
+
+            $totalHT = $totalHT + $totalPrestations;
             $tva = $totalHT * 0.18;
             $totalTTC = $totalHT + $tva;
 
@@ -96,6 +101,7 @@ class VenteController extends Controller
                 'numero_client' => $request->numero_client,
                 'nom_client' => $request->nom_client,
                 'commentaire' => $request->commentaire,
+                'total' => $totalTTC,
                 'total_ht' => $totalHT,
                 'tva' => $tva,
                 'total_ttc' => $totalTTC,
@@ -106,12 +112,24 @@ class VenteController extends Controller
             foreach ($articles as $articleData) {
                 $vente->articles()->attach($articleData['id'], [
                     'quantite' => $articleData['quantite'],
-                    'prix_unitaire_ht' => $articleData['prix_unitaire_ht'],
-                    'montant_total' => $articleData['montant_total']
+                    'prix_unitaire' => $articleData['prix_unitaire'],
+                    'sous_total' => $articleData['sous_total']
                 ]);
 
                 $article = Article::findOrFail($articleData['id']);
                 $article->decrement('quantite_stock', $articleData['quantite']);
+            }
+
+            // Enregistrer les prestations
+            if ($request->has('prestations') && !empty($request->prestations)) {
+                foreach ($request->prestations as $prestation) {
+                    $vente->prestations()->create([
+                        'nom_prestation' => $prestation['nom'],
+                        'quantite' => $prestation['quantite'],
+                        'prix_unitaire' => $prestation['montant'],
+                        'montant_total' => $prestation['quantite'] * $prestation['montant']
+                    ]);
+                }
             }
         });
 
@@ -130,8 +148,14 @@ class VenteController extends Controller
 
     public function show(Vente $vente)
     {
-        $vente->load('client', 'articles', 'devis');
+        $vente->load('client', 'articles', 'devis', 'prestations');
         return view('ventes.show', compact('vente'));
+    }
+
+    public function facture(Vente $vente)
+    {
+        $vente->load('client', 'articles', 'devis', 'prestations');
+        return view('ventes.facture', compact('vente'));
     }
     public function destroy(Vente $vente)
     {

@@ -100,14 +100,14 @@
                         <!-- <div class="app-info-item">
                             <label class="app-info-label">Coût moyen pondéré :</label>
                             <span class="app-info-value">
-                                {{ number_format($stock->article->cout_moyen_pondere ?? 0, 2, ',', ' ') }} €
+                                {{ number_format($stock->article->cout_moyen_pondere ?? 0, 2, ',', ' ') }} F CFA
                             </span>
                         </div> -->
                         
                         <!-- <div class="app-info-item">
                             <label class="app-info-label">Valeur totale :</label>
                             <span class="app-info-value app-badge app-badge-info">
-                                {{ number_format(($stock->article->cout_moyen_pondere ?? 0) * $stock->quantite, 2, ',', ' ') }} €
+                                {{ number_format(($stock->article->cout_moyen_pondere ?? 0) * $stock->quantite, 2, ',', ' ') }} F CFA
                             </span>
                         </div> -->
                         

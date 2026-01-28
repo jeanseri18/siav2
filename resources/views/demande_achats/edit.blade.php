@@ -137,14 +137,12 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th>Article</th>
+                                            <th>N° ou Réf Article</th>
                                             <th>Désignation <span class="text-danger">*</span></th>
-                                            <th>Quantité <span class="text-danger">*</span></th>
-                                            <th>Unité <span class="text-danger">*</span></th>
-                                            <th>Prix estimé</th>
-                                            <th>Spécifications</th>
-                                            <th>Commentaire</th>
-                                            <th style="width: 80px;">Actions</th>
+                                            <th>Qté <span class="text-danger">*</span></th>
+                                            <th>Unité</th>
+                                            <th>Spécification</th>
+                                            <th style="width: 100px;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -154,37 +152,38 @@
                                                 <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
-                                                        <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
+                                                        <option value="{{ $article->id }}" 
+                                                            data-unite="{{ $article->uniteMesure ? $article->uniteMesure->ref : 'Unité' }}" 
                                                             data-designation="{{ $article->nom }}"
+                                                            data-reference="{{ $article->reference }}"
                                                             {{ $ligne->article_id == $article->id ? 'selected' : '' }}>
-                                                            {{ $article->reference_fournisseur }} - {{ $article->nom }}
+                                                            {{ $article->reference }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </td>
                                             <td>
-                                                <input type="text" class="app-form-control designation" 
-                                                    name="designation[]" value="{{ $ligne->designation }}" required>
+                                                <div class="app-d-flex app-align-items-center app-gap-2">
+                                                    <div class="item-icon">
+                                                        <i class="fas fa-box text-primary"></i>
+                                                    </div>
+                                                    <input type="text" class="app-form-control designation" 
+                                                        name="designation[]" value="{{ $ligne->designation }}" required style="border: none; background: transparent;">
+                                                </div>
                                             </td>
                                             <td>
                                                 <input type="number" class="app-form-control" 
-                                                    name="quantite[]" min="1" value="{{ $ligne->quantite }}" required>
+                                                    name="quantite[]" min="1" value="{{ $ligne->quantite }}" required style="width: 80px;">
                                             </td>
                                             <td>
-                                                <input type="text" class="app-form-control unite-mesure" 
-                                                    name="unite_mesure[]" value="{{ $ligne->unite_mesure }}" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" class="app-form-control" 
-                                                    name="prix_estime[]" min="0" value="{{ $ligne->prix_estime }}">
+                                                <span class="app-badge app-badge-info unite-mesure">{{ $ligne->unite_mesure }}</span>
+                                                <input type="hidden" class="unite-mesure-input" name="unite_mesure[]" value="{{ $ligne->unite_mesure }}">
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control" 
-                                                    name="specifications[]" value="{{ $ligne->specifications }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="app-form-control" 
-                                                    name="commentaire[]" value="{{ $ligne->commentaire }}">
+                                                    name="specifications[]" value="{{ $ligne->specifications }}" placeholder="Spécifications...">
+                                                <input type="hidden" name="prix_estime[]" value="{{ $ligne->prix_estime ?? 0 }}">
+                                                <input type="hidden" name="commentaire[]" value="{{ $ligne->commentaire ?? '' }}">
                                             </td>
                                             <td>
                                                 <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
@@ -223,36 +222,37 @@
             <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
-                    <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                        data-designation="{{ $article->nom }}">
-                        {{ $article->reference_fournisseur }} - {{ $article->nom }}
+                    <option value="{{ $article->id }}" 
+                        data-unite="{{ $article->uniteMesure ? $article->uniteMesure->ref : 'Unité' }}" 
+                        data-designation="{{ $article->nom }}"
+                        data-reference="{{ $article->reference }}">
+                        {{ $article->reference }} - {{ $article->nom }}
                     </option>
                 @endforeach
             </select>
         </td>
         <td>
-            <input type="text" class="app-form-control designation" 
-                name="designation[]" required>
+            <div class="app-d-flex app-align-items-center app-gap-2">
+                <div class="item-icon">
+                    <i class="fas fa-box text-primary"></i>
+                </div>
+                <input type="text" class="app-form-control designation" 
+                    name="designation[]" required style="border: none; background: transparent;">
+            </div>
         </td>
         <td>
             <input type="number" class="app-form-control" 
-                name="quantite[]" min="1" value="1" required>
+                name="quantite[]" min="1" value="1" required style="width: 80px;">
         </td>
         <td>
-            <input type="text" class="app-form-control unite-mesure" 
-                name="unite_mesure[]" value="Unité" required>
-        </td>
-        <td>
-            <input type="number" step="0.01" class="app-form-control" 
-                name="prix_estime[]" min="0" value="0">
+            <span class="app-badge app-badge-info unite-mesure">Unité</span>
+            <input type="hidden" class="unite-mesure-input" name="unite_mesure[]" value="Unité">
         </td>
         <td>
             <input type="text" class="app-form-control" 
-                name="specifications[]">
-        </td>
-        <td>
-            <input type="text" class="app-form-control" 
-                name="commentaire[]">
+                name="specifications[]" placeholder="Spécifications...">
+            <input type="hidden" name="prix_estime[]" value="0">
+            <input type="hidden" name="commentaire[]" value="">
         </td>
         <td>
             <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
@@ -262,7 +262,43 @@
     </tr>
 </template>
 
-@push('scripts')
+@endsection
+
+@section('styles')
+<style>
+/* Styles pour le tableau des articles */
+.item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.designation {
+    flex: 1;
+}
+
+.app-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.app-badge-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+#articles-table tbody tr td {
+    vertical-align: middle;
+}
+</style>
+@endsection
+
+@section('scripts')
 <script>
 // Remplir automatiquement les informations d'un article
 function fillArticleInfo(selectElement) {
@@ -276,7 +312,10 @@ function fillArticleInfo(selectElement) {
     }
     
     if (unite) {
-        row.querySelector('.unite-mesure').value = unite;
+        const uniteBadge = row.querySelector('.unite-mesure');
+        const uniteInput = row.querySelector('.unite-mesure-input');
+        if (uniteBadge) uniteBadge.textContent = unite;
+        if (uniteInput) uniteInput.value = unite;
     }
 }
 
@@ -320,5 +359,4 @@ $(document).ready(function() {
     }
 });
 </script>
-@endpush
 @endsection

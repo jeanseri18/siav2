@@ -11,7 +11,7 @@ class Rubrique extends Model
     
     protected $table = 'rubriques';
     
-    protected $fillable = ['nom', 'id_soussession', 'type'];
+    protected $fillable = ['nom', 'id_soussession', 'type', 'contrat_id', 'id_qe'];
     
     public function sousCategorie()
     {
@@ -22,4 +22,24 @@ class Rubrique extends Model
     {
         return $this->hasMany(Bpu::class, 'id_rubrique');
     }
+    
+    public function contrat()
+    {
+        return $this->belongsTo(Contrat::class);
+    }
+    
+    public function dqe()
+    {
+        return $this->belongsTo(DQE::class, 'id_qe');
+    }
+    
+    /**
+     * Relation avec les lignes DQE
+     */
+    public function dqeLignes()
+    {
+        return $this->hasMany(DQELigne::class, 'id_rubrique');
+    }
+    
+
 }

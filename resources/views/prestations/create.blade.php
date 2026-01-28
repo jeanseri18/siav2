@@ -6,7 +6,68 @@
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('prestations.index') }}">Prestations</a></li>
 <li class="breadcrumb-item active">Ajouter</li>
+@push('styles')
+<style>
+.app-form-radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.app-form-radio {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.app-form-radio input[type="radio"] {
+    margin-right: 0.5rem;
+    accent-color: var(--primary, #033d71);
+}
+
+.app-form-radio-label {
+    font-weight: 500;
+    color: var(--gray-700, #495057);
+}
+</style>
+@endpush
+
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Gérer le changement de type de prestataire
+    $('input[name="prestataire_type"]').change(function() {
+        var selectedType = $(this).val();
+        
+        if (selectedType === 'artisan') {
+            $('#artisan_selection').show();
+            $('#fournisseur_selection').hide();
+            $('#id_artisan').prop('disabled', false);
+            $('#fournisseur_id').prop('disabled', true);
+            $('#fournisseur_id').val('');
+        } else if (selectedType === 'fournisseur') {
+            $('#artisan_selection').hide();
+            $('#fournisseur_selection').show();
+            $('#id_artisan').prop('disabled', true);
+            $('#fournisseur_id').prop('disabled', false);
+            $('#id_artisan').val('');
+        }
+    });
+    
+    // Initialiser l'état au chargement
+    var initialType = $('input[name="prestataire_type"]:checked').val();
+    if (initialType === 'fournisseur') {
+        $('#artisan_selection').hide();
+        $('#fournisseur_selection').show();
+        $('#id_artisan').prop('disabled', true);
+        $('#fournisseur_id').prop('disabled', false);
+    }
+});
+</script>
+@endpush
 
 @section('content')
 <div class="app-fade-in">
@@ -40,8 +101,6 @@
                 @csrf
                 
                 <div class="app-form-row">
-                 
-                    
                     <div class="app-form-col">
                         <div class="app-form-group">
                             <label for="id_contrat" class="app-form-label">
@@ -58,21 +117,58 @@
                             <div class="app-form-text">Contrat associé à cette prestation</div>
                         </div>
                     </div>
-      
                     
                     <div class="app-form-col">
                         <div class="app-form-group">
-                            <label for="id_artisan" class="app-form-label" style="color: #999;">
-                                <i class="fas fa-hard-hat me-2"></i>Artisan (optionnel)
+                            <label class="app-form-label">
+                                <i class="fas fa-handshake me-2"></i>Type de prestataire
                             </label>
-                            <select name="id_artisan" id="id_artisan" class="app-form-select" disabled style="background-color: #f5f5f5; color: #999; cursor: not-allowed;">
+                            <div class="app-form-radio-group">
+                                <label class="app-form-radio">
+                                    <input type="radio" name="prestataire_type" value="artisan" id="type_artisan" checked>
+                                    <span class="app-form-radio-label">Artisan</span>
+                                </label>
+                                <label class="app-form-radio">
+                                    <input type="radio" name="prestataire_type" value="fournisseur" id="type_fournisseur">
+                                    <span class="app-form-radio-label">Fournisseur</span>
+                                </label>
+                            </div>
+                            <div class="app-form-text">Choisir le type de prestataire</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-group" id="artisan_selection">
+                            <label for="id_artisan" class="app-form-label">
+                                <i class="fas fa-hard-hat me-2"></i>Artisan
+                            </label>
+                            <select name="id_artisan" id="id_artisan" class="app-form-select">
                                 <option value="">-- Sélectionnez un artisan --</option>
                                 @foreach($artisans as $artisan)
                                     <option value="{{ $artisan->id }}">{{ $artisan->nom }}</option>
                                 @endforeach
                             </select>
-                            <div class="app-form-text" style="color: #999;">Artisan assigné à cette prestation (peut être ajouté plus tard)</div>
+                            <div class="app-form-text">Artisan assigné à cette prestation</div>
                         </div>
+                        
+                        <div class="app-form-group" id="fournisseur_selection" style="display: none;">
+                            <label for="fournisseur_id" class="app-form-label">
+                                <i class="fas fa-building me-2"></i>Fournisseur
+                            </label>
+                            <select name="fournisseur_id" id="fournisseur_id" class="app-form-select">
+                                <option value="">-- Sélectionnez un fournisseur --</option>
+                                @foreach($fournisseurs as $fournisseur)
+                                    <option value="{{ $fournisseur->id }}">{{ $fournisseur->nom_raison_sociale }} {{ $fournisseur->prenoms }}</option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Fournisseur assigné à cette prestation</div>
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-col">
+                        <!-- Colonne vide pour maintenir l'alignement -->
                     </div>
                 </div>
                 

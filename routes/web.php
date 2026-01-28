@@ -10,14 +10,23 @@ use App\Http\Controllers\SousCategorieController;
 use App\Http\Controllers\ProjetController;
 use App\Http\Controllers\ClientFournisseurController;
 use App\Http\Controllers\ProfileController;
-
+use App\Models\Ville;
+use App\Models\Commune;
+use App\Models\Quartier;
+use App\Models\Secteur;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ArtisanController;
 use App\Http\Controllers\CorpsMetierController;
 use App\Http\Controllers\ConfigGlobalController;
+use Illuminate\Http\Request;
 
 use App\Http\Controllers\ContratController;
+use App\Http\Controllers\ContratDebourseSecController;
+use App\Http\Controllers\ContratFraisChantierController;
+use App\Http\Controllers\ContratFraisGenerauxController;
+use App\Http\Controllers\ContratBeneficeController;
+use App\Http\Controllers\DebourseChantierController;
 use App\Http\Controllers\StockProjetController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\TransfertsStockController;
@@ -51,15 +60,37 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\DemandeCotationController;
 use App\Http\Controllers\DemandeRavitaillementController;
 use App\Http\Controllers\DQEController;
-use App\Http\Controllers\FraisGeneralController;
-use App\Http\Controllers\DebourseController;
-use App\Http\Controllers\DebourseChantierController;
+use App\Http\Controllers\DQECategorieController;
+use App\Http\Controllers\DQELigneController;
+use App\Http\Controllers\FactureContratController;
+use App\Http\Controllers\MenuController;
+
+
 use App\Http\Controllers\EmployeController;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
+use App\Models\DemandeCotation;
 
 use App\Http\Controllers\CommuneController;
 use App\Http\Controllers\QuartierController;
+
+// Route pour récupérer les sous-catégories par catégorie
+Route::get('/api/categories/{categorie}/sous-categories', function($categorie_id) {
+    $sousCategories = \App\Models\SousCategorie::where('categorie_id', $categorie_id)->get();
+    return response()->json($sousCategories);
+})->name('api.sous-categories.by-categorie');
+
+// Routes pour récupérer les catégories rubrique par DQE
+Route::get('/api/dqe/{dqe}/categories-rubrique', function($dqe_id) {
+    $categories = \App\Models\CategorieRubrique::where('id_qe', $dqe_id)->get();
+    return response()->json($categories);
+})->name('api.categories-rubrique.by-dqe');
+
+// Routes pour récupérer les sous-catégories rubrique par catégorie
+Route::get('/api/categories-rubrique/{categorie}/sous-categories-rubrique', function($categorie_id) {
+    $sousCategories = \App\Models\SousCategorieRubrique::where('id_session', $categorie_id)->get();
+    return response()->json($sousCategories);
+})->name('api.sous-categories-rubrique.by-categorie');
 
 // Routes pour les Communes
 Route::get('/communes', [CommuneController::class, 'index'])->name('communes.index');
@@ -93,16 +124,7 @@ Route::get('/employes/{employe}', [EmployeController::class, 'show'])->name('emp
 Route::get('/employes/{employe}/edit', [EmployeController::class, 'edit'])->name('employes.edit');
 Route::put('/employes/{employe}', [EmployeController::class, 'update'])->name('employes.update');
 Route::delete('/employes/{employe}', [EmployeController::class, 'destroy'])->name('employes.destroy');
-// Dans routes/web.php
-// Routes pour les frais généraux
-Route::get('/contrats_frais_generaux', [FraisGeneralController::class, 'index'])->name('frais_generaux.index');
-Route::get('/contrats_frais_generaux_create/create', [FraisGeneralController::class, 'create'])->name('frais_generaux.create');
-Route::post('/contrats/frais-generaux', [FraisGeneralController::class, 'store'])->name('frais_generaux.store');
-Route::get('/frais-generaux_edit/{fraisGeneral}/edit', [FraisGeneralController::class, 'edit'])->name('frais_generaux.edit');
-Route::put('/frais-generaux/{fraisGeneral}', [FraisGeneralController::class, 'update'])->name('frais_generaux.update');
-Route::delete('/frais-generaux/{fraisGeneral}', [FraisGeneralController::class, 'destroy'])->name('frais_generaux.destroy');
-Route::post('/contrats_frais_generaux_generate', [FraisGeneralController::class, 'generate'])->name('frais_generaux.generate');
-Route::get('/frais-generaux_export/{fraisGeneral}/export', [FraisGeneralController::class, 'export'])->name('frais_generaux.export');
+
 // Routes pour les DQE
 Route::get('/contrats_dqe/dqe', [DQEController::class, 'index'])->name('dqe.index');
 Route::get('/contrats_dqe_create/{contrat}/dqe/create', [DQEController::class, 'create'])->name('dqe.create');
@@ -111,7 +133,12 @@ Route::get('/dqe/{dqe}', [DQEController::class, 'show'])->name('dqe.show');
 Route::get('/dqe_edit/{dqe}/edit', [DQEController::class, 'edit'])->name('dqe.edit');
 Route::put('/dqe/{dqe}', [DQEController::class, 'update'])->name('dqe.update');
 Route::delete('/dqe/{dqe}', [DQEController::class, 'destroy'])->name('dqe.destroy');
+Route::post('/dqe/{dqe}/valider', [DQEController::class, 'valider'])->name('dqe.valider');
+Route::post('/dqe/{dqe}/rejeter', [DQEController::class, 'rejeter'])->name('dqe.rejeter');
+Route::post('/dqe/{dqe}/soumettre', [DQEController::class, 'soumettre'])->name('dqe.soumettre');
+Route::post('/dqe/{dqe}/approuver', [DQEController::class, 'approuver'])->name('dqe.approuver');
 Route::post('/contrats_dqe_generate/{contrat}/dqe/generate', [DQEController::class, 'generateFromBPU'])->name('dqe.generate');
+Route::post('/dqe/{dqe}/debourse-chantier/generate', [DebourseChantierController::class, 'generate'])->name('debourse-chantier.generate');
 
 // Routes pour les lignes de DQE
 Route::post('/dqe/{dqe}/lines', [DQEController::class, 'addLine'])->name('dqe.lines.add');
@@ -120,39 +147,43 @@ Route::put('/dqe/{dqe}/lines/{line}', [DQEController::class, 'updateLine'])->nam
 Route::delete('/dqe/{dqe}/lines/{line}', [DQEController::class, 'deleteLine'])->name('dqe.lines.delete');
 Route::post('/dqe/{dqe}/sections', [DQEController::class, 'createSection'])->name('dqe.sections.create');
 
-// Routes pour les déboursés
-Route::get('/contrats_debourses/debourses', [DebourseController::class, 'index'])->name('debourses.index');
-// Routes pour les vues séparées de déboursés
-Route::get('/contrats_debourses/debourse-sec', [DebourseController::class, 'debourse_sec'])->name('debourses.sec');
-// DÉSACTIVÉ - Route pour déboursé main d'œuvre temporairement commentée
-// Route::get('/contrats_debourses/debourse-main-oeuvre', [DebourseController::class, 'debourseMainOeuvre'])->name('debourses.main_oeuvre');
-Route::get('/contrats_debourses/frais-chantier', [DebourseController::class, 'frais_chantier'])->name('debourses.frais_chantier');
-Route::get('/contrats_debourses/debourse-chantier', [DebourseChantierController::class, 'index'])->name('debourses.chantier');
-Route::post('/dqe_debourses/{dqe}/debourses/generate', [DebourseController::class, 'generate'])->name('debourses.generate');
+// Routes pour les catégories DQE manuelles
+Route::post('/contrats/{contrat}/categories', [DQECategorieController::class, 'storeCategorie'])->name('dqe.categories.store');
+Route::post('/contrats/{contrat}/sous-categories', [DQECategorieController::class, 'storeSousCategorie'])->name('dqe.sous-categories.store');
+Route::post('/contrats/{contrat}/rubriques', [DQECategorieController::class, 'storeRubrique'])->name('dqe.rubriques.store');
+Route::get('/contrats/{contrat}/categories', [DQECategorieController::class, 'getCategories'])->name('dqe.categories.get');
+Route::get('/contrats/{contrat}/sous-categories/{categorie}', [DQECategorieController::class, 'getSousCategories'])->name('dqe.sous-categories.get');
+Route::get('/contrats/{contrat}/rubriques', [DQECategorieController::class, 'getRubriques'])->name('dqe.rubriques.get');
 
-// Nouvelles routes pour la génération spécifique de chaque type de déboursé
-Route::post('/dqe_debourses/{dqe}/debourses/generate-sec', [DebourseController::class, 'generateDebourseSec'])->name('debourses.generate_sec');
-Route::post('/dqe_debourses/{dqe}/debourses/generate-frais-chantier', [DebourseController::class, 'generateFraisChantier'])->name('debourses.generate_frais_chantier');
-Route::post('/dqe_debourses/{dqe}/debourses/generate-chantier', [DebourseChantierController::class, 'generate'])->name('debourses.generate_chantier');
+// Routes pour la modification et suppression des catégories DQE
+Route::put('/dqe/categories/{categorie}', [DQECategorieController::class, 'updateCategorie'])->name('dqe.categories.update');
+Route::delete('/dqe/categories/{categorie}', [DQECategorieController::class, 'deleteCategorie'])->name('dqe.categories.delete');
+Route::put('/dqe/sous-categories/{sousCategorie}', [DQECategorieController::class, 'updateSousCategorie'])->name('dqe.sous-categories.update');
+Route::delete('/dqe/sous-categories/{sousCategorie}', [DQECategorieController::class, 'deleteSousCategorie'])->name('dqe.sous-categories.delete');
+Route::put('/dqe/rubriques/{rubrique}', [DQECategorieController::class, 'updateRubrique'])->name('dqe.rubriques.update');
+Route::delete('/dqe/rubriques/{rubrique}', [DQECategorieController::class, 'deleteRubrique'])->name('dqe.rubriques.delete');
 
-Route::get('/debourses/{debourse}', [DebourseController::class, 'details'])->name('debourses.details');
-Route::get('/debourses/{debourse}/show', [DebourseController::class, 'details'])->name('debourses.show');
-Route::get('/debourses_export/{debourse}/export', [DebourseController::class, 'export'])->name('debourses.export');
-Route::put('/debourses/{detail}/update-detail', [DebourseController::class, 'updateDetail'])->name('debourses.update_detail');
+// Routes pour les lignes DQE
+Route::get('/dqe/{dqe}/lignes', [DQEController::class, 'getLignesByDqe'])->name('dqe.lignes.get');
+Route::get('/dqe/lignes/{ligne}', [DQELigneController::class, 'show'])->name('dqe.lignes.show');
+Route::get('/dqe/lignes/{ligne}/edit', [DQELigneController::class, 'edit'])->name('dqe.lignes.edit');
+Route::post('/dqe/lignes', [DQELigneController::class, 'store'])->name('dqe.lignes.store');
+Route::put('/dqe/lignes/{ligne}', [DQELigneController::class, 'update'])->name('dqe.lignes.update');
+Route::delete('/dqe/lignes/{ligne}', [DQELigneController::class, 'destroy'])->name('dqe.lignes.delete');
 
-// Routes pour les déboursés chantier
-Route::get('/contrats_debourses_chantier/{contrat}/debourses_chantier', [App\Http\Controllers\DebourseChantierController::class, 'index'])->name('debourses_chantier.index');
-Route::post('/dqe_debourses_chantier/{dqe}/debourses_chantier/generate', [App\Http\Controllers\DebourseChantierController::class, 'generate'])->name('debourses_chantier.generate');
-Route::get('/debourses_chantier/{debourseChantier}', [App\Http\Controllers\DebourseChantierController::class, 'details'])->name('debourses_chantier.details');
-Route::get('/debourses_chantier_export/{debourseChantier}/export', [App\Http\Controllers\DebourseChantierController::class, 'export'])->name('debourses_chantier.export');
-Route::put('/debourses_chantier/{detail}/update-detail', [App\Http\Controllers\DebourseChantierController::class, 'updateDetail'])->name('debourses_chantier.update_detail');
-Route::post('/debourses_chantier/{detail}/duplicate', [App\Http\Controllers\DebourseChantierController::class, 'duplicateDetail'])->name('debourses_chantier.duplicate_detail');
-Route::delete('/debourses_chantier/{detail}/delete', [App\Http\Controllers\DebourseChantierController::class, 'deleteDetail'])->name('debourses_chantier.delete_detail');
+// Routes pour la gestion des taux d'avancement
+
+
+// Routes pour la sélection BPU et création de lignes DQE
+Route::get('/contrats/{contrat}/bpu/lignes', [DQEController::class, 'getBpuLignes'])->name('contrats.bpu.lignes');
+Route::post('/dqe/{dqe}/lignes/depuis-bpu', [DQEController::class, 'creerLignesDepuisBPU'])->name('dqe.lignes.depuis-bpu');
+
+
 
 // Ajoutez ces routes à votre fichier de routes
-Route::get('/dashboard/realtime-stats', 'StatistiqueController@getRealtimeStats')->name('dashboard.realtime-stats');
-Route::get('/dashboard/evolution-data', 'StatistiqueController@getEvolutionData')->name('dashboard.evolution-data');
-Route::post('/dashboard/export-pdf', 'StatistiqueController@exportPDF')->name('dashboard.export-pdf');
+// Route::get('/dashboard/realtime-stats', 'StatistiqueController@getRealtimeStats')->name('dashboard.realtime-stats');
+// Route::get('/dashboard/evolution-data', 'StatistiqueController@getEvolutionData')->name('dashboard.evolution-data');
+// Route::post('/dashboard/export-pdf', 'StatistiqueController@exportPDF')->name('dashboard.export-pdf');
 
 Route::get('demandes-approvisionnement/{demandeApprovisionnement}/articles', function(DemandeApprovisionnement $demandeApprovisionnement) {
     $lignes = $demandeApprovisionnement->lignes()->with('article')->get();
@@ -162,6 +193,12 @@ Route::get('demandes-approvisionnement/{demandeApprovisionnement}/articles', fun
 // Route pour récupérer les articles d'une demande d'achat
 Route::get('demandes-achat/{demandeAchat}/articles', function(DemandeAchat $demandeAchat) {
     $lignes = $demandeAchat->lignes()->with('article')->get();
+    return response()->json($lignes);
+});
+
+// Route pour récupérer les articles d'une demande de cotation
+Route::get('demandes-cotation/{demandeCotation}/articles', function(DemandeCotation $demandeCotation) {
+    $lignes = $demandeCotation->lignes()->with('article')->get();
     return response()->json($lignes);
 });
 
@@ -198,6 +235,9 @@ Route::post('bon-commandes/{bonCommande}/livrer',
 Route::get('bon-commandes/{bonCommande}/pdf', 
     [BonCommandeController::class, 'exportPDF'])
     ->name('bon-commandes.pdf');
+Route::get('bon-commandes/demande-achat/{demandeCotationId}', 
+    [BonCommandeController::class, 'getDemandeAchatFromCotation'])
+    ->name('bon-commandes.demande-achat');
 
 // Routes pour les réceptions
 Route::resource('receptions', ReceptionController::class)->only(['index', 'show', 'create', 'store']);
@@ -212,6 +252,7 @@ Route::post('receptions/store/{bonCommande}',
 
 // Routes pour les demandes d'achat
 Route::resource('demande-achats', DemandeAchatController::class);
+Route::get('api/demandes-achat/{id}/articles', [DemandeAchatController::class, 'getArticles'])->name('api.demandes-achat.articles');
 Route::post('demande-achats/{demandeAchat}/approve', 
     [DemandeAchatController::class, 'approve'])
     ->middleware('role:chef_projet,conducteur_travaux,acheteur,admin,dg')
@@ -298,10 +339,29 @@ Route::get('/prestations/{prestation}/artisans-disponibles', [PrestationControll
 Route::put('/prestations/{prestation}/affecter-artisan', [PrestationController::class, 'affecterArtisan'])->name('prestations.affecter-artisan');
 Route::get('/prestations/{prestation}/details', [PrestationController::class, 'getDetails'])->name('prestations.details');
 Route::post('/prestations/{prestation}/comptes', [PrestationController::class, 'ajouterCompte'])->name('prestations.ajouter-compte');
-Route::get('/prestations/{prestation}/decomptes', [PrestationController::class, 'getDecomptes'])->name('prestations.decomptes');
 Route::get('/prestations/{prestation}/artisan-info', [PrestationController::class, 'getArtisanInfo'])->name('prestations.artisan-info');
 Route::put('/prestations/{prestation}/remplacer-artisan', [PrestationController::class, 'remplacerArtisan'])->name('prestations.remplacer-artisan');
+Route::get('/prestations/{prestation}/lignes', [PrestationController::class, 'lignes'])->name('prestations.lignes');
+Route::post('/prestations/{prestation}/lignes', [PrestationController::class, 'storeLignes'])->name('prestations.storeLignes');
+Route::get('/prestations/{prestation}/voir-lignes', [PrestationController::class, 'voirLignes'])->name('prestations.voirLignes');
+Route::post('/prestations/{prestation}/valider-paiements', [PrestationController::class, 'validerPaiements'])->name('prestations.validerPaiements');
+Route::get('/prestations/{prestation}/decompte/{decompte}', [PrestationController::class, 'voirDecompte'])->name('prestations.voirDecompte');
+Route::get('/prestations/{prestation}/document', [PrestationController::class, 'document'])->name('prestations.document');
 Route::resource('factures', FactureController::class);
+Route::post('facture-contrat/generate/{dqe}', [FactureContratController::class, 'generate'])
+    ->name('facture-contrat.generate');
+
+// Routes pour les factures contrat
+Route::get('facture-contrat', [FactureContratController::class, 'index'])->name('facture-contrat.index');
+Route::get('facture-contrat/{id}', [FactureContratController::class, 'show'])->name('facture-contrat.show');
+Route::delete('facture-contrat/{id}', [FactureContratController::class, 'destroy'])->name('facture-contrat.destroy');
+
+// Routes pour les factures de décompte
+Route::get('facture-contrat/{factureContrat}/decompte/create', [FactureContratController::class, 'createDecompte'])->name('facture-contrat.decompte.create');
+Route::post('facture-contrat/{factureContrat}/decompte', [FactureContratController::class, 'storeDecompte'])->name('facture-contrat.decompte.store');
+Route::get('facture-decompte/{factureDecompte}', [FactureContratController::class, 'showDecompte'])->name('facture-decompte.show');
+Route::post('facture-decompte/{factureDecompte}/valider', [FactureContratController::class, 'validerDecompte'])->name('facture-decompte.valider');
+Route::get('facture-decompte/{factureDecompte}/print', [FactureContratController::class, 'printDecompte'])->name('facture-decompte.print');
 // Routes supplémentaires pour les factures
 Route::get('/factures_statistics', [FactureController::class, 'statistics'])->name('factures.statistics');
 Route::get('/factures_pdf/{facture}/pdf', [FactureController::class, 'generatePDF'])->name('factures.generatePDF');
@@ -374,11 +434,15 @@ Route::get('/ventes', [VenteController::class, 'index'])->name('ventes.index'); 
 Route::get('/ventes/create', [VenteController::class, 'create'])->name('ventes.create'); // Formulaire de création
 Route::post('/ventes', [VenteController::class, 'store'])->name('ventes.store'); // Enregistrer une vente
 Route::get('/ventes/{vente}', [VenteController::class, 'show'])->name('ventes.show'); // Voir une vente
+Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture'); // Facture d'une vente
 Route::delete('/ventes/{vente}', [VenteController::class, 'destroy'])->name('ventes.destroy'); // Supprimer une vente
 Route::get('/api/devis/client/{clientId}', [VenteController::class, 'getDevisForClient'])->name('api.devis.client');
 
 // Routes pour les devis
 Route::resource('devis', DevisController::class);
+Route::post('/devis/{devis}/approve', [DevisController::class, 'approve'])->name('devis.approve');
+Route::post('/devis/{devis}/reject', [DevisController::class, 'reject'])->name('devis.reject');
+Route::get('/devis/{devis}/print', [DevisController::class, 'print'])->name('devis.print');
 Route::get('/api/devis/client/{clientId}', [DevisController::class, 'getDevisForClient'])->name('api.devis.client.controller');
 
 Route::prefix('caisse/')->group(function () {
@@ -405,6 +469,7 @@ Route::post('annuler-demande/{demandeId}', [CaisseController::class, 'annulerDem
 Route::get('/demande-depense', [CaisseController::class, 'listerDemandesDepenses'])->name('caisse.demande-liste');
 
 Route::get('transferts', [TransfertsStockController::class, 'index'])->name('transferts.index');
+Route::get('transferts/create', [TransfertsStockController::class, 'create'])->name('transferts.create');
 Route::post('transferts', [TransfertsStockController::class, 'store'])->name('transferts.store');
 
 Route::get('articles', [ArticleController::class, 'index'])->name('articles.index');
@@ -453,6 +518,29 @@ Route::prefix('contrats')->group(function() {
     Route::post('duplicate/{id}', [ContratController::class, 'duplicate'])->name('contrats.duplicate');
     Route::get('projet/{projetId}/clients', [ContratController::class, 'getClientsByProject'])->name('contrats.clients-by-project');
     Route::get('{id}', [ContratController::class, 'show'])->name('contrats.show');
+    Route::get('{contrat}/debourse-sec', [ContratDebourseSecController::class, 'index'])->name('contrats.debourse-sec.index');
+Route::get('{contrat}/debourse-sec/{parent}', [ContratDebourseSecController::class, 'show'])->name('contrats.debourse-sec.show');
+Route::get('{contrat}/debourse-sec/parent/{parent}', [ContratDebourseSecController::class, 'showParent'])->name('contrats.debourse-sec.parent.show');
+Route::get('{contrat}/frais-chantier', [ContratFraisChantierController::class, 'index'])->name('contrats.frais-chantier.index');
+Route::post('{contrat}/frais-chantier', [ContratFraisChantierController::class, 'store'])->name('contrats.frais-chantier.store');
+Route::get('{contrat}/frais-chantier/{parent}', [ContratFraisChantierController::class, 'show'])->name('contrats.frais-chantier.show');
+Route::get('{contrat}/frais-chantier/parent/{parent}', [ContratFraisChantierController::class, 'showParent'])->name('contrats.frais-chantier.parent.show');
+Route::post('{contrat}/frais-chantier/{parent}/lignes', [ContratFraisChantierController::class, 'storeLigne'])->name('contrats.frais-chantier.lignes.store');
+Route::get('{contrat}/frais-generaux', [ContratFraisGenerauxController::class, 'index'])->name('contrats.frais-generaux.index');
+Route::post('{contrat}/frais-generaux', [ContratFraisGenerauxController::class, 'store'])->name('contrats.frais-generaux.store');
+Route::get('{contrat}/frais-generaux/{parent}', [ContratFraisGenerauxController::class, 'show'])->name('contrats.frais-generaux.show');
+Route::get('{contrat}/frais-generaux/parent/{parent}', [ContratFraisGenerauxController::class, 'showParent'])->name('contrats.frais-generaux.parent.show');
+Route::post('{contrat}/frais-generaux/{parent}/lignes', [ContratFraisGenerauxController::class, 'storeLigne'])->name('contrats.frais-generaux.lignes.store');
+Route::get('{contrat}/benefice', [ContratBeneficeController::class, 'index'])->name('contrats.benefice.index');
+    Route::get('{contrat}/benefice/{parent}', [ContratBeneficeController::class, 'show'])->name('contrats.benefice.show');
+    Route::get('{contrat}/benefice/parent/{parent}', [ContratBeneficeController::class, 'showParent'])->name('contrats.benefice.parent.show');
+    
+    // Routes pour le déboursé chantier
+    Route::get('{contrat}/debourse-chantier', [DebourseChantierController::class, 'index'])->name('contrats.debourse-chantier.index');
+    Route::get('{contrat}/debourse-chantier/{parent}', [DebourseChantierController::class, 'show'])->name('contrats.debourse-chantier.show');
+    Route::get('{contrat}/debourse-chantier/parent/{parent}', [DebourseChantierController::class, 'showParent'])->name('contrats.debourse-chantier.parent.show');
+    Route::post('{contrat}/debourse-chantier/{parent}/lignes', [DebourseChantierController::class, 'storeLigne'])->name('contrats.debourse-chantier.lignes.store');
+    Route::delete('{contrat}/debourse-chantier/{parent}/lignes/{ligne}', [DebourseChantierController::class, 'destroyLigne'])->name('contrats.debourse-chantier.lignes.destroy');
 });
 // Route::get('/contrats/{id}', [ContratController::class, 'show'])->name('contrats.show');
 
@@ -548,6 +636,9 @@ Route::post('/select-bu', [AuthController::class, 'selectBU'])->name('select.bu.
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Route pour le menu principal
+Route::get('/menu', [MenuController::class, 'index'])->name('menu')->middleware('auth');
+
 
 
  Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -636,4 +727,83 @@ Route::get('/', function () {
 
 
 
+Route::get('api/villes/{pays_id}', function ($pays_id) {
+    return Ville::where('pays_id', $pays_id)->get(['id', 'nom']);
+});
 
+Route::get('api/communes/{ville_id}', function ($ville_id) {
+    return Commune::where('ville_id', $ville_id)->get(['id', 'nom']);
+});
+
+Route::get('api/quartiers/{commune_id}', function ($commune_id) {
+    return Quartier::where('commune_id', $commune_id)->get(['id', 'nom']);
+});
+
+Route::get('api/secteurs/{quartier_id}', function ($quartier_id) {
+    return Secteur::where('quartier_id', $quartier_id)->get(['id', 'nom']);
+});
+
+// Routes pour les déboursés secs
+use App\Http\Controllers\DebourseSecController;
+use App\Http\Controllers\FraisChantierController;
+use App\Http\Controllers\FraisGenerauxController;
+use App\Http\Controllers\LigneBeneficeController;
+
+Route::post('/dqe/{dqe}/debourse-sec/generate', [DebourseSecController::class, 'generate'])->name('debourse-sec.generate');
+Route::get('/dqe/{dqe}/debourse-sec', [DebourseSecController::class, 'index'])->name('debourse-sec.index');
+
+// Routes pour les frais de chantier
+Route::post('/dqe/{dqe}/frais-chantier/generate', [FraisChantierController::class, 'generate'])->name('frais-chantier.generate');
+Route::get('/dqe/{dqe}/frais-chantier', [FraisChantierController::class, 'index'])->name('frais-chantier.index');
+
+// Routes pour les frais généraux
+Route::post('/dqe/{dqe}/frais-generaux/generate', [FraisGenerauxController::class, 'generate'])->name('frais-generaux.generate');
+Route::get('/dqe/{dqe}/frais-generaux', [FraisGenerauxController::class, 'index'])->name('frais-generaux.index');
+
+// Routes pour le bénéfice
+Route::post('/dqe/{dqe}/ligne-benefice/generate', [LigneBeneficeController::class, 'generate'])->name('ligne-benefice.generate');
+Route::get('/dqe/{dqe}/ligne-benefice', [LigneBeneficeController::class, 'index'])->name('ligne-benefice.index');
+
+
+
+Route::get('/articles/search', function (Request $request) {
+    $search = $request->get('q', '');
+    
+    $articles = \App\Models\Article::with('uniteMesure')
+        ->where('nom', 'like', "%{$search}%")
+        ->orWhere('reference', 'like', "%{$search}%")
+        ->limit(10)
+        ->get()
+        ->map(function ($article) {
+            return [
+                'id' => $article->id,
+                'nom' => $article->nom,
+                'reference' => $article->reference,
+                'unite_mesure' => $article->uniteMesure ? $article->uniteMesure->nom : 'Unité',
+                'unite_mesure_id' => $article->uniteMesure ? $article->uniteMesure->id : null,
+                'prix_unitaire' => $article->prix_unitaire
+            ];
+        });
+    
+    return response()->json($articles);
+});
+
+// Route pour vérifier les mises à jour
+Route::get('/check-updates', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toISOString()
+    ]);
+})->name('check-updates');
+
+// Routes pour la comptabilité
+Route::get('/comptabilite', function () {
+    return view('comptabilite.index');
+})->name('comptabilite.index')->middleware('auth');
+
+// Routes pour les guides utilisateurs
+Route::get('/guides', function () {
+    return view('guides.index');
+})->name('guides.index')->middleware('auth');
+
+// Routes pour les lignes de prestations

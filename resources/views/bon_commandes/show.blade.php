@@ -193,7 +193,8 @@
                                 <th>Désignation</th>
                                 <th class="text-center">Quantité</th>
                                 <th class="text-end">Prix unitaire</th>
-                                <th class="text-end">Montant</th>
+                                <th class="text-center">% Remise</th>
+                                <th class="text-end">Montant HT</th>
                                 @if($bonCommande->statut == 'livrée')
                                     <th class="text-center">Quantité livrée</th>
                                 @endif
@@ -224,8 +225,18 @@
                                 <td class="text-end">
                                     {{ number_format($ligne->prix_unitaire, 0, ',', ' ') }} FCFA
                                 </td>
+                                <td class="text-center">
+                                    @if($ligne->remise > 0)
+                                        <span class="app-badge app-badge-warning">{{ $ligne->remise }}%</span>
+                                    @else
+                                        <span class="text-muted">0%</span>
+                                    @endif
+                                </td>
                                 <td class="text-end app-fw-bold text-success">
-                                    {{ number_format($ligne->quantite * $ligne->prix_unitaire, 0, ',', ' ') }} FCFA
+                                    {{ number_format($ligne->montant_avec_remise, 0, ',', ' ') }} FCFA
+                                    @if($ligne->remise > 0)
+                                        <br><small class="text-muted text-decoration-line-through">{{ number_format($ligne->montant, 0, ',', ' ') }} FCFA</small>
+                                    @endif
                                 </td>
                                 @if($bonCommande->statut == 'livrée')
                                 <td class="text-center">
@@ -240,7 +251,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="table-active">
-                                <th colspan="{{ $bonCommande->statut == 'livrée' ? '6' : '5' }}" class="text-end">
+                                <th colspan="{{ $bonCommande->statut == 'livrée' ? '7' : '6' }}" class="text-end">
                                     <i class="fas fa-calculator me-2"></i>Total général :
                                 </th>
                                 <th class="text-end text-success h5">
@@ -304,9 +315,9 @@
                         <i class="fas fa-arrow-left me-2"></i>Retour à la liste
                     </a>
                     
-                    <button class="app-btn app-btn-info w-100" onclick="window.print()">
+                    <a href="{{ route('bon-commandes.pdf', $bonCommande) }}" target="_blank" class="app-btn app-btn-info w-100">
                         <i class="fas fa-print me-2"></i>Imprimer
-                    </button>
+                    </a>
                     
                     @if($bonCommande->statut == 'en attente')
                     <a href="{{ route('bon-commandes.edit', $bonCommande) }}" class="app-btn app-btn-warning w-100">

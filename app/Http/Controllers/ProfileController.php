@@ -66,7 +66,8 @@ class ProfileController extends Controller
         }
 
         // Mettre à jour les informations
-        $user->name = $request->name;
+        $user->nom = $request->name;
+        $user->prenom = $request->prenom;
         $user->email = $request->email;
         $user->save();
 

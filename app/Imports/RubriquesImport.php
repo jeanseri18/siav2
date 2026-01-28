@@ -105,54 +105,34 @@ class RubriquesImport implements ToCollection
                 }
                 
                 // Si on arrive ici, c'est probablement une ligne BPU
-                // Récupérer et nettoyer les valeurs numériques
+                // Récupération des champs dans l'ordre spécifié :
+                // code, Désignation, Unité, Matériaux, T.MO (%), T.MAT (%), T.FC (%), T.FG (%), T.BEN (%)
                 $materiaux = $this->parseNumeric($row[3] ?? 0);
-                $mainOeuvre = $this->parseNumeric($row[4] ?? 0);
-                $materiel = $this->parseNumeric($row[5] ?? 0);
+                $tauxMO = $this->parseNumeric($row[4] ?? 0);
+                $tauxMAT = $this->parseNumeric($row[5] ?? 0);
+                $tauxFC = $this->parseNumeric($row[6] ?? 0);
+                $tauxFG = $this->parseNumeric($row[7] ?? 0);
+                $tauxBEN = $this->parseNumeric($row[8] ?? 0);
                 
-                // Si toutes les valeurs sont 0, essayer de prendre les valeurs calculées dans le fichier
-                if ($materiaux == 0 && $mainOeuvre == 0 && $materiel == 0) {
-                    $debourse_sec = $this->parseNumeric($row[6] ?? 0);
-                    $frais_chantier = $this->parseNumeric($row[7] ?? 0);
-                    $frais_general = $this->parseNumeric($row[8] ?? 0);
-                    $marge_nette = $this->parseNumeric($row[9] ?? 0);
-                    $pu_ht = $this->parseNumeric($row[10] ?? 0);
-                    
-                    // Si on a un déboursé sec, essayer de déduire les composants
-                    if ($debourse_sec > 0) {
-                        // Estimation approximative basée sur les proportions courantes
-                        $materiaux = $debourse_sec * 0.60;
-                        $mainOeuvre = $debourse_sec * 0.30;
-                        $materiel = $debourse_sec * 0.10;
-                    }
-                }
-                
-                // Calculs automatiques
-                $ds = $materiaux + $mainOeuvre + $materiel;
-                $fc = $ds * 0.30; // 30%
-                $fg = ($ds + $fc) * 0.15; // 15%
-                $mn = ($ds + $fc + $fg) * 0.15; // 15%
-                $pu_ht = $ds + $fc + $fg + $mn;
-                $pu_ttc = $pu_ht * 1.18; // TVA 18%
-                
-                // Création de la ligne BPU
-                Bpu::create([
+                // Création de la ligne BPU avec les valeurs de base
+                $bpu = Bpu::create([
+                    // 'code' => $code,
                     'designation' => $designation,
+                    'unite' => $unite,
                     'qte' => 1,
                     'materiaux' => $materiaux,
-                    'main_oeuvre' => $mainOeuvre,
-                    'materiel' => $materiel,
-                    'unite' => $unite,
-                    'debourse_sec' => $ds,
-                    'frais_chantier' => $fc,
-                    'frais_general' => $fg,
-                    'marge_nette' => $mn,
-                    'pu_ht' => $pu_ht,
-                    'pu_ttc' => $pu_ttc,
+                    'taux_mo' => $tauxMO,
+                    'taux_mat' => $tauxMAT,
+                    'taux_fc' => $tauxFC,
+                    'taux_fg' => $tauxFG,
+                    'taux_benefice' => $tauxBEN,
                     'id_rubrique' => $currentRubriqueId,
                 ]);
                 
-                Log::info("BPU créé: $designation");
+                // Calculer automatiquement toutes les valeurs dérivées
+                $bpu->updateDerivedValues();
+                
+                Log::info("BPU créé: $code - $designation");
                 
             } catch (\Exception $e) {
                 Log::error("Erreur lors du traitement de la ligne $index: " . $e->getMessage());

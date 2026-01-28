@@ -27,10 +27,20 @@ class CategoryController extends Controller
             'nom' => 'required|string|max:255',
         ]);
 
-        Categorie::create([
+        $categorie = Categorie::create([
             'nom' => $request->nom,
         ]);
 
+        // Si c'est une requête AJAX, retourner une réponse JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'categorie' => $categorie,
+                'message' => 'Catégorie créée avec succès.'
+            ]);
+        }
+
+        // Sinon, redirection classique
         return redirect()->route('categories.index')->with('success', 'Categorie created successfully.');
     }
 

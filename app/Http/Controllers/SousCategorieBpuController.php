@@ -14,10 +14,13 @@ class SousCategorieBpuController extends Controller
             'id_session' => 'required|exists:categorierubriques,id',
         ]);
         
+        $contratId = session('contrat_id');
+        
         SousCategorieRubrique::create([
             'nom' => $request->nom,
             'id_session' => $request->id_session,
             'type' => 'bpu',
+            'contrat_id' => $contratId,
         ]);
         
         return back()->with('success', 'Sous-catégorie créée avec succès.');

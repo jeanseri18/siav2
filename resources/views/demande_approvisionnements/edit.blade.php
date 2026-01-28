@@ -98,8 +98,10 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th>Article <span class="text-danger">*</span></th>
-                                            <th>Quantité <span class="text-danger">*</span></th>
+                                            <th style="width: 25%;">Article <span class="text-danger">*</span></th>
+                                            <th>Désignation</th>
+                                            <th style="width: 10%;">Unité</th>
+                                            <th style="width: 12%;">Quantité <span class="text-danger">*</span></th>
                                             <th>Commentaire</th>
                                             <th style="width: 80px;">Actions</th>
                                         </tr>
@@ -111,13 +113,19 @@
                                                 <select class="app-form-select article-select" name="article_id[]" required>
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
-                                                        <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}"
+                                                        <option value="{{ $article->id }}" data-unite="{{ $article->uniteMesure->ref ?? '' }}" data-designation="{{ $article->nom }}" data-code="{{ $article->reference }}"
                                                             {{ $ligne->article_id == $article->id ? 'selected' : '' }}>
                                                             {{ $article->reference }} - {{ $article->nom }} 
                                                             ({{ $article->categorie->nom }})
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="app-form-control designation-field" name="designation[]" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="app-form-control unite-field" name="unite[]" readonly>
                                             </td>
                                             <td>
                                                 <input type="number" class="app-form-control" name="quantite_demandee[]" 
@@ -164,7 +172,7 @@
             <select class="app-form-select article-select" name="article_id[]" required>
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
-                    <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}">
+                    <option value="{{ $article->id }}" data-unite="{{ $article->uniteMesure->ref ?? '' }}" data-designation="{{ $article->nom }}" data-code="{{ $article->reference }}">
                         {{ $article->reference }} - {{ $article->nom }} 
                         ({{ $article->categorie->nom }})
                     </option>
@@ -195,10 +203,7 @@ function addArticle() {
     // Ajouter la nouvelle ligne au tableau
     document.querySelector('#articles_table tbody').appendChild(clone);
     
-    // Initialiser Select2 sur la nouvelle ligne si disponible
-    if (typeof $.fn.select2 !== 'undefined') {
-        $('#articles_table tbody tr:last-child .article-select').select2();
-    }
+    // Les sélecteurs d'articles utilisent l'affichage HTML natif
 }
 
 function removeLine(button) {
@@ -212,19 +217,39 @@ function removeLine(button) {
     }
 }
 
-// Initialiser Select2 au chargement de la page
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $.fn.select2 !== 'undefined') {
-        $('.article-select').select2();
-    }
-});
+// Les sélecteurs d'articles utilisent l'affichage HTML natif
+// Select2 n'est pas utilisé pour les articles
 
-// Alternative avec jQuery si préféré
-$(document).ready(function() {
-    // Initialiser les select2 existants
-    if (typeof $.fn.select2 !== 'undefined') {
-        $('.article-select').select2();
+function handleArticleChange(event) {
+    const select = event.target;
+    const selectedOption = select.options[select.selectedIndex];
+    const row = select.closest('tr');
+    
+    if (selectedOption.value) {
+        // Récupérer les données depuis les attributs data de l'option
+        const designation = selectedOption.getAttribute('data-designation') || '';
+        const unite = selectedOption.getAttribute('data-unite') || '';
+        
+        // Remplir automatiquement les champs
+        const designationField = row.querySelector('.designation-field');
+        designationField.value = designation;
+        
+        const uniteField = row.querySelector('.unite-field');
+        uniteField.value = unite;
+    } else {
+        // Vider les champs si aucun article sélectionné
+        row.querySelector('.designation-field').value = '';
+        row.querySelector('.unite-field').value = '';
     }
+}
+
+// Ajouter les événements change pour les selects existants
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.article-select').forEach(function(select) {
+        select.addEventListener('change', handleArticleChange);
+        // Déclencher le changement pour remplir les champs initiaux
+        select.dispatchEvent(new Event('change'));
+    });
 });
 </script>
 @endpush

@@ -13,7 +13,7 @@ class DQE extends Model
 
     protected $fillable = [
         'contrat_id', 'reference', 'montant_total_ht', 'montant_total_ttc',
-        'statut', 'notes'
+        'statut', 'notes', 'date_validation', 'date_rejet'
     ];
 
     /**
@@ -37,7 +37,7 @@ class DQE extends Model
      */
     public function debourses()
     {
-        return $this->hasMany(Debourse::class, 'dqe_id');
+        return $this->hasMany(DebourseSec::class, 'dqe_id');
     }
 
     /**

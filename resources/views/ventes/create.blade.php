@@ -89,26 +89,42 @@
                         </div>
 
                         <!-- Section Articles -->
-                        <div class="app-card mt-4">
-                            <div class="app-card-header">
-                                <h3 class="app-card-title">
-                                    <i class="fas fa-boxes me-2"></i>Articles
-                                </h3>
-                                <div class="app-card-actions">
-                                    <button type="button" id="add-article-btn" class="app-btn app-btn-success app-btn-sm">
-                                        <i class="fas fa-plus me-2"></i>Ajouter un article
-                                    </button>
-                                </div>
+                        <div class="app-card-header mt-4">
+                            <h3 class="app-card-title">
+                                <i class="fas fa-boxes me-2"></i>Articles
+                            </h3>
+                            <div class="app-card-actions">
+                                <button type="button" id="add-article-btn" class="app-btn app-btn-success app-btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Ajouter un article
+                                </button>
                             </div>
-                            
-                            <div class="app-card-body">
-                                <!-- Zone dynamique pour les articles -->
-                                <div id="articles-container" class="app-gap-3">
-                                    <div class="text-center text-muted py-4" id="no-articles-message">
-                                        <i class="fas fa-box-open fa-3x mb-3"></i>
-                                        <p>Aucun article ajouté. Cliquez sur "Ajouter un article" pour commencer.</p>
-                                    </div>
-                                </div>
+                        </div>
+                        
+                        <!-- Zone dynamique pour les articles -->
+                        <div id="articles-container" class="app-gap-3">
+                            <div class="text-center text-muted py-4" id="no-articles-message">
+                                <i class="fas fa-box-open fa-3x mb-3"></i>
+                                <p>Aucun article ajouté. Cliquez sur "Ajouter un article" pour commencer.</p>
+                            </div>
+                        </div>
+
+                        <!-- Section des prestations -->
+                        <div class="app-card-header mt-4">
+                            <h4 class="app-card-title">
+                                <i class="fas fa-tools me-2"></i>Prestations
+                            </h4>
+                            <div class="app-card-tools">
+                                <button type="button" class="app-btn app-btn-secondary app-btn-sm" id="add-prestation-btn">
+                                    <i class="fas fa-plus me-2"></i>Ajouter une prestation
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Zone dynamique pour les prestations -->
+                        <div id="prestations-container" class="app-gap-3">
+                            <div class="text-center text-muted py-4" id="no-prestations-message">
+                                <i class="fas fa-tools fa-3x mb-3"></i>
+                                <p>Aucune prestation ajoutée. Cliquez sur "Ajouter une prestation" pour commencer.</p>
                             </div>
                         </div>
 
@@ -164,19 +180,34 @@
 <script>
     let articles = @json($articles);
     let devis = @json($devis);
+    let clients = @json($clients);
     let articlesContainer = document.getElementById("articles-container");
     let noArticlesMessage = document.getElementById("no-articles-message");
     let articleIndex = 0;
+    let prestationsContainer = document.getElementById("prestations-container");
+    let noPrestationsMessage = document.getElementById("no-prestations-message");
+    let prestationIndex = 0;
 
-    // Gestion de la sélection du client pour charger les devis
+    // Gestion de la sélection du client pour charger les devis et remplir les infos
     document.getElementById('client_id').addEventListener('change', function() {
         const clientId = this.value;
         const devisSelect = document.getElementById('devis_id');
+        const numeroClientInput = document.getElementById('numero_client');
+        const nomClientInput = document.getElementById('nom_client');
         
         // Vider la liste des devis
         devisSelect.innerHTML = '<option value="">Sélectionner un devis ou créer une nouvelle vente</option>';
         
         if (clientId) {
+            // Trouver le client sélectionné
+            const selectedClient = clients.find(c => c.id == clientId);
+            
+            // Remplir automatiquement le numéro et le nom du client
+            if (selectedClient) {
+                numeroClientInput.value = selectedClient.code || '';
+                nomClientInput.value = selectedClient.nom || selectedClient.nom_raison_sociale || '';
+            }
+            
             // Filtrer les devis pour ce client
             const clientDevis = devis.filter(d => d.client_id == clientId);
             
@@ -187,6 +218,10 @@
                 option.dataset.devis = JSON.stringify(devis);
                 devisSelect.appendChild(option);
             });
+        } else {
+            // Vider les champs si aucun client sélectionné
+            numeroClientInput.value = '';
+            nomClientInput.value = '';
         }
     });
 
@@ -225,10 +260,9 @@
         noArticlesMessage.style.display = 'none';
         
         let div = document.createElement("div");
-        div.classList.add("article-item", "app-card", "mb-3");
+        div.classList.add("article-item", "mb-3");
 
         div.innerHTML = `
-            <div class="app-card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="app-form-group">
@@ -240,7 +274,7 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Unité</label>
-                            <div class="app-form-control bg-light">${article.unite_mesure || 'Unité'}</div>
+                            <div class="app-form-control bg-light">${article.unite_mesure?.ref || 'Unité'}</div>
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -253,17 +287,17 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Prix Unitaire HT</label>
-                            <div class="app-form-control bg-light">${parseFloat(article.pivot.prix_unitaire_ht).toLocaleString()} FCFA</div>
+                            <div class="app-form-control bg-light">${parseFloat(article.pivot.prix_unitaire).toLocaleString()} FCFA</div>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Montant Total</label>
-                            <div class="app-form-control bg-light article-price">${parseFloat(article.pivot.montant_total).toLocaleString()} FCFA</div>
+                            <div class="app-form-control bg-light article-price">${parseFloat(article.pivot.sous_total).toLocaleString()} FCFA</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            
         `;
 
         articlesContainer.appendChild(div);
@@ -275,19 +309,18 @@
         noArticlesMessage.style.display = 'none';
         
         let div = document.createElement("div");
-        div.classList.add("article-item", "app-card", "mb-3");
+        div.classList.add("article-item", "mb-3");
 
         div.innerHTML = `
-            <div class="app-card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="app-form-group">
                             <label class="app-form-label">
                                 <i class="fas fa-box me-2"></i>Article
                             </label>
                             <select name="articles[${articleIndex}][id]" class="app-form-select article-select" required>
                                 <option value="">-- Sélectionner un article --</option>
-                                ${articles.map(article => `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure || 'Unité'}">${article.nom}</option>`).join('')}
+                                ${articles.map(article => `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure?.ref || 'Unité'}">${article.nom}</option>`).join('')}
                             </select>
                         </div>
                     </div>
@@ -308,12 +341,12 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">
-                                <i class="fas fa-euro-sign me-2"></i>Prix Unitaire HT
+                                <i class="fas fa-money-bill-wave me-2"></i>Prix Unitaire HT
                             </label>
                             <input type="number" name="articles[${articleIndex}][prix_unitaire]" class="app-form-control price-input" min="0" step="0.01" placeholder="Prix HT" required>
                         </div>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Montant Total</label>
                             <div class="app-form-control bg-light article-price">0 FCFA</div>
@@ -328,7 +361,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            
         `;
 
         articlesContainer.appendChild(div);
@@ -383,9 +416,81 @@
         priceInput.addEventListener("input", updateSubtotal);
     });
 
+    // Gestion des prestations
+    document.getElementById("add-prestation-btn").addEventListener("click", function () {
+        // Masquer le message "aucune prestation"
+        noPrestationsMessage.style.display = 'none';
+        
+        let div = document.createElement("div");
+        div.classList.add("prestation-item", "mb-3");
+
+        div.innerHTML = `
+         
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="app-form-group">
+                            <label class="app-form-label">
+                                <i class="fas fa-tools me-2"></i>Nom de la prestation
+                            </label>
+                            <input type="text" name="prestations[${prestationIndex}][nom]" class="app-form-control" placeholder="Nom de la prestation" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="app-form-group">
+                            <label class="app-form-label">
+                                <i class="fas fa-sort-numeric-up me-2"></i>Quantité
+                            </label>
+                            <input type="number" name="prestations[${prestationIndex}][quantite]" class="app-form-control prestation-quantity" min="1" value="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="app-form-group">
+                            <label class="app-form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>Montant
+                            </label>
+                            <input type="number" name="prestations[${prestationIndex}][montant]" class="app-form-control prestation-montant" min="0" step="0.01" placeholder="Montant" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="app-form-group">
+                            <label class="app-form-label">&nbsp;</label>
+                            <button type="button" class="app-btn app-btn-danger app-btn-sm remove-prestation w-100">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            
+        `;
+
+        prestationsContainer.appendChild(div);
+        prestationIndex++;
+
+        updateTotal();
+
+        // Ajouter l'événement de suppression
+        div.querySelector(".remove-prestation").addEventListener("click", function () {
+            div.remove();
+            updateTotal();
+            
+            // Afficher le message si aucune prestation
+            if (prestationsContainer.children.length === 1) {
+                noPrestationsMessage.style.display = 'block';
+            }
+        });
+
+        // Mise à jour du total lors des changements
+        let quantityInput = div.querySelector(".prestation-quantity");
+        let montantInput = div.querySelector(".prestation-montant");
+
+        quantityInput.addEventListener("input", updateTotal);
+        montantInput.addEventListener("input", updateTotal);
+    });
+
     function updateTotal() {
         let totalHT = 0;
 
+        // Calculer le total des articles
         document.querySelectorAll(".article-item").forEach(function (item) {
             let priceElement = item.querySelector(".article-price");
             if (priceElement) {
@@ -404,6 +509,18 @@
                     let quantity = parseInt(quantityInput.value) || 1;
                     totalHT += price * quantity;
                 }
+            }
+        });
+
+        // Calculer le total des prestations
+        document.querySelectorAll(".prestation-item").forEach(function (item) {
+            let quantityInput = item.querySelector(".prestation-quantity");
+            let montantInput = item.querySelector(".prestation-montant");
+            
+            if (quantityInput && montantInput) {
+                let quantity = parseInt(quantityInput.value) || 1;
+                let montant = parseFloat(montantInput.value) || 0;
+                totalHT += quantity * montant;
             }
         });
 

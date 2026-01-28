@@ -30,12 +30,13 @@ class UserController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required|in:utilisateur,admin',
+            'role' => 'required|in:employe,admin',
             'status' => 'required|in:actif,inactif',
         ]);
 
         $user = new User();
-        $user->name = $request->name;
+        $user->nom = $request->name;
+        $user->prenom = $request->prenom;
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
         $user->role = $request->role;
@@ -70,12 +71,13 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required|in:utilisateur,admin',
+            'role' => 'required|in:employe,admin',
             'status' => 'required|in:actif,inactif',
         ]);
 
         $user = User::findOrFail($id);
-        $user->name = $request->name;
+        $user->nom = $request->name;
+        $user->prenom = $request->prenom;
         $user->email = $request->email;
         $user->role = $request->role;
         $user->status = $request->status;

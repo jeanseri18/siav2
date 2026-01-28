@@ -100,7 +100,7 @@
                                     <i class="fas fa-user me-2"></i>Créé par
                                 </label>
                                 <div class="app-form-control bg-light">
-                                    {{ $demandeCotation->user ? $demandeCotation->user->name : 'N/A' }}
+                                    {{ $demandeCotation->user ? $demandeCotation->user->nom : 'N/A' }}
                                 </div>
                             </div>
                         </div>
@@ -240,7 +240,7 @@
                                         <div class="item-icon">
                                             <i class="fas fa-building text-primary"></i>
                                         </div>
-                                        <span>{{ $fournisseur->fournisseur->nom_raison_sociale }}</span>
+                                        <span>{{ $fournisseur->fournisseur->nom_raison_sociale }}{{ $fournisseur->fournisseur->prenoms }}</span>
                                     </div>
                                 </td>
                                 <td class="text-center">

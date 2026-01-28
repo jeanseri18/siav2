@@ -7,8 +7,12 @@ use App\Models\LigneBonCommande;
 use App\Models\ClientFournisseur;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
+use App\Models\DemandeCotation;
 use App\Models\Article;
 use App\Models\Reference;
+use App\Models\Projet;
+use App\Models\ModePaiement;
+use App\Models\ConfigGlobal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -26,9 +30,12 @@ class BonCommandeController extends Controller
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
         $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')->get();
         $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
-        $articles = Article::all();
+        $demandesCotation = DemandeCotation::with('demandeAchat')->where('statut', 'terminée')->get();
+        $projets = Projet::all();
+        $modesPaiement = ModePaiement::all();
+        $articles = Article::with('uniteMesure')->get();
         
-        return view('bon_commandes.create', compact('fournisseurs', 'demandesAppro', 'demandesAchat', 'articles'));
+        return view('bon_commandes.create', compact('fournisseurs', 'demandesAppro', 'demandesAchat', 'demandesCotation', 'projets', 'modesPaiement', 'articles'));
     }
 
     public function store(Request $request)
@@ -39,6 +46,8 @@ class BonCommandeController extends Controller
             'date_livraison_prevue' => 'nullable|date|after_or_equal:date_commande',
             'conditions_paiement' => 'nullable|string',
             'notes' => 'nullable|string',
+            'mode_reglement' => 'nullable|string',
+            'delai_reglement' => 'nullable|string',
             'article_id' => 'required|array',
             'article_id.*' => 'exists:articles,id',
             'quantite' => 'required|array',
@@ -56,11 +65,14 @@ class BonCommandeController extends Controller
         $newReference = $lastReference ? $lastReference->ref : 'PO_0000';
         $newReference = 'PO_' . now()->format('YmdHis');
 
-        // Calculer le montant total
+        // Calculer le montant total avec remises
         $montantTotal = 0;
         for ($i = 0; $i < count($request->article_id); $i++) {
             if ($request->article_id[$i] && $request->quantite[$i] > 0 && $request->prix_unitaire[$i] > 0) {
-                $montantTotal += $request->quantite[$i] * $request->prix_unitaire[$i];
+                $montantBrut = $request->quantite[$i] * $request->prix_unitaire[$i];
+                $remise = $request->remise[$i] ?? 0;
+                $montantRemise = $montantBrut * ($remise / 100);
+                $montantTotal += $montantBrut - $montantRemise;
             }
         }
 
@@ -71,11 +83,16 @@ class BonCommandeController extends Controller
             'fournisseur_id' => $request->fournisseur_id,
             'demande_approvisionnement_id' => $request->demande_approvisionnement_id,
             'demande_achat_id' => $request->demande_achat_id,
+            'projet_id' => $request->projet_id,
+            'demande_cotation_id' => $request->demande_cotation_id,
             'user_id' => Auth::id(),
             'montant_total' => $montantTotal,
             'date_livraison_prevue' => $request->date_livraison_prevue,
             'conditions_paiement' => $request->conditions_paiement,
             'notes' => $request->notes,
+            'mode_reglement' => $request->mode_reglement,
+            'delai_reglement' => $request->delai_reglement,
+            'lieu_livraison' => $request->lieu_livraison,
             'statut' => 'en attente'
         ]);
 
@@ -87,6 +104,7 @@ class BonCommandeController extends Controller
                     'article_id' => $request->article_id[$i],
                     'quantite' => $request->quantite[$i],
                     'prix_unitaire' => $request->prix_unitaire[$i],
+                    'remise' => $request->remise[$i] ?? 0,
                     'quantite_livree' => 0,
                     'commentaire' => $request->commentaire[$i] ?? null
                 ]);
@@ -119,11 +137,14 @@ class BonCommandeController extends Controller
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
         $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')->get();
         $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
-        $articles = Article::all();
+        $demandesCotation = DemandeCotation::with('demandeAchat')->where('statut', 'terminée')->get();
+        $projets = Projet::all();
+        $modesPaiement = ModePaiement::all();
+        $articles = Article::with('uniteMesure')->get();
         
         $bonCommande->load(['lignes.article']);
         
-        return view('bon_commandes.edit', compact('bonCommande', 'fournisseurs', 'demandesAppro', 'demandesAchat', 'articles'));
+        return view('bon_commandes.edit', compact('bonCommande', 'fournisseurs', 'demandesAppro', 'demandesAchat', 'demandesCotation', 'projets', 'modesPaiement', 'articles'));
     }
 
     public function update(Request $request, BonCommande $bonCommande)
@@ -139,6 +160,8 @@ class BonCommandeController extends Controller
             'date_livraison_prevue' => 'nullable|date|after_or_equal:date_commande',
             'conditions_paiement' => 'nullable|string',
             'notes' => 'nullable|string',
+            'mode_reglement' => 'nullable|string',
+            'delai_reglement' => 'nullable|string',
             'article_id' => 'required|array',
             'article_id.*' => 'exists:articles,id',
             'quantite' => 'required|array',
@@ -147,11 +170,14 @@ class BonCommandeController extends Controller
             'prix_unitaire.*' => 'numeric|min:0'
         ]);
 
-        // Calculer le montant total
+        // Calculer le montant total avec remises
         $montantTotal = 0;
         for ($i = 0; $i < count($request->article_id); $i++) {
             if ($request->article_id[$i] && $request->quantite[$i] > 0 && $request->prix_unitaire[$i] > 0) {
-                $montantTotal += $request->quantite[$i] * $request->prix_unitaire[$i];
+                $montantBrut = $request->quantite[$i] * $request->prix_unitaire[$i];
+                $remise = $request->remise[$i] ?? 0;
+                $montantRemise = $montantBrut * ($remise / 100);
+                $montantTotal += $montantBrut - $montantRemise;
             }
         }
 
@@ -161,10 +187,15 @@ class BonCommandeController extends Controller
             'fournisseur_id' => $request->fournisseur_id,
             'demande_approvisionnement_id' => $request->demande_approvisionnement_id,
             'demande_achat_id' => $request->demande_achat_id,
+            'projet_id' => $request->projet_id,
+            'demande_cotation_id' => $request->demande_cotation_id,
             'montant_total' => $montantTotal,
             'date_livraison_prevue' => $request->date_livraison_prevue,
             'conditions_paiement' => $request->conditions_paiement,
-            'notes' => $request->notes
+            'notes' => $request->notes,
+            'mode_reglement' => $request->mode_reglement,
+            'delai_reglement' => $request->delai_reglement,
+            'lieu_livraison' => $request->lieu_livraison
         ]);
 
         // Supprimer les anciennes lignes
@@ -178,6 +209,7 @@ class BonCommandeController extends Controller
                     'article_id' => $request->article_id[$i],
                     'quantite' => $request->quantite[$i],
                     'prix_unitaire' => $request->prix_unitaire[$i],
+                    'remise' => $request->remise[$i] ?? 0,
                     'quantite_livree' => 0,
                     'commentaire' => $request->commentaire[$i] ?? null
                 ]);
@@ -293,6 +325,57 @@ class BonCommandeController extends Controller
     }
 
     /**
+     * Récupérer la demande d'achat liée à une demande de cotation
+     */
+    public function getDemandeAchatFromCotation($demandeCotationId)
+    {
+        $demandeCotation = DemandeCotation::with([
+            'demandeAchat.demandeApprovisionnement',
+            'demandeAchat.projet',
+            'fournisseurs.fournisseur'
+        ])->find($demandeCotationId);
+        
+        $response = ['success' => false];
+        
+        if ($demandeCotation && $demandeCotation->demandeAchat) {
+            $response = [
+                'success' => true,
+                'demande_achat_id' => $demandeCotation->demandeAchat->id,
+                'demande_achat_reference' => $demandeCotation->demandeAchat->reference
+            ];
+            
+            // Ajouter la demande d'approvisionnement si elle existe
+            if ($demandeCotation->demandeAchat->demandeApprovisionnement) {
+                $response['demande_approvisionnement_id'] = $demandeCotation->demandeAchat->demandeApprovisionnement->id;
+                $response['demande_approvisionnement_reference'] = $demandeCotation->demandeAchat->demandeApprovisionnement->reference;
+            }
+            
+            // Ajouter le projet si il existe
+            if ($demandeCotation->demandeAchat->projet) {
+                $response['projet_id'] = $demandeCotation->demandeAchat->projet->id;
+                $response['projet_nom'] = $demandeCotation->demandeAchat->projet->nom_projet;
+            }
+            
+            // Chercher le fournisseur retenu
+            $fournisseurRetenu = $demandeCotation->fournisseurs->where('retenu', true)->first();
+            
+            if ($fournisseurRetenu && $fournisseurRetenu->fournisseur) {
+                $response['fournisseur'] = [
+                    'id' => $fournisseurRetenu->fournisseur->id,
+                    'nom' => $fournisseurRetenu->fournisseur->nom_raison_sociale,
+                    'prenoms' => $fournisseurRetenu->fournisseur->prenoms,
+                    'mode_paiement' => $fournisseurRetenu->fournisseur->mode_paiement,
+                    'delai_paiement' => $fournisseurRetenu->fournisseur->delai_paiement
+                ];
+            }
+        } else {
+            $response['message'] = 'Aucune demande d\'achat liée trouvée';
+        }
+        
+        return response()->json($response);
+    }
+
+    /**
      * Exporter un bon de commande en PDF
      */
     public function exportPDF($id)
@@ -305,7 +388,10 @@ class BonCommandeController extends Controller
             'demandeAchat'
         ])->findOrFail($id);
         
-        $pdf = PDF::loadView('bon_commandes.pdf', compact('bonCommande'))
+        // Récupérer les configurations globales
+        $configGlobal = ConfigGlobal::first();
+        
+        $pdf = PDF::loadView('bon_commandes.bon_commande_pdf', compact('bonCommande', 'configGlobal'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->download('Bon_Commande_' . $bonCommande->reference . '.pdf');

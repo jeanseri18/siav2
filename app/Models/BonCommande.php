@@ -17,12 +17,17 @@ class BonCommande extends Model
         'fournisseur_id',
         'demande_approvisionnement_id',
         'demande_achat_id',
+        'projet_id',
+        'demande_cotation_id',
         'user_id',
         'montant_total',
         'date_livraison_prevue',
         'statut',
         'conditions_paiement',
-        'notes'
+        'notes',
+        'mode_reglement',
+        'delai_reglement',
+        'lieu_livraison'
     ];
 
     protected $casts = [
@@ -44,6 +49,16 @@ class BonCommande extends Model
     public function demandeAchat()
     {
         return $this->belongsTo(DemandeAchat::class, 'demande_achat_id');
+    }
+
+    public function projet()
+    {
+        return $this->belongsTo(Projet::class, 'projet_id');
+    }
+
+    public function demandeCotation()
+    {
+        return $this->belongsTo(DemandeCotation::class, 'demande_cotation_id');
     }
 
     public function user()

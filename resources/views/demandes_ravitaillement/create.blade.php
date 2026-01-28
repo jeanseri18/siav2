@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('sublayouts.contrat')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -69,38 +70,15 @@
                             </div>
                         </div>
 
+                        <!-- Champ caché pour le contrat_id depuis la session -->
+                        <input type="hidden" name="contrat_id" value="{{ $contratSessionId }}">
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="contrat_id" class="form-label">Contrat <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('contrat_id') is-invalid @enderror" id="contrat_id" name="contrat_id" required>
-                                        <option value="">Sélectionner un contrat</option>
-                                        @foreach($contrats as $contrat)
-                                            <option value="{{ $contrat->id }}" {{ old('contrat_id') == $contrat->id ? 'selected' : '' }}>
-                                                {{ $contrat->reference }} - {{ $contrat->client->nom ?? 'N/A' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('contrat_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="fournisseur_id" class="form-label">Fournisseur</label>
-                                    <select class="form-select @error('fournisseur_id') is-invalid @enderror" id="fournisseur_id" name="fournisseur_id">
-                                        <option value="">Sélectionner un fournisseur</option>
-                                        @foreach($fournisseurs as $fournisseur)
-                                            <option value="{{ $fournisseur->id }}" {{ old('fournisseur_id') == $fournisseur->id ? 'selected' : '' }}>
-                                    {{ $fournisseur->nom_raison_sociale }}                                     {{ $fournisseur->prenoms }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('fournisseur_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <label>Demandeur</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                                    <input type="hidden" name="demandeur_id" value="{{ Auth::user()->id }}">
                                 </div>
                             </div>
                         </div>
@@ -123,19 +101,6 @@
                                     <input type="date" class="form-control @error('date_livraison_souhaitee') is-invalid @enderror" 
                                            id="date_livraison_souhaitee" name="date_livraison_souhaitee" value="{{ old('date_livraison_souhaitee') }}">
                                     @error('date_livraison_souhaitee')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group mb-3">
-                                    <label for="description" class="form-label">Description</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" 
-                                              id="description" name="description" rows="3">{{ old('description') }}</textarea>
-                                    @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -221,13 +186,7 @@
                 </div>
             </div>
             
-            <div class="col-md-2">
-                <div class="form-group mb-3">
-                    <label class="form-label">Prix unitaire estimé</label>
-                    <input type="number" class="form-control prix-input" name="lignes[INDEX][prix_unitaire_estime]" 
-                           step="0.01" min="0">
-                </div>
-            </div>
+
             
             <div class="col-md-1">
                 <div class="form-group mb-3">
@@ -239,15 +198,7 @@
             </div>
         </div>
         
-        <div class="row">
-            <div class="col-md-11">
-                <div class="form-group mb-0">
-                    <label class="form-label">Description</label>
-                    <input type="text" class="form-control" name="lignes[INDEX][description]" 
-                           placeholder="Description optionnelle de l'article">
-                </div>
-            </div>
-        </div>
+
     </div>
 </template>
 @endsection

@@ -16,7 +16,7 @@ class DocumentController extends Controller
     {
         $projet_id = session('projet_id');
         $projets = Projet::all();
-    $articles = Article::all();
+        $articles = Article::all();
         // Récupérer uniquement les documents du projet en session
         $documents = Document::where('id_projet', $projet_id)->get();
     
@@ -26,9 +26,14 @@ class DocumentController extends Controller
     {
         $projet_id = session('projet_id');
         $projets = Projet::all();
-    $articles = Article::all();
-        // Récupérer uniquement les documents du projet en session
-        $documents = Document::where('id_projet', $projet_id)->get();
+        $articles = Article::all();
+        
+        // Récupérer le contrat du projet en session
+        $projet = Projet::find($projet_id);
+        $contrats_ids = $projet ? $projet->contrats()->pluck('id') : collect();
+        
+        // Récupérer uniquement les documents liés aux contrats du projet
+        $documents = Document::whereIn('id_contrat', $contrats_ids)->get();
     
         return view('documents.index_contrat', compact('documents','projets','articles'));
     }

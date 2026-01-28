@@ -231,7 +231,7 @@
                 <td>{{ $ligne->article ? $ligne->article->nom : $ligne->designation }}</td>
                 <td>{{ $ligne->description ?: 'N/A' }}</td>
                 <td class="text-center">{{ $ligne->quantite }}</td>
-                <td>{{ $ligne->unite_mesure }}</td>
+                <td>{{ $ligne->article->uniteMesure->ref ?? '' }}</td>
                 <td class="text-right">{{ number_format($ligne->prix_unitaire, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right">{{ number_format($total, 0, ',', ' ') }} FCFA</td>
             </tr>
@@ -257,7 +257,7 @@
         <h3>Informations de validation</h3>
         <div class="info-row">
             <div class="info-label">Demandé par:</div>
-            <div class="info-value">{{ $demandeApprovisionnement->user ? $demandeApprovisionnement->user->name : 'N/A' }}</div>
+            <div class="info-value">{{ $demandeApprovisionnement->user ? $demandeApprovisionnement->user->nom : 'N/A' }}</div>
         </div>
         <div class="info-row">
             <div class="info-label">Date de création:</div>

@@ -259,7 +259,7 @@
         <h3>Informations de validation</h3>
         <div class="info-row">
             <div class="info-label">Demandé par:</div>
-            <div class="info-value">{{ $demandeAchat->user ? $demandeAchat->user->name : 'N/A' }}</div>
+            <div class="info-value">{{ $demandeAchat->user ? $demandeAchat->user->nom : 'N/A' }}</div>
         </div>
         <div class="info-row">
             <div class="info-label">Date de création:</div>

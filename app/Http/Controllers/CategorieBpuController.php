@@ -13,9 +13,12 @@ class CategorieBpuController extends Controller
             'nom' => 'required|string|max:255',
         ]);
         
+        $contratId = session('contrat_id');
+        
         CategorieRubrique::create([
             'nom' => $request->nom,
             'type' => 'bpu',
+            'contrat_id' => $contratId,
         ]);
         
         return back()->with('success', 'Catégorie créée avec succès.');

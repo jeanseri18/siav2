@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('sublayouts.contrat')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -33,11 +34,11 @@
                                     <th>Référence</th>
                                     <th>Objet</th>
                                     <th>Contrat</th>
+                                    <th>Projet</th>
                                     <th>Demandeur</th>
                                     <th>Statut</th>
                                     <th>Priorité</th>
                                     <th>Date Demande</th>
-                                    <th>Montant Estimé</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -54,6 +55,13 @@
                                                 @endif
                                             @else
                                                 N/A
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($demande->contrat && $demande->contrat->projet)
+                                                {{ $demande->contrat->projet->nom }}
+                                            @else
+                                                Aucun projet
                                             @endif
                                         </td>
                                         <td>
@@ -89,13 +97,6 @@
                                             <span class="badge bg-{{ $priorityClass }}">{{ $demande->priorite_label }}</span>
                                         </td>
                                         <td>{{ $demande->date_demande->format('d/m/Y') }}</td>
-                                        <td>
-                                            @if($demande->montant_estime)
-                                                {{ number_format($demande->montant_estime, 0, ',', ' ') }} FCFA
-                                            @else
-                                                N/A
-                                            @endif
-                                        </td>
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
@@ -162,8 +163,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center">Aucune demande de ravitaillement trouvée</td>
-                                    </tr>
+                                    <td colspan="8" class="text-center">Aucune demande de ravitaillement trouvée</td>
+                                </tr>
                                 @endforelse
                             </tbody>
                         </table>

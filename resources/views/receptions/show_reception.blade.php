@@ -43,7 +43,7 @@
                                     <p><strong>Statut:</strong> 
                                         <span class="badge {{ $reception->statut_badge_class }}">{{ $reception->statut_formate }}</span>
                                     </p>
-                                    <p><strong>Réceptionné par:</strong> {{ $reception->user->name }}</p>
+                                    <p><strong>Réceptionné par:</strong> {{ $reception->user->nom }}</p>
                                 </div>
                             </div>
                         </div>

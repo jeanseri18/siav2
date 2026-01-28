@@ -4,7 +4,7 @@
 @section('page-title', 'Liste des Transferts de Stock')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('projets.index') }}">Projets</a></li>
+<li class="breadcrumb-item">Projets</li>
 <li class="breadcrumb-item active">Transferts de Stock</li>
 @endsection
 
@@ -18,12 +18,12 @@
                 <i class="fas fa-exchange-alt me-2"></i>Liste des Transferts de Stock
             </h2>
             <div class="app-card-actions">
-                <button type="button" class="app-btn app-btn-primary app-btn-icon" data-bs-toggle="modal" data-bs-target="#transfertModal">
+                <a href="{{ route('transferts.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Effectuer un transfert
-                </button>
+                </a>
             </div>
         </div>
-
+        
         @if(session('success'))
         <div class="app-alert app-alert-success">
             <div class="app-alert-icon">
@@ -37,7 +37,7 @@
             </button>
         </div>
         @endif
-
+        
         @if(session('error'))
         <div class="app-alert app-alert-danger">
             <div class="app-alert-icon">
@@ -51,7 +51,7 @@
             </button>
         </div>
         @endif
-
+        
         <div class="app-card-body app-table-responsive">
             <table id="Table" class="app-table display">
                 <thead>
@@ -94,11 +94,11 @@
 </div>
 
 <!-- Modal de Transfert -->
-<div class="modal fade" id="transfertModal" tabindex="-1" aria-labelledby="transfertModalLabel" aria-hidden="true">
+<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content app-modal">
             <div class="app-modal-header">
-                <h5 class="app-modal-title" id="transfertModalLabel">
+                <h5 class="app-modal-title" id="transferModalLabel">
                     <i class="fas fa-exchange-alt me-2"></i>
                     Transférer du Stock
                 </h5>
@@ -109,17 +109,20 @@
             <div class="app-modal-body">
                 <form action="{{ route('transferts.store') }}" method="POST" class="app-form" id="transfertForm">
                     @csrf
+                    @if(session('projet_id'))
+                    <input type="hidden" name="projet_source" value="{{ session('projet_id') }}">
+                    @endif
                     
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
-                                <label for="id_projet_source" class="app-form-label">
+                                <label for="projet_source" class="app-form-label">
                                     <i class="fas fa-building me-2"></i>Projet Source
                                 </label>
-                                <select name="id_projet_source" id="id_projet_source" class="app-form-select" required>
+                                <select name="projet_source" id="projet_source" class="app-form-select" required @if(session('projet_id')) disabled @endif>
                                     <option value="">-- Sélectionner le projet source --</option>
                                     @foreach($projets as $projet)
-                                    <option value="{{ $projet->id }}">{{ $projet->nom_projet }}</option>
+                                    <option value="{{ $projet->id }}" data-projet-id="{{ $projet->id }}" @if(session('projet_id') == $projet->id) selected @endif>{{ $projet->nom_projet }}</option>
                                     @endforeach
                                 </select>
                                 <div class="app-form-text">Le projet d'où provient le stock</div>
@@ -128,13 +131,13 @@
 
                         <div class="app-form-col">
                             <div class="app-form-group">
-                                <label for="id_projet_destination" class="app-form-label">
+                                <label for="projet_destination" class="app-form-label">
                                     <i class="fas fa-bullseye me-2"></i>Projet Destination
                                 </label>
-                                <select name="id_projet_destination" id="id_projet_destination" class="app-form-select" required>
+                                <select name="projet_destination" id="projet_destination" class="app-form-select" required>
                                     <option value="">-- Sélectionner le projet destination --</option>
                                     @foreach($projets as $projet)
-                                    <option value="{{ $projet->id }}">{{ $projet->nom_projet }}</option>
+                                    <option value="{{ $projet->id }}" data-projet-id="{{ $projet->id }}">{{ $projet->nom_projet }}</option>
                                     @endforeach
                                 </select>
                                 <div class="app-form-text">Le projet où le stock sera transféré</div>
@@ -145,10 +148,10 @@
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
-                                <label for="article_id" class="app-form-label">
+                                <label for="article" class="app-form-label">
                                     <i class="fas fa-box me-2"></i>Article
                                 </label>
-                                <select name="article_id" id="article_id" class="app-form-select" required>
+                                <select name="article" id="article" class="app-form-select" required>
                                     <option value="">-- Sélectionner un article --</option>
                                     @foreach($articles as $article)
                                     <option value="{{ $article->id }}">{{ $article->nom }}</option>
@@ -191,49 +194,107 @@
 </div>
 
 @push('styles')
-<link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
+<style>
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 0.8em;
+    }
+</style>
 @endpush
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.js"></script>
 <script>
-    $(document).ready(function () {
-        // Configuration DataTable
-        $('#Table').DataTable({
-            responsive: true,
-            dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
-            buttons: [
-                {
-                    extend: 'collection',
-                    text: '<i class="fas fa-file-export"></i> Exporter',
-                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-                },
-                {
-                    extend: 'colvis',
-                    text: '<i class="fas fa-columns"></i> Colonnes'
-                }
-            ],
-            language: {
-                url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+document.addEventListener('DOMContentLoaded', function() {
+    const projetSource = document.getElementById('projet_source');
+    const projetDestination = document.getElementById('projet_destination');
+    
+    // Fonction pour filtrer les options
+    function filterProjetOptions() {
+        const sourceValue = projetSource.value;
+        const destinationValue = projetDestination.value;
+        
+        // Réinitialiser toutes les options (les rendre visibles)
+        Array.from(projetSource.options).forEach(option => {
+            if (option.value !== '') {
+                option.style.display = '';
+                option.disabled = false;
             }
         });
         
-        // Amélioration visuelle des boutons DataTables
-        $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
-        
-        // Contrôle pour éviter qu'un projet soit à la fois source et destination
-        $('#id_projet_source, #id_projet_destination').change(function() {
-            const sourceValue = $('#id_projet_source').val();
-            const destValue = $('#id_projet_destination').val();
-            
-            if (sourceValue && destValue && sourceValue === destValue) {
-                alert('Le projet source et le projet destination ne peuvent pas être identiques.');
-                $(this).val('');
+        Array.from(projetDestination.options).forEach(option => {
+            if (option.value !== '') {
+                option.style.display = '';
+                option.disabled = false;
             }
+        });
+        
+        // Cacher le projet source dans la liste destination
+        if (sourceValue) {
+            Array.from(projetDestination.options).forEach(option => {
+                if (option.value === sourceValue) {
+                    option.style.display = 'none';
+                    option.disabled = true;
+                }
+            });
+            
+            // Si le projet destination sélectionné est le même que la source, le réinitialiser
+            if (destinationValue === sourceValue) {
+                projetDestination.value = '';
+            }
+        }
+        
+        // Cacher le projet destination dans la liste source
+        if (destinationValue) {
+            Array.from(projetSource.options).forEach(option => {
+                if (option.value === destinationValue) {
+                    option.style.display = 'none';
+                    option.disabled = true;
+                }
+            });
+            
+            // Si le projet source sélectionné est le même que la destination, le réinitialiser
+            if (sourceValue === destinationValue) {
+                projetSource.value = '';
+            }
+        }
+    }
+    
+    // Appliquer le filtrage immédiatement si un projet source est sélectionné
+    if (projetSource.value) {
+        filterProjetOptions();
+    }
+    
+    // Écouter les changements sur les deux sélecteurs (uniquement si projet source n'est pas grisé)
+    if (!projetSource.disabled) {
+        projetSource.addEventListener('change', filterProjetOptions);
+    }
+    projetDestination.addEventListener('change', filterProjetOptions);
+    
+    // Réinitialiser le formulaire quand le modal est fermé
+    const transferModal = document.getElementById('transferModal');
+    transferModal.addEventListener('hidden.bs.modal', function() {
+        // Réinitialiser le formulaire
+        transferModal.querySelector('form').reset();
+        
+        // Réafficher toutes les options (uniquement si projet source n'est pas grisé)
+        if (!projetSource.disabled) {
+            Array.from(projetSource.options).forEach(option => {
+                option.style.display = '';
+                option.disabled = false;
+            });
+        }
+        
+        Array.from(projetDestination.options).forEach(option => {
+            option.style.display = '';
+            option.disabled = false;
         });
     });
+    
+    // Définir la date du jour par défaut
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_transfert').value = today;
+});
 </script>
 @endpush
+
 @endsection

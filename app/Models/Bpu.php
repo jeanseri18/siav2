@@ -12,8 +12,8 @@ class Bpu extends Model
     protected $table = 'bpus';
     
     protected $fillable = [
-        'designation', 'qte', 'materiaux', 'unite', 'main_oeuvre', 'materiel',
-        'debourse_sec', 'frais_chantier', 'frais_general', 'marge_nette', 'pu_ht', 'pu_ttc', 'id_rubrique', 'contrat_id'
+        'code', 'designation', 'qte', 'materiaux', 'taux_mo', 'unite', 'main_oeuvre', 'taux_mat', 'materiel',
+        'debourse_sec', 'taux_fc', 'frais_chantier', 'taux_fg', 'frais_general', 'taux_benefice', 'marge_nette', 'pu_ht', 'pu_ttc', 'id_rubrique', 'contrat_id'
     ];
     
     public function rubrique()
@@ -22,12 +22,12 @@ class Bpu extends Model
     }
     
     /**
-     * Relation avec les lignes de DQE
+     * Relation avec les lignes de DQE via la rubrique
      */
-    public function dqeLignes()
-    {
-        return $this->hasMany(DQELigne::class, 'bpu_id');
-    }
+    // public function dqeLignes()
+    // {
+    //     return $this->hasManyThrough(DQELigne::class, Rubrique::class, 'id', 'id_rubrique', 'id_rubrique', 'id');
+    // }
     
     /**
      * Relation avec le contrat
@@ -54,23 +54,29 @@ class Bpu extends Model
     }
     
     /**
-     * Calculer et mettre à jour les valeurs dérivées
+     * Calculer et mettre à jour les valeurs dérivées selon les formules BPU
      */
     public function updateDerivedValues()
     {
-        // Déboursé sec = Matériaux + Main d'œuvre + Matériel
+        // MAIN D'ŒUVRE (MO) = % MO x MATERIAUX
+        $this->main_oeuvre = ($this->taux_mo / 100) * $this->materiaux;
+        
+        // MATERIEL (MAT) = % MAT x MATERIAUX
+        $this->materiel = ($this->taux_mat / 100) * $this->materiaux;
+        
+        // DEBOURSE SEC (DS) = MATERIAUX + MAIN D'ŒUVRE + MATERIEL
         $this->debourse_sec = $this->materiaux + $this->main_oeuvre + $this->materiel;
         
-        // Frais de chantier = 30% du déboursé sec
-        $this->frais_chantier = $this->debourse_sec * 0.3;
+        // FRAIS CHANTIER (FC) = % FC x DS
+        $this->frais_chantier = ($this->taux_fc / 100) * $this->debourse_sec;
         
-        // Frais généraux = 15% du (déboursé sec + frais de chantier)
-        $this->frais_general = ($this->debourse_sec + $this->frais_chantier) * 0.15;
+        // FRAIS GENERAUX (FG) = % FG x DS
+        $this->frais_general = ($this->taux_fg / 100) * $this->debourse_sec;
         
-        // Marge nette = 15% du (déboursé sec + frais de chantier + frais généraux)
-        $this->marge_nette = ($this->debourse_sec + $this->frais_chantier + $this->frais_general) * 0.15;
+        // BENEFICE (B) = % B x DS
+        $this->marge_nette = ($this->taux_benefice / 100) * $this->debourse_sec;
         
-        // Prix unitaire HT = Déboursé sec + Frais de chantier + Frais généraux + Marge nette
+        // P.U HT = DS + FC + FG + B
         $this->pu_ht = $this->debourse_sec + $this->frais_chantier + $this->frais_general + $this->marge_nette;
         
         // Prix unitaire TTC = Prix unitaire HT * 1.18 (TVA 18%)

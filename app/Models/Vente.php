@@ -14,6 +14,7 @@ class Vente extends Model {
         'numero_client', 
         'nom_client', 
         'commentaire',
+        'total',
         'total_ht', 
         'tva', 
         'total_ttc', 
@@ -36,8 +37,12 @@ class Vente extends Model {
 
     public function articles() {
         return $this->belongsToMany(Article::class, 'vente_articles')
-            ->withPivot('quantite', 'prix_unitaire_ht', 'montant_total')
+            ->withPivot('quantite', 'prix_unitaire', 'sous_total')
             ->withTimestamps();
+    }
+
+    public function prestations() {
+        return $this->hasMany(VentePrestation::class);
     }
 
     /**
@@ -45,7 +50,7 @@ class Vente extends Model {
      */
     public function calculerTotalHT()
     {
-        return $this->articles->sum('pivot.montant_total');
+        return $this->articles->sum('pivot.sous_total');
     }
 
     /**

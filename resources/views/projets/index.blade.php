@@ -34,6 +34,7 @@
                         <th>Date de début</th>
                         <th>Date de fin</th>
                         <th>Secteur d'activité</th>
+                        <th>Chef de projet</th>
                         <th>Conducteur de travaux</th>
                         <th>TVA</th>
                         <th>Statut</th>
@@ -57,12 +58,31 @@
                                 <span>{{ $projet->nom_projet }}</span>
                             </div>
                         </td>
-                        <td>{{ $projet->client }}</td>
+                        <td>
+                            @if($projet->clientFournisseur)
+                                {{ $projet->clientFournisseur->nom_raison_sociale }} {{ $projet->clientFournisseur->prenoms }}
+                            @else
+                                {{ $projet->client }}
+                            @endif
+                        </td>
                         <td>{{ $projet->date_creation }}</td>
                         <td>{{ $projet->date_debut }}</td>
                         <td>{{ $projet->date_fin ?? 'Non spécifiée' }}</td>
                         <td>{{ $projet->secteurActivite->nom ?? 'Secteur non défini' }}</td>
-                        <td>{{ $projet->conducteur_travaux }}</td>
+                        <td>
+                            @if($projet->chefProjet)
+                                {{ $projet->chefProjet->prenom }} {{ $projet->chefProjet->nom }}
+                            @else
+                                <span class="text-muted">Non assigné</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($projet->conducteurTravaux)
+                                {{ $projet->conducteurTravaux->prenom }} {{ $projet->conducteurTravaux->nom }}
+                            @else
+                                <span class="text-muted">Non assigné</span>
+                            @endif
+                        </td>
                         <td>
                             <span class="app-badge app-badge-{{ $projet->hastva ? 'success' : 'secondary' }} app-badge-pill">
                                 {{ $projet->hastva ? 'Oui' : 'Non' }}

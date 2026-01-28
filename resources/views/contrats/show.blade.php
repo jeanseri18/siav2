@@ -488,100 +488,337 @@
 
         <div class="main-content">
             <!-- Contract Information Form -->
+            <!-- Zone Client -->
             <div class="content-card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <i class="fas fa-cogs"></i>Informations du contrat
+                        <i class="fas fa-user"></i>Zone Client
                     </h2>
                 </div>
                 
                 <div class="card-body">
-                    <form action="{{ route('contrats.update', $contrat->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="ref_contrat" class="form-label">
-                                    <i class="fas fa-hashtag"></i>Référence du contrat
+                                <label class="form-label">
+                                    <i class="fas fa-hashtag"></i>N° Client
                                 </label>
-                                <input type="text" class="form-control" id="ref_contrat" name="ref_contrat" value="{{ $contrat->ref_contrat }}" required>
+                                <div>{{ $contrat->client_id }}</div>
                             </div>
 
                             <div class="form-group">
-                                <label for="nom_contrat" class="form-label">
-                                    <i class="fas fa-file-signature"></i>Nom du contrat
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>Nom du client
                                 </label>
-                                <input type="text" class="form-control" id="nom_contrat" name="nom_contrat" value="{{ $contrat->nom_contrat }}" required>
+                                <div>{{ $contrat->client->nom_raison_sociale ?? 'N/A' }}</div>
                             </div>
 
                             <div class="form-group">
-                                <label for="date_debut" class="form-label">
+                                <label class="form-label">
+                                    <i class="fas fa-tag"></i>Type de client
+                                </label>
+                                <div>{{ $contrat->client->type ?? 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-clock"></i>Délai de paiement
+                                </label>
+                                <div>{{ $contrat->client->delai_paiement ?? 'N/A' }} jours</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-industry"></i>Secteur d'activité
+                                </label>
+                                <div>{{ $contrat->client->secteur->nom ?? 'N/A' }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Représentants du client -->
+                        <h4 class="mt-4 mb-3">
+                            <i class="fas fa-users"></i>Représentants du client
+                        </h4>
+                        <div class="form-grid">
+                            @for($i = 0; $i < 3; $i++)
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-tie"></i>Représentant {{ $i + 1 }}
+                                </label>
+                                @php
+                                    $contact = null;
+                                    if ($contrat->client && $contrat->client->contactPersons) {
+                                        $contact = $contrat->client->contactPersons->slice($i, 1)->first();
+                                    }
+                                @endphp
+                                <div class="border rounded p-2 bg-light">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Nom:</small>
+                                            <div>{{ $contact->nom ?? 'N/A' }}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Prénoms:</small>
+                                            <div>{{ $contact->prenoms ?? 'N/A' }}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Fonction:</small>
+                                            <div>{{ $contact->fonction ?? 'N/A' }}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Cel1:</small>
+                                            <div>{{ $contact->telephone_1 ?? 'N/A' }}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Cel2:</small>
+                                            <div>{{ $contact->telephone_2 ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endfor
+                        </div>
+                </div>
+            </div>
+
+            <!-- Zone Contrat -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-file-contract"></i>Zone Contrat
+                    </h2>
+                </div>
+                
+                <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-hashtag"></i>N° Contrat
+                                </label>
+                                <div>{{ $contrat->ref_contrat }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-file-signature"></i>Nom du Contrat
+                                </label>
+                                <div>{{ $contrat->nom_contrat }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-hard-hat"></i>Type du travaux
+                                </label>
+                                <div>{{ $contrat->type_travaux }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
                                     <i class="fas fa-calendar-alt"></i>Date de début
                                 </label>
-                                <input type="date" class="form-control" id="date_debut" name="date_debut" value="{{ $contrat->date_debut }}" required>
+                                <div>{{ $contrat->date_debut }}</div>
                             </div>
 
                             <div class="form-group">
-                                <label for="date_fin" class="form-label">
+                                <label class="form-label">
                                     <i class="fas fa-calendar-check"></i>Date de fin
                                 </label>
-                                <input type="date" class="form-control" id="date_fin" name="date_fin" value="{{ $contrat->date_fin }}">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="type_travaux" class="form-label">
-                                    <i class="fas fa-hard-hat"></i>Type de travaux
-                                </label>
-                                <input type="text" class="form-control" id="type_travaux" name="type_travaux" value="{{ $contrat->type_travaux }}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="taux_garantie" class="form-label">
-                                    <i class="fas fa-shield-alt"></i>Taux de garantie (%)
-                                </label>
-                                <input type="number" step="0.01" class="form-control" id="taux_garantie" name="taux_garantie" value="{{ $contrat->taux_garantie }}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="client_id" class="form-label">
-                                    <i class="fas fa-user"></i>Client
-                                </label>
-                                <select class="form-select" id="client_id" name="client_id" required>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}" @if($contrat->client_id == $client->id) selected @endif>{{ $client->nom_raison_sociale }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="montant" class="form-label">
-                                    <i class="fas fa-money-bill-wave"></i>Montant (CFA)
-                                </label>
-                                <input type="number" step="0.01" class="form-control" id="montant" name="montant" value="{{ $contrat->montant }}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="statut" class="form-label">
-                                    <i class="fas fa-info-circle"></i>Statut
-                                </label>
-                                <select class="form-select" id="statut" name="statut" required>
-                                    <option value="en cours" @if($contrat->statut == 'en cours') selected @endif>En cours</option>
-                                    <option value="terminé" @if($contrat->statut == 'terminé') selected @endif>Terminé</option>
-                                    <option value="annulé" @if($contrat->statut == 'annulé') selected @endif>Annulé</option>
-                                </select>
+                                <div>{{ $contrat->date_fin }}</div>
                             </div>
                         </div>
 
-                        <div class="btn-group">
-                            <a href="{{ route('contrats.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Retour
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Mettre à jour
-                            </button>
+                        <!-- Chef chantier -->
+                        <h4 class="mt-4 mb-3">
+                            <i class="fas fa-user-tie"></i>Chef chantier
+                        </h4>
+                        <div class="form-grid">
+                            @php
+                                $chefChantier = $contrat->chefChantier;
+                            @endphp
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>Nom
+                                </label>
+                                <div>{{ $chefChantier->nom ?? 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>Prénoms
+                                </label>
+                                <div>{{ $chefChantier->prenom ?? 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope"></i>Email
+                                </label>
+                                <div>{{ $chefChantier->email ?? 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>Téléphone
+                                </label>
+                                <div>{{ $chefChantier->telephone ?? 'N/A' }}</div>
+                            </div>
                         </div>
-                    </form>
+                </div>
+            </div>
+
+            <!-- Zone Financière -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-money-bill-wave"></i>Zone Financière
+                    </h2>
+                </div>
+                
+                <div class="card-body">
+                        <!-- Informations fiscales -->
+                        <h4 class="mb-3">
+                            <i class="fas fa-receipt"></i>Informations fiscales
+                        </h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-percentage"></i>Facturation client soumise à TVA18%
+                                </label>
+                                <div>{{ ($contrat->tva_18 ?? true) ? 'Oui' : 'Non' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-shield-alt"></i>Retenues de garantie (%)
+                                </label>
+                                <div>{{ $contrat->taux_garantie }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-shield-alt"></i>Retenue décennale (%)
+                                </label>
+                                <div>{{ $contrat->retenue_decennale ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-money-check-alt"></i>Avance de démarrage
+                                </label>
+                                <div>{{ $contrat->avance_demarrage ?? 0 }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Données financières actuelles -->
+                        <h4 class="mt-4 mb-3">
+                            <i class="fas fa-chart-line"></i>Données financières actuelles
+                        </h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-money-bill-wave"></i>Mt du contrat (CFA)
+                                </label>
+                                <div>{{ $contrat->montant }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-line"></i>CA réalisé (CFA)
+                                </label>
+                                <div>{{ $contrat->ca_realise ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>DS prévisionnel (CFA)
+                                </label>
+                                <div>{{ $contrat->ds_prev ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>DS réalisé (CFA)
+                                </label>
+                                <div>{{ $contrat->ds_realise ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>FC prévisionnel (CFA)
+                                </label>
+                                <div>{{ $contrat->fc_prev ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>FC réalisé (CFA)
+                                </label>
+                                <div>{{ $contrat->fc_realise ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>FG prévisionnel (CFA)
+                                </label>
+                                <div>{{ $contrat->fg_prev ?? 0 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i>FG réalisé (CFA)
+                                </label>
+                                <div>{{ $contrat->fg_realise ?? 0 }}</div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+
+            <!-- Information système -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-info-circle"></i>Information système
+                    </h2>
+                </div>
+                
+                <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>Créé par
+                                </label>
+                                <div>{{ $contrat->createdBy->name ?? 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-plus"></i>Date de création
+                                </label>
+                                <div>{{ $contrat->created_at ? $contrat->created_at->format('d/m/Y H:i') : 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-edit"></i>Dernière date de modification
+                                </label>
+                                <div>{{ $contrat->updated_at ? $contrat->updated_at->format('d/m/Y H:i') : 'N/A' }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-info-circle"></i>Statut du contrat
+                                </label>
+                                <div>{{ ucfirst($contrat->statut) }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-building"></i>Business Unit
+                                </label>
+                                <div>{{ $contrat->businessUnit->nom ?? 'N/A' }}</div>
+                            </div>
+                        </div>
+                </div>
+            </div>
                 </div>
             </div>
             
@@ -713,7 +950,6 @@
                                             <th>Date d'émission</th>
                                             <th>Montant</th>
                                             <th>Statut</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -726,11 +962,6 @@
                                                     <span class="status-badge status-{{ $facture->statut == 'payée' ? 'paid' : ($facture->statut == 'en attente' ? 'pending' : 'overdue') }}">
                                                         {{ ucfirst($facture->statut) }}
                                                     </span>
-                                                </td>
-                                                <td>
-                                                    <a href="{{ route('factures.show', $facture->id) }}" class="btn btn-sm" style="background: #667eea; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none;">
-                                                        <i class="fas fa-eye"></i> Voir
-                                                    </a>
                                                 </td>
                                             </tr>
                                         @endforeach

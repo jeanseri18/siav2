@@ -138,7 +138,7 @@
                                     </span>
                                 </td>
                                 <td>-</td>
-                                <td>{{ auth()->user()->name ?? 'Utilisateur' }}</td>
+                                <td>{{ auth()->user()->nom ?? 'Utilisateur' }}</td>
                             </tr>
                             <tr>
                                 <td>{{ date('d/m/Y', strtotime('-3 days')) }}</td>
@@ -148,7 +148,7 @@
                                     </span>
                                 </td>
                                 <td>+{{ $stock->quantite }}</td>
-                                <td>{{ auth()->user()->name ?? 'Utilisateur' }}</td>
+                                <td>{{ auth()->user()->nom ?? 'Utilisateur' }}</td>
                             </tr>
                         </tbody>
                     </table>

@@ -12,8 +12,9 @@ class DQELigne extends Model
     protected $table = 'dqe_lignes';
 
     protected $fillable = [
-        'dqe_id', 'bpu_id', 'code', 'section', 'designation', 'quantite', 
-        'unite', 'pu_ht', 'montant_ht'
+        'dqe_id', 'id_rubrique', 'code', 'section', 'designation', 'quantite', 
+        'unite', 'pu_ht', 'montant_ht', 'materiaux', 'mo', 'materiel', 
+        'frais_chantier', 'frais_generaux', 'benefice'
     ];
 
     /**
@@ -25,20 +26,17 @@ class DQELigne extends Model
     }
 
     /**
-     * Relation avec le BPU
+     * Relation avec la rubrique
      */
-    public function bpu()
+    public function rubrique()
     {
-        return $this->belongsTo(Bpu::class, 'bpu_id');
+        return $this->belongsTo(Rubrique::class, 'id_rubrique');
     }
 
     /**
-     * Relation avec les détails de déboursé
+     * REMOVED: Relation avec les détails de déboursé supprimée
+     * Les déboursés ont été supprimés du système
      */
-    public function debourseDetails()
-    {
-        return $this->hasMany(DebourseDetail::class, 'dqe_ligne_id');
-    }
 
     /**
      * Calculer le montant HT en fonction de la quantité et du prix unitaire

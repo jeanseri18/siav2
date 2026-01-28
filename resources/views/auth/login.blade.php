@@ -12,7 +12,7 @@
         <div class="col-md-5 col-lg-4">
             <div class="auth-card">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('assets/logo.png') }}" alt="SIA" class="logo mb-3">
+                    <img src="{{ asset('Logo_XBTP_Png/Logo_Noir.png') }}" alt="XBTP" class="logo mb-3">
                     <h2 class="auth-title">Connexion</h2>
                     <p class="auth-subtitle">Accédez à votre espace personnel</p>
                 </div>

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('sublayouts.contrat')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -69,35 +70,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group mb-3">
-                                            <label for="contrat_id" class="form-label">Contrat</label>
-                                            <select class="form-control @error('contrat_id') is-invalid @enderror" id="contrat_id" name="contrat_id">
-                                                <option value="">Sélectionner un contrat</option>
-                                                @foreach($contrats as $contrat)
-                                                    <option value="{{ $contrat->id }}" {{ old('contrat_id', $demandeRavitaillement->contrat_id) == $contrat->id ? 'selected' : '' }}>
-                                                        {{ $contrat->reference }} - {{ $contrat->client->nom ?? 'N/A' }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('contrat_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="form-group mb-3">
-                                            <label for="fournisseur_id" class="form-label">Fournisseur</label>
-                                            <select class="form-control @error('fournisseur_id') is-invalid @enderror" id="fournisseur_id" name="fournisseur_id">
-                                                <option value="">Sélectionner un fournisseur</option>
-                                                @foreach($fournisseurs as $fournisseur)
-                                                    <option value="{{ $fournisseur->id }}" {{ old('fournisseur_id', $demandeRavitaillement->fournisseur_id) == $fournisseur->id ? 'selected' : '' }}>
-                                    {{ $fournisseur->nom_raison_sociale }}                                     {{ $fournisseur->prenoms }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('fournisseur_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        <input type="hidden" name="contrat_id" value="{{ $contratSessionId }}">
                                     </div>
                                 </div>
                             </div>
@@ -129,15 +102,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group mb-3">
-                                            <label for="description" class="form-label">Description</label>
-                                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                                      id="description" name="description" rows="4" 
-                                                      placeholder="Description détaillée de la demande...">{{ old('description', $demandeRavitaillement->description) }}</textarea>
-                                            @error('description')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+
 
                                         <div class="form-group mb-3">
                                             <label for="commentaires" class="form-label">Commentaires</label>
@@ -206,24 +171,7 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-2">
-                                                            <div class="form-group">
-                                                                <label class="form-label">Prix unitaire</label>
-                                                                <input type="number" class="form-control prix-input" 
-                                                                       name="lignes[{{ $index }}][prix_unitaire_estime]" 
-                                                                       value="{{ $ligne->prix_unitaire_estime }}" 
-                                                                       step="0.01" min="0">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <div class="form-group">
-                                                                <label class="form-label">Description</label>
-                                                                <input type="text" class="form-control" 
-                                                                       name="lignes[{{ $index }}][description]" 
-                                                                       value="{{ $ligne->description }}" 
-                                                                       placeholder="Description...">
-                                                            </div>
-                                                        </div>
+
                                                         <div class="col-md-1">
                                                             <div class="form-group">
                                                                 <label class="form-label">&nbsp;</label>
@@ -306,22 +254,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="form-group">
-                    <label class="form-label">Prix unitaire</label>
-                    <input type="number" class="form-control prix-input" 
-                           name="lignes[__INDEX__][prix_unitaire_estime]" 
-                           step="0.01" min="0">
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <input type="text" class="form-control" 
-                           name="lignes[__INDEX__][description]" 
-                           placeholder="Description...">
-                </div>
-            </div>
+
             <div class="col-md-1">
                 <div class="form-group">
                     <label class="form-label">&nbsp;</label>

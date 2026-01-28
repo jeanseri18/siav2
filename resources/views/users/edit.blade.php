@@ -20,7 +20,7 @@
                 <div class="app-card">
                     <div class="app-card-header">
                         <h2 class="app-card-title">
-                            <i class="fas fa-user-edit me-2"></i>Modifier l'Utilisateur: {{ $user->name }}
+                            <i class="fas fa-user-edit me-2"></i>Modifier l'Utilisateur: {{ $user->nom_complet }}
                         </h2>
                     </div>
                     
@@ -47,7 +47,16 @@
                             <label for="name" class="app-form-label">
                                 <i class="fas fa-user me-2"></i>Nom
                             </label>
-                            <input type="text" name="name" id="name" class="app-form-control" value="{{ $user->name }}" required>
+                            <input type="text" name="name" id="nom" class="app-form-control" value="{{ $user->nom }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="app-form-col">
+                            <div class="app-form-group">
+                                <label for="prenom" class="app-form-label">
+                                    <i class="fas fa-user me-2"></i>Prénom
+                                </label>
+                                <input type="text" name="prenom" id="prenom" class="app-form-control" value="{{ $user->prenom }}" required>
                             <div class="app-form-text">Nom complet de l'utilisateur</div>
                         </div>
                         
@@ -66,7 +75,7 @@
                                         <i class="fas fa-user-tag me-2"></i>Rôle
                                     </label>
                                     <select name="role" id="role" class="app-form-select">
-                                        <option value="utilisateur" {{ $user->role == 'utilisateur' ? 'selected' : '' }}>Utilisateur</option>
+                                        <option value="employe" {{ $user->role == 'employe' ? 'selected' : '' }}>employe</option>
                                         <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
                                     </select>
                                     <div class="app-form-text">Niveau d'accès de l'utilisateur</div>

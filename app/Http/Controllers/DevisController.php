@@ -5,21 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Devis;
 use App\Models\Article;
 use App\Models\ClientFournisseur;
+use App\Models\ConfigGlobal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DevisController extends Controller
 {
     public function index()
     {
-        $devis = Devis::with('client', 'articles')->get();
+        $devis = Devis::with('client', 'articles', 'user')->get();
         return view('devis.index', compact('devis'));
     }
 
     public function create()
     {
         $clients = ClientFournisseur::where('type', 'Client')->get();
-        $articles = Article::all();
+        $articles = Article::with('uniteMesure')->get();
         return view('devis.create', compact('clients', 'articles'));
     }
 
@@ -33,6 +35,8 @@ class DevisController extends Controller
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
+            'articles.*.prix_unitaire' => 'required|numeric|min:0',
+            'articles.*.remise' => 'nullable|numeric|min:0|max:100',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -45,7 +49,9 @@ class DevisController extends Controller
                 'tva' => 0,
                 'total_ttc' => 0,
                 'statut' => 'En attente',
-                'utilise_pour_vente' => false
+                'utilise_pour_vente' => false,
+                'user_id' => auth()->id(),
+                'ref_devis' => Devis::generateRefDevis()
             ]);
 
             $totalHT = 0;
@@ -53,13 +59,17 @@ class DevisController extends Controller
             foreach ($request->articles as $articleData) {
                 $article = Article::findOrFail($articleData['id']);
                 
-                // Utiliser le coût moyen pondéré comme prix unitaire HT
-                $prixUnitaireHT = $article->cout_moyen_pondere;
-                $montantTotal = $prixUnitaireHT * $articleData['quantite'];
+                // Utiliser le prix unitaire saisi par l'utilisateur
+                $prixUnitaireHT = $articleData['prix_unitaire'];
+                $remise = $articleData['remise'] ?? 0;
+                $montantBrut = $prixUnitaireHT * $articleData['quantite'];
+                $montantRemise = $montantBrut * ($remise / 100);
+                $montantTotal = $montantBrut - $montantRemise;
 
                 $devis->articles()->attach($article->id, [
                     'quantite' => $articleData['quantite'],
                     'prix_unitaire_ht' => $prixUnitaireHT,
+                    'remise' => $remise,
                     'montant_total' => $montantTotal
                 ]);
 
@@ -79,26 +89,27 @@ class DevisController extends Controller
         return redirect()->route('devis.index')->with('success', 'Devis créé avec succès.');
     }
 
-    public function show(Devis $devis)
+    public function show(Devis $devi)
     {
-        return view('devis.show', compact('devis'));
+        $devi->load('user');
+        return view('devis.show', compact('devi'));
     }
 
-    public function edit(Devis $devis)
+    public function edit(Devis $devi)
     {
-        if ($devis->utilise_pour_vente) {
+        if ($devi->utilise_pour_vente) {
             return redirect()->route('devis.index')
                 ->with('error', 'Ce devis a déjà été utilisé pour une vente et ne peut plus être modifié.');
         }
 
         $clients = ClientFournisseur::where('type', 'Client')->get();
-        $articles = Article::all();
-        return view('devis.edit', compact('devis', 'clients', 'articles'));
+        $articles = Article::with('uniteMesure')->get();
+        return view('devis.edit', compact('devi', 'clients', 'articles'));
     }
 
-    public function update(Request $request, Devis $devis)
+    public function update(Request $request, Devis $devi)
     {
-        if ($devis->utilise_pour_vente) {
+        if ($devi->utilise_pour_vente) {
             return redirect()->route('devis.index')
                 ->with('error', 'Ce devis a déjà été utilisé pour une vente et ne peut plus être modifié.');
         }
@@ -111,23 +122,30 @@ class DevisController extends Controller
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
+            'articles.*.prix_unitaire' => 'required|numeric|min:0',
+            'articles.*.remise' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($request, $devis) {
+        DB::transaction(function () use ($request, $devi) {
             // Supprimer les anciens articles
-            $devis->articles()->detach();
+            $devi->articles()->detach();
 
             $totalHT = 0;
 
             foreach ($request->articles as $articleData) {
                 $article = Article::findOrFail($articleData['id']);
                 
-                $prixUnitaireHT = $article->cout_moyen_pondere;
-                $montantTotal = $prixUnitaireHT * $articleData['quantite'];
+                // Utiliser le prix unitaire saisi par l'utilisateur
+                $prixUnitaireHT = $articleData['prix_unitaire'];
+                $remise = $articleData['remise'] ?? 0;
+                $montantBrut = $prixUnitaireHT * $articleData['quantite'];
+                $montantRemise = $montantBrut * ($remise / 100);
+                $montantTotal = $montantBrut - $montantRemise;
 
-                $devis->articles()->attach($article->id, [
+                $devi->articles()->attach($article->id, [
                     'quantite' => $articleData['quantite'],
                     'prix_unitaire_ht' => $prixUnitaireHT,
+                    'remise' => $remise,
                     'montant_total' => $montantTotal
                 ]);
 
@@ -137,7 +155,7 @@ class DevisController extends Controller
             $tva = $totalHT * 0.18;
             $totalTTC = $totalHT + $tva;
 
-            $devis->update([
+            $devi->update([
                 'client_id' => $request->client_id,
                 'numero_client' => $request->numero_client,
                 'nom_client' => $request->nom_client,
@@ -151,14 +169,14 @@ class DevisController extends Controller
         return redirect()->route('devis.index')->with('success', 'Devis mis à jour avec succès.');
     }
 
-    public function destroy(Devis $devis)
+    public function destroy(Devis $devi)
     {
-        if ($devis->utilise_pour_vente) {
+        if ($devi->utilise_pour_vente) {
             return redirect()->route('devis.index')
                 ->with('error', 'Ce devis a déjà été utilisé pour une vente et ne peut plus être supprimé.');
         }
 
-        $devis->delete();
+        $devi->delete();
         return redirect()->route('devis.index')->with('success', 'Devis supprimé avec succès.');
     }
 
@@ -173,5 +191,57 @@ class DevisController extends Controller
             ->get();
 
         return response()->json($devis);
+    }
+
+    /**
+     * Approuver un devis
+     */
+    public function approve($id)
+    {
+        $devi = Devis::findOrFail($id);
+        
+        if ($devi->utilise_pour_vente) {
+            return redirect()->route('devis.index')
+                ->with('error', 'Ce devis a déjà été utilisé pour une vente et ne peut plus être modifié.');
+        }
+
+        $devi->update(['statut' => 'Approuvé']);
+        
+        return redirect()->route('devis.index')
+            ->with('success', 'Devis approuvé avec succès.');
+    }
+
+    /**
+     * Rejeter un devis
+     */
+    public function reject($id)
+    {
+        $devi = Devis::findOrFail($id);
+        
+        if ($devi->utilise_pour_vente) {
+            return redirect()->route('devis.index')
+                ->with('error', 'Ce devis a déjà été utilisé pour une vente et ne peut plus être modifié.');
+        }
+
+        $devi->update(['statut' => 'Rejeté']);
+        
+        return redirect()->route('devis.index')
+            ->with('success', 'Devis rejeté avec succès.');
+    }
+
+    /**
+     * Imprimer un devis en PDF
+     */
+    public function print($id)
+    {
+        $devi = Devis::with(['client', 'articles.uniteMesure', 'user'])->findOrFail($id);
+        
+        // Récupérer les configurations globales
+        $configGlobal = ConfigGlobal::first();
+        
+        $pdf = PDF::loadView('devis.pdf', compact('devi', 'configGlobal'))
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->stream('Devis_' . ($devi->ref_devis ?? $devi->id) . '.pdf');
     }
 }

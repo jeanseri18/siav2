@@ -26,11 +26,16 @@ class ConfigGlobalController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'entete' => 'required|string|max:255',
-            'numdepatfacture' => 'required|string|max:255',
-            'pieddepage' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'id_bu' => 'required|exists:bus,id|unique:config_global,id_bu',
+            'nom_entreprise' => 'nullable|string|max:255',
+            'localisation' => 'nullable|string|max:255',
+            'adresse_postale' => 'nullable|string',
+            'rccm' => 'nullable|string|max:255',
+            'cc' => 'nullable|string|max:255',
+            'tel1' => 'nullable|string|max:255',
+            'tel2' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
         $data = $request->all();
@@ -51,10 +56,15 @@ class ConfigGlobalController extends Controller
     public function update(Request $request, ConfigGlobal $configGlobal)
     {
         $request->validate([
-            'entete' => 'required|string|max:255',
-            'numdepatfacture' => 'required|string|max:255',
-            'pieddepage' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'nom_entreprise' => 'nullable|string|max:255',
+            'localisation' => 'nullable|string|max:255',
+            'adresse_postale' => 'nullable|string',
+            'rccm' => 'nullable|string|max:255',
+            'cc' => 'nullable|string|max:255',
+            'tel1' => 'nullable|string|max:255',
+            'tel2' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
         $data = $request->all();

@@ -14,10 +14,13 @@ class RubriqueController extends Controller
             'id_soussession' => 'required|exists:souscategorierubriques,id',
         ]);
         
+        $contratId = session('contrat_id');
+        
         Rubrique::create([
             'nom' => $request->nom,
             'id_soussession' => $request->id_soussession,
             'type' => 'bpu',
+            'contrat_id' => $contratId,
         ]);
         
         return back()->with('success', 'Rubrique créée avec succès.');

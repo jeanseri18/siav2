@@ -55,7 +55,7 @@
                                 <div class="item-icon">
                                     <i class="fas fa-user text-primary"></i>
                                 </div>
-                                <span>{{ $user->name }}</span>
+                                <span>{{ $user->nom_complet }}</span>
                             </div>
                         </td>
                         <td>

@@ -18,48 +18,69 @@ class TransfertsStockController extends Controller
         return view('stock_projet.transferts', compact('transferts','projets','articles'));
     }
 
+    public function create()
+    {
+        $projets = Projet::all();
+        $articles = Article::all();
+        return view('stock_projet.create_transfer', compact('projets','articles'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'id_projet_source' => 'required|exists:projets,id',
-            'id_projet_destination' => 'required|exists:projets,id',
-            'article_id' => 'required|exists:articles,id',
-            'quantite' => 'required|integer|min:1',
+            'projet_source' => 'required|exists:projets,id',
+            'projet_destination' => 'required|exists:projets,id',
             'date_transfert' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.article_id' => 'required|exists:articles,id',
+            'items.*.quantite' => 'required|integer|min:1',
         ]);
 
-        // Vérification du stock disponible
-        $stockSource = StockProjet::where('id_projet', $request->id_projet_source)
-                                  ->where('article_id', $request->article_id)
-                                  ->first();
+        $projetSource = $request->projet_source;
+        $projetDestination = $request->projet_destination;
+        $dateTransfert = $request->date_transfert;
 
-        if (!$stockSource || $stockSource->quantite < $request->quantite) {
-            return redirect()->back()->with('error', 'Quantité insuffisante dans le stock source.');
+        // Vérification du stock disponible pour tous les articles
+        foreach ($request->items as $item) {
+            $stockSource = StockProjet::where('id_projet', $projetSource)
+                                      ->where('article_id', $item['article_id'])
+                                      ->first();
+
+            if (!$stockSource || $stockSource->quantite < $item['quantite']) {
+                return redirect()->back()->with('error', 'Quantité insuffisante dans le stock source pour l\'article: ' . Article::find($item['article_id'])->nom);
+            }
         }
 
-        // Décrémentation du stock source
-        $stockSource->decrement('quantite', $request->quantite);
+        // Effectuer les transferts pour chaque article
+        foreach ($request->items as $item) {
+            // Décrémentation du stock source
+            $stockSource = StockProjet::where('id_projet', $projetSource)
+                                      ->where('article_id', $item['article_id'])
+                                      ->first();
+            
+            $stockSource->decrement('quantite', $item['quantite']);
 
-        // Ajout au stock du projet de destination
-        $stockDestination = StockProjet::firstOrCreate(
-            [
-                'id_projet' => $request->id_projet_destination,
-                'article_id' => $request->article_id
-            ],
-            ['quantite' => 0]
-        );
+            // Ajout au stock du projet de destination
+            $stockDestination = StockProjet::firstOrCreate(
+                [
+                    'id_projet' => $projetDestination,
+                    'article_id' => $item['article_id']
+                ],
+                ['quantite' => 0]
+            );
 
-        $stockDestination->increment('quantite', $request->quantite);
+            $stockDestination->increment('quantite', $item['quantite']);
 
-        // Enregistrement du transfert
-        TransfertStock::create([
-            'id_projet_source' => $request->id_projet_source,
-            'id_projet_destination' => $request->id_projet_destination,
-            'article_id' => $request->article_id,
-            'quantite' => $request->quantite,
-            'date_transfert' => $request->date_transfert,
-        ]);
+            // Enregistrement du transfert
+            TransfertStock::create([
+                'id_projet_source' => $projetSource,
+                'id_projet_destination' => $projetDestination,
+                'article_id' => $item['article_id'],
+                'quantite' => $item['quantite'],
+                'date_transfert' => $dateTransfert,
+            ]);
+        }
 
-        return redirect()->back()->with('success', 'Transfert effectué avec succès.');
+        return redirect()->route('transferts.index')->with('success', 'Transfert(s) effectué(s) avec succès.');
     }
 }

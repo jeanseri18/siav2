@@ -89,7 +89,6 @@ class ContratController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // 'ref_contrat' => 'required|unique:contrats',
             'nom_contrat' => 'required',
             'date_debut' => 'required|date',
             'date_fin' => 'nullable|date',
@@ -100,6 +99,9 @@ class ContratController extends Controller
             'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
             'projet_id' => 'nullable|exists:projets,id',
+            'tva_18' => 'nullable|boolean',
+            'retenue_decennale' => 'nullable|numeric|min:0|max:100',
+            'avance_demarrage' => 'nullable|numeric|min:0',
         ]);
 
         $lastReference = \App\Models\Reference::where('nom', 'Code contrat')
@@ -133,6 +135,9 @@ class ContratController extends Controller
             'montant' => $request->montant,
             'statut' => $request->statut,
             'decompte' => $request->decompte ?? false,
+            'tva_18' => $request->tva_18 ?? true,
+            'retenue_decennale' => $request->retenue_decennale ?? 0,
+            'avance_demarrage' => $request->avance_demarrage ?? 0,
         ]);
 
         // Rediriger selon la source de la création
@@ -182,6 +187,9 @@ class ContratController extends Controller
             'chef_chantier_id' => 'nullable|exists:users,id',
             'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',
+            'tva_18' => 'nullable|boolean',
+            'retenue_decennale' => 'nullable|numeric|min:0|max:100',
+            'avance_demarrage' => 'nullable|numeric|min:0',
         ]);
         $lastReference = \App\Models\Reference::where('nom', 'Code contrat')
         ->latest('created_at')
@@ -249,13 +257,11 @@ $request->merge([
         // Calculer le déboursé sec du DQE validé
         $debourseSec = $contrat->debourses()
             ->where('dqe_id', $lastDqe->id)
-            ->where('type', 'sec')
             ->first();
             
         // Calculer les frais de chantier du DQE validé
         $fraisChantier = $contrat->debourses()
             ->where('dqe_id', $lastDqe->id)
-            ->where('type', 'frais_chantier')
             ->first();
             
         $dsPrevu = $debourseSec ? $debourseSec->montant_total : 0;
@@ -340,19 +346,29 @@ $request->merge([
     // API pour récupérer les clients selon le projet
     public function getClientsByProject($projetId)
     {
-        // Récupérer l'ID du bus depuis la session
-        $id_bu = session('selected_bu');
+        // Récupérer le projet avec son client
+        $projet = Projet::with('clientFournisseur')->find($projetId);
         
-        if (!$id_bu) {
-            return response()->json(['error' => 'Aucun BU sélectionné'], 400);
+        if (!$projet) {
+            return response()->json(['error' => 'Projet non trouvé'], 404);
         }
         
-        // Récupérer tous les clients du BU sélectionné
-        // Note: Dans cette version, tous les clients du BU sont disponibles pour tous les projets
-        $clients = ClientFournisseur::where('type', 'client')
-                                    ->where('id_bu', $id_bu)
-                                    ->select('id', 'nom_raison_sociale', 'prenoms')
-                                    ->get();
+        // Si le projet a un client associé, le retourner directement
+        if ($projet->clientFournisseur) {
+            $clients = collect([$projet->clientFournisseur->only(['id', 'nom_raison_sociale', 'prenoms'])]);
+        } else {
+            // Sinon, récupérer tous les clients du BU comme fallback
+            $id_bu = session('selected_bu');
+            
+            if (!$id_bu) {
+                return response()->json(['error' => 'Aucun BU sélectionné'], 400);
+            }
+            
+            $clients = ClientFournisseur::where('type', 'client')
+                                        ->where('id_bu', $id_bu)
+                                        ->select('id', 'nom_raison_sociale', 'prenoms')
+                                        ->get();
+        }
         
         return response()->json($clients);
     }

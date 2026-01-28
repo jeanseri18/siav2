@@ -47,7 +47,7 @@ class ClientController extends Controller
         $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'delai_paiement' => 'required|integer',
+            'delai_paiement' => 'required|string',
             'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
@@ -164,7 +164,7 @@ $request->merge([
         $modesPaiementValides = ModePaiement::pluck('nom')->implode(',');
         $validationRules = [
             'categorie' => 'required|in:Particulier,Entreprise',
-            'delai_paiement' => 'required|integer',
+            'delai_paiement' => 'required|string',
             'mode_paiement' => 'required|in:' . $modesPaiementValides,
             'regime_imposition' => 'required|string|max:255',
             'boite_postale' => 'required|string',
@@ -256,7 +256,7 @@ $request->merge([
 
     public function show($id)
     {
-        $client = ClientFournisseur::with(['contactPersons'])->findOrFail($id);
+        $client = ClientFournisseur::with(['contactPersons', 'contrats', 'bus'])->findOrFail($id);
         return view('clients.show', compact('client'));
     }
 

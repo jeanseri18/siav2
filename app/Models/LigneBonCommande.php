@@ -16,6 +16,7 @@ class LigneBonCommande extends Model
         'article_id',
         'quantite',
         'prix_unitaire',
+        'remise',
         'quantite_livree',
         'quantite_recue',
         'commentaire'
@@ -38,6 +39,19 @@ class LigneBonCommande extends Model
     public function getMontantAttribute()
     {
         return $this->quantite * $this->prix_unitaire;
+    }
+
+    public function getMontantAvecRemiseAttribute()
+    {
+        $montantBrut = $this->quantite * $this->prix_unitaire;
+        $montantRemise = $montantBrut * ($this->remise / 100);
+        return $montantBrut - $montantRemise;
+    }
+
+    public function getMontantRemiseAttribute()
+    {
+        $montantBrut = $this->quantite * $this->prix_unitaire;
+        return $montantBrut * ($this->remise / 100);
     }
 
     /**

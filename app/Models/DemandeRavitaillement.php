@@ -13,28 +13,22 @@ class DemandeRavitaillement extends Model
     protected $fillable = [
         'reference',
         'objet',
-        'description',
         'statut',
         'priorite',
         'date_demande',
         'date_livraison_souhaitee',
         'date_livraison_effective',
-        'montant_estime',
-        'montant_reel',
         'commentaires',
         'motif_rejet',
         'contrat_id',
         'demandeur_id',
-        'approbateur_id',
-        'fournisseur_id'
+        'approbateur_id'
     ];
     
     protected $casts = [
         'date_demande' => 'date',
         'date_livraison_souhaitee' => 'date',
-        'date_livraison_effective' => 'date',
-        'montant_estime' => 'decimal:2',
-        'montant_reel' => 'decimal:2'
+        'date_livraison_effective' => 'date'
     ];
     
     // Relations
@@ -53,11 +47,7 @@ class DemandeRavitaillement extends Model
         return $this->belongsTo(User::class, 'approbateur_id');
     }
     
-    public function fournisseur(): BelongsTo
-    {
-        return $this->belongsTo(ClientFournisseur::class, 'fournisseur_id');
-    }
-    
+
     public function lignes(): HasMany
     {
         return $this->hasMany(LigneDemandeRavitaillement::class);

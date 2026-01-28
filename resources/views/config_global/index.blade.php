@@ -39,22 +39,38 @@
 
         <div class="app-card-body app-table-responsive">
             <table id="Table" class="app-table">
-                <thead>
-                    <tr>
-                        <th>En-tête</th>
-                        <th>Numéro de départ</th>
-                        <th>Pied de page</th>
-                        <th>Logo</th>
-                        <th>Business Unit</th>
-                        <th style="width: 150px;">Actions</th>
-                    </tr>
-                </thead>
+                        <thead>
+                            <tr>
+                                <th>Nom entreprise</th>
+                                <th>Localisation</th>
+                                <th>Téléphone</th>
+                                <th>Email</th>
+                                <th>RCCM</th>
+                                <th>Logo</th>
+                                <th>Business Unit</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
                 <tbody>
                     @foreach ($configs as $config)
                         <tr>
-                            <td>{{ $config->entete }}</td>
-                            <td>{{ $config->numdepatfacture }}</td>
-                            <td>{{ Str::limit($config->pieddepage, 50) }}</td>
+                            <td>{{ $config->nom_entreprise ?? 'N/A' }}</td>
+                            <td>{{ $config->localisation ?? 'N/A' }}</td>
+                            <td>
+                                @if($config->tel1 || $config->tel2)
+                                    {{ $config->tel1 }}{{ $config->tel1 && $config->tel2 ? ' / ' : '' }}{{ $config->tel2 }}
+                                @else
+                                    <span class="app-badge app-badge-light">N/A</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($config->email)
+                                    <a href="mailto:{{ $config->email }}">{{ $config->email }}</a>
+                                @else
+                                    <span class="app-badge app-badge-light">N/A</span>
+                                @endif
+                            </td>
+                            <td>{{ $config->rccm ?? 'N/A' }}</td>
                             <td>
                                 @if ($config->logo)
                                     <img src="{{ asset('storage/' . $config->logo) }}" width="50" alt="Logo" class="img-fluid" style="border-radius: var(--border-radius-sm);">

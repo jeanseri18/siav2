@@ -47,7 +47,7 @@
                         <th>Prénoms</th>
                         <th>Corps de métier</th>
                         <th>Localisation</th>
-                        <th>Tel1</th>
+                        <th>Téléphone</th>
                         <th>Mail</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
@@ -72,7 +72,7 @@
                                 {{ $artisan->fonction }}
                         </td>
                         <td>{{ $artisan->localisation }}</td>
-                        <td>{{ $artisan->tel1 }}</td>
+                        <td>{{ $artisan->telephone }}</td>
                         <td>{{ $artisan->mail }}</td>
                         <td>
                             <div class="app-d-flex app-gap-2">

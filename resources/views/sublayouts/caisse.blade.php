@@ -85,7 +85,7 @@
             <form action="{{ route('caisse.saisirDepense', $bus->id) }}" method="POST" class="modern-form">
                 @csrf
                 <div class="form-group">
-                    <label for="montant"><i class="fas fa-euro-sign"></i> Montant</label>
+                    <label for="montant"><i class="fas fa-money-bill-wave"></i> Montant</label>
                     <input type="number" id="montant" name="montant" class="form-control-modern" placeholder="0.00" required>
                 </div>
                 <div class="form-group">
@@ -123,7 +123,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="montant_appro"><i class="fas fa-euro-sign"></i> Montant</label>
+                    <label for="montant_appro"><i class="fas fa-money-bill-wave"></i> Montant</label>
                     <input type="number" id="montant_appro" name="montant" class="form-control-modern" placeholder="0.00" step="0.01" required>
                 </div>
                 <div class="form-group">

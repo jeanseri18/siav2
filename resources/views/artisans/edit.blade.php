@@ -148,10 +148,10 @@
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
-                                <label for="tel1" class="app-form-label">
-                                    <i class="fas fa-phone me-2"></i>Tél 1 <span class="text-danger">*</span>
+                                <label for="telephone" class="app-form-label">
+                                    <i class="fas fa-phone me-2"></i>Téléphone <span class="text-danger">*</span>
                                 </label>
-                                <input type="tel" name="tel1" id="tel1" class="app-form-control" value="{{ old('tel1', $artisan->tel1) }}" required>
+                                <input type="tel" name="telephone" id="telephone" class="app-form-control" value="{{ old('telephone', $artisan->telephone) }}" required>
                             </div>
                         </div>
                         

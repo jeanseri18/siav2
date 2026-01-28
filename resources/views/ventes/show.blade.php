@@ -119,9 +119,9 @@
                         <tfoot>
                             <tr class="table-active">
                                 <td colspan="3" class="text-end app-fw-bold">
-                                    <i class="fas fa-calculator me-2"></i>Total de la vente :
+                                    <i class="fas fa-calculator me-2"></i>Total des articles :
                                 </td>
-                                <td class="text-end app-fw-bold text-success h5">
+                                <td class="text-end app-fw-bold text-success">
                                     {{ number_format($vente->total, 0, ',', ' ') }} FCFA
                                 </td>
                             </tr>
@@ -129,6 +129,64 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Prestations -->
+            @if($vente->prestations->count() > 0)
+            <div class="app-card mt-4">
+                <div class="app-card-header">
+                    <h3 class="app-card-title">
+                        <i class="fas fa-tools me-2"></i>Prestations
+                    </h3>
+                </div>
+                <div class="app-card-body app-table-responsive">
+                    <table class="app-table">
+                        <thead>
+                            <tr>
+                                <th>Prestation</th>
+                                <th class="text-center">Quantité</th>
+                                <th class="text-end">Prix Unitaire</th>
+                                <th class="text-end">Montant Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($vente->prestations as $prestation)
+                            <tr>
+                                <td>
+                                    <div class="app-d-flex app-align-items-center app-gap-2">
+                                        <div class="item-icon">
+                                            <i class="fas fa-tools text-info"></i>
+                                        </div>
+                                        <span>{{ $prestation->nom_prestation }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center app-fw-bold">
+                                    <span class="app-badge app-badge-light">
+                                        {{ $prestation->quantite }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    {{ number_format($prestation->prix_unitaire, 0, ',', ' ') }} FCFA
+                                </td>
+                                <td class="text-end app-fw-bold text-info">
+                                    {{ number_format($prestation->montant_total, 0, ',', ' ') }} FCFA
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td colspan="3" class="text-end app-fw-bold">
+                                    <i class="fas fa-calculator me-2"></i>Total des prestations :
+                                </td>
+                                <td class="text-end app-fw-bold text-info">
+                                    {{ number_format($vente->prestations->sum('montant_total'), 0, ',', ' ') }} FCFA
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Panel latéral -->
@@ -186,7 +244,7 @@
                     </button>
                     @endif
                     
-                    <button class="app-btn app-btn-info w-100" onclick="window.print()">
+                    <button class="app-btn app-btn-info w-100" onclick="window.open('{{ route('ventes.facture', $vente) }}', '_blank')">
                         <i class="fas fa-print me-2"></i>Imprimer la facture
                     </button>
                     

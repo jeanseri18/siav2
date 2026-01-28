@@ -92,7 +92,7 @@
                     <div class="app-card mt-4">
                         <div class="app-card-body">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">Total HT :</h5>
                                         <h4 class="mb-0 text-info">
@@ -100,7 +100,15 @@
                                         </h4>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="app-d-flex app-justify-content-between app-align-items-center">
+                                        <h5 class="mb-0">Remise :</h5>
+                                        <h4 class="mb-0 text-danger">
+                                            <span id="total-remise">0</span> FCFA
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">TVA (18%) :</h5>
                                         <h4 class="mb-0 text-warning">
@@ -108,7 +116,7 @@
                                         </h4>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="app-d-flex app-justify-content-between app-align-items-center">
                                         <h5 class="mb-0">Total TTC :</h5>
                                         <h4 class="mb-0 text-success">
@@ -139,6 +147,13 @@
 <script>
     let articles = @json($articles);
     let clients = @json($clients);
+    
+    // Debug: vérifier les données des articles
+    console.log('Articles data:', articles);
+    if (articles.length > 0) {
+        console.log('Premier article:', articles[0]);
+        console.log('UniteMesure du premier article:', articles[0].unite_mesure);
+    }
     let articlesContainer = document.getElementById("articles-container");
     let noArticlesMessage = document.getElementById("no-articles-message");
     let articleIndex = 0;
@@ -150,10 +165,10 @@
         const nomClientInput = document.getElementById('nom_client');
         
         if (clientId) {
-            const selectedClient = clients.find(client => client.id == clientId);
-            if (selectedClient) {
-                numeroClientInput.value = selectedClient.numero_client || selectedClient.id;
-                nomClientInput.value = selectedClient.nom || selectedClient.nom_raison_sociale || '';
+                            const selectedClient = clients.find(client => client.id == clientId);
+                            if (selectedClient) {
+                                numeroClientInput.value = selectedClient.code || selectedClient.numero_client || selectedClient.id;
+                                nomClientInput.value = selectedClient.nom || selectedClient.nom_raison_sociale || '';
             }
         } else {
             numeroClientInput.value = '';
@@ -171,18 +186,18 @@
         div.innerHTML = `
             <div class="app-card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="app-form-group">
                             <label class="app-form-label">
                                 <i class="fas fa-box me-2"></i>Article
                             </label>
                             <select name="articles[${articleIndex}][id]" class="app-form-select article-select" required>
                                 <option value="">-- Sélectionner un article --</option>
-                                ${articles.map(article => `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure || 'Unité'}">${article.nom}</option>`).join('')}
+                                ${articles.map(article => `<option value="${article.id}" data-price="${article.cout_moyen_pondere || article.prix_unitaire}" data-unite="${article.unite_mesure ? article.unite_mesure.ref : 'Unité'}">${article.nom} - ${article.cout_moyen_pondere || article.prix_unitaire} FCFA HT</option>`).join('')}
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="app-form-group">
                             <label class="app-form-label">Unité</label>
                             <div class="app-form-control bg-light article-unite">-</div>
@@ -199,15 +214,21 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">
-                                <i class="fas fa-euro-sign me-2"></i>Prix Unitaire HT
+                                <i class="fas fa-coins me-2"></i>Prix Unitaire HT
                             </label>
                             <input type="number" name="articles[${articleIndex}][prix_unitaire]" class="app-form-control price-input" min="0" step="0.01" placeholder="Prix HT" required>
                         </div>
                     </div>
                     <div class="col-md-1">
                         <div class="app-form-group">
+                            <label class="app-form-label">Remise %</label>
+                            <input type="number" name="articles[${articleIndex}][remise]" class="app-form-control remise-input" min="0" max="100" step="0.01" value="0">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="app-form-group">
                             <label class="app-form-label">Montant Total</label>
-                            <div class="app-form-control bg-light article-price">0 FCFA</div>
+                            <div class="app-form-control bg-light article-price" style="min-width: 120px;">0 FCFA</div>
                         </div>
                     </div>
                     <div class="col-md-1">
@@ -242,6 +263,7 @@
         let select = div.querySelector(".article-select");
         let quantityInput = div.querySelector(".quantity-input");
         let priceInput = div.querySelector(".price-input");
+        let remiseInput = div.querySelector(".remise-input");
         let priceSpan = div.querySelector(".article-price");
         let uniteSpan = div.querySelector(".article-unite");
 
@@ -250,7 +272,10 @@
             let unite = selectedOption.dataset.unite || '-';
             let price = parseFloat(priceInput.value) || 0;
             let quantity = parseInt(quantityInput.value) || 1;
-            let subtotal = price * quantity;
+            let remise = parseFloat(remiseInput.value) || 0;
+            let subtotalHT = price * quantity;
+            let montantRemise = subtotalHT * (remise / 100);
+            let subtotal = subtotalHT - montantRemise;
             
             uniteSpan.textContent = unite;
             priceSpan.textContent = subtotal.toLocaleString() + " FCFA";
@@ -272,20 +297,29 @@
         });
         quantityInput.addEventListener("input", updateSubtotal);
         priceInput.addEventListener("input", updateSubtotal);
+        remiseInput.addEventListener("input", updateSubtotal);
+        
+        // Initialiser l'affichage de l'unité et du prix
+        updateSubtotal();
     });
 
     function updateTotal() {
         let totalHT = 0;
+        let totalRemise = 0;
 
         document.querySelectorAll(".article-item").forEach(function (item) {
-            let select = item.querySelector(".article-select");
             let quantityInput = item.querySelector(".quantity-input");
+            let priceInput = item.querySelector(".price-input");
+            let remiseInput = item.querySelector(".remise-input");
             
-            if (select && quantityInput) {
-                let selectedOption = select.options[select.selectedIndex];
-                let price = parseFloat(selectedOption.dataset.price || 0);
+            if (quantityInput && priceInput) {
+                let price = parseFloat(priceInput.value) || 0;
                 let quantity = parseInt(quantityInput.value) || 1;
-                totalHT += price * quantity;
+                let remise = parseFloat(remiseInput.value) || 0;
+                let subtotalHT = price * quantity;
+                let montantRemise = subtotalHT * (remise / 100);
+                totalHT += subtotalHT - montantRemise;
+                totalRemise += montantRemise;
             }
         });
 
@@ -295,6 +329,12 @@
         document.getElementById("total-ht").textContent = totalHT.toLocaleString();
         document.getElementById("total-tva").textContent = tva.toLocaleString();
         document.getElementById("total-ttc").textContent = totalTTC.toLocaleString();
+        
+        // Afficher la remise totale si elle existe
+        const remiseElement = document.getElementById("total-remise");
+        if (remiseElement) {
+            remiseElement.textContent = totalRemise.toLocaleString();
+        }
     }
 </script>
 @endpush

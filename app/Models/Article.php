@@ -47,4 +47,31 @@ class Article extends Model
     {
         return $this->hasMany(LigneDemandeRavitaillement::class);
     }
+
+    // Relation pour les lignes de réception
+    public function lignesReception()
+    {
+        return $this->hasMany(LigneReception::class);
+    }
+
+    // Récupère la date du dernier approvisionnement
+    public function getDateDernierApprovisionnementAttribute()
+    {
+        return $this->lignesReception()
+            ->join('receptions', 'ligne_receptions.reception_id', '=', 'receptions.id')
+            ->where('receptions.statut', 'complete')
+            ->orderBy('receptions.date_reception', 'desc')
+            ->value('receptions.date_reception');
+    }
+
+    // Récupère le prix du dernier achat
+    public function getPrixDernierAchatAttribute()
+    {
+        return $this->lignesReception()
+            ->join('receptions', 'ligne_receptions.reception_id', '=', 'receptions.id')
+            ->where('receptions.statut', 'complete')
+            ->where('ligne_receptions.quantite_recue', '>', 0)
+            ->orderBy('receptions.date_reception', 'desc')
+            ->value('ligne_receptions.prix_unitaire_recu');
+    }
 }

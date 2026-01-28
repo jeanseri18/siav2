@@ -55,7 +55,7 @@
                                         </div>
                                     @else
                                         @php
-                                            $initials = collect(explode(' ', $user->name))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
+                                            $initials = collect(explode(' ', $user->nom))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
                                         @endphp
                                         <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
                                              style="width: 120px; height: 120px; font-size: 2.5rem; font-weight: bold;" id="photo-preview">
@@ -95,7 +95,7 @@
                                                 <i class="fas fa-user me-2"></i>Nom complet <span class="text-danger">*</span>
                                             </label>
                                             <input type="text" class="app-form-control @error('name') is-invalid @enderror" 
-                                                   id="name" name="name" value="{{ old('name', $user->name) }}" required
+                                                   id="nom" name="nom" value="{{ old('nom', $user->nom) }}" required
                                                    placeholder="Votre nom complet">
                                             @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>

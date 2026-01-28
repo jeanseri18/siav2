@@ -33,7 +33,7 @@
                                     <i class="fas fa-user me-2"></i>Nom complet
                                 </label>
                                 <div class="app-form-control bg-light">
-                                    {{ $user->name }}
+                                    {{ $user->nom }}
                                 </div>
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                              class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                     @else
                         @php
-                            $initials = collect(explode(' ', $user->name))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
+                            $initials = collect(explode(' ', $user->nom))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
                         @endphp
                         <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
                              style="width: 150px; height: 150px; font-size: 3rem; font-weight: bold;">
@@ -183,7 +183,7 @@
                         </div>
                     @endif
                     
-                    <h5 class="app-fw-bold">{{ $user->name }}</h5>
+                    <h5 class="app-fw-bold">{{ $user->nom }}</h5>
                     <p class="text-muted">{{ ucfirst($user->role) }}</p>
                     
                     <div class="app-d-grid app-gap-2 mt-3">

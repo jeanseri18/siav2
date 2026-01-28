@@ -6,12 +6,92 @@
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('sublayouts_article') }}">Articles</a></li>
 <li class="breadcrumb-item active">Modifier</li>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorieSelect = document.getElementById('categorie_id');
+    const sousCategorieSelect = document.getElementById('sous_categorie_id');
+    const originalSousCategories = Array.from(sousCategorieSelect.options);
+    const selectedSousCategorie = "{{ $article->sous_categorie_id }}";
+    
+    function filterSousCategories() {
+        const selectedCategorie = categorieSelect.value;
+        
+        // Réinitialiser les options
+        sousCategorieSelect.innerHTML = '<option value="">Aucune</option>';
+        
+        if (selectedCategorie) {
+            // Filtrer et ajouter les sous-catégories correspondantes
+            originalSousCategories.forEach(option => {
+                if (option.value === '' || option.dataset.categorie === selectedCategorie) {
+                    sousCategorieSelect.appendChild(option.cloneNode(true));
+                }
+            });
+            
+            // Restaurer la sélection si elle existe toujours
+            if (selectedSousCategorie) {
+                const option = sousCategorieSelect.querySelector(`option[value="${selectedSousCategorie}"]`);
+                if (option) {
+                    sousCategorieSelect.value = selectedSousCategorie;
+                }
+            }
+        }
+    }
+    
+    // Filtrer au chargement de la page
+    filterSousCategories();
+    
+    // Filtrer quand la catégorie change
+    categorieSelect.addEventListener('change', filterSousCategories);
+});
+</script>
+@endpush
+
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorieSelect = document.getElementById('categorie_id');
+    const sousCategorieSelect = document.getElementById('sous_categorie_id');
+    const originalSousCategories = Array.from(sousCategorieSelect.options);
+    
+    function filterSousCategories() {
+        const selectedCategorie = categorieSelect.value;
+        const selectedSousCategorie = sousCategorieSelect.value;
+        
+        // Réinitialiser les options
+        sousCategorieSelect.innerHTML = '<option value="">Aucune</option>';
+        
+        if (selectedCategorie) {
+            // Filtrer et ajouter les sous-catégories correspondantes
+            originalSousCategories.forEach(option => {
+                if (option.value === '' || option.dataset.categorie === selectedCategorie) {
+                    const newOption = option.cloneNode(true);
+                    // Garder la sélection si elle correspond à la catégorie actuelle
+                    if (option.value === selectedSousCategorie) {
+                        newOption.selected = true;
+                    }
+                    sousCategorieSelect.appendChild(newOption);
+                }
+            });
+        }
+    }
+    
+    // Filtrer au chargement de la page
+    filterSousCategories();
+    
+    // Filtrer quand la catégorie change
+    categorieSelect.addEventListener('change', filterSousCategories);
+});
+</script>
 @endsection
 
 @section('content')
 
 <div class="app-fade-in">
     <div class="app-card">
+
         <div class="app-card-header">
             <h2 class="app-card-title">
                 <i class="fas fa-edit me-2"></i>Modifier l'Article: {{ $article->nom }}
@@ -19,6 +99,24 @@
         </div>
         
         <div class="app-card-body">
+
+         @if ($errors->any())
+            <div class="app-alert app-alert-danger">
+                <div class="app-alert-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="app-alert-content">
+                    <div class="app-alert-text">
+                        @foreach ($errors->all() as $error)
+                            {{ $error }}<br>
+                        @endforeach
+                    </div>
+                </div>
+                <button type="button" class="app-alert-close" onclick="this.parentElement.style.display='none';">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            @endif
             <form action="{{ route('articles.update', $article) }}" method="POST" class="app-form">
                 @csrf
                 @method('PUT')
@@ -42,18 +140,18 @@
                     
                     <div class="app-form-col">
                         <div class="app-form-group">
-                            <label for="unite_mesure" class="app-form-label">
-                                <i class="fas fa-ruler me-2"></i>Unité de mesure
+                            <label for="sous_categorie_id" class="app-form-label">
+                                <i class="fas fa-sitemap me-2"></i>Sous-catégorie
                             </label>
-                            <select name="unite_mesure" id="unite_mesure" class="app-form-select">
-                                <option value="">Sélectionner une unité</option>
-                                @foreach ($uniteMesures as $uniteMesure)
-                                    <option value="{{ $uniteMesure->id }}" {{ $article->unite_mesure == $uniteMesure->id ? 'selected' : '' }}>
-                                        {{ $uniteMesure->nom }}
+                            <select name="sous_categorie_id" id="sous_categorie_id" class="app-form-select">
+                                <option value="">Aucune</option>
+                                @foreach ($sousCategories as $sousCategorie)
+                                    <option value="{{ $sousCategorie->id }}" data-categorie="{{ $sousCategorie->categorie_id }}" {{ $article->sous_categorie_id == $sousCategorie->id ? 'selected' : '' }}>
+                                        {{ $sousCategorie->nom }}
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="app-form-text">Unité de mesure de l'article</div>
+                            <div class="app-form-text">Sous-catégorie optionnelle</div>
                         </div>
                     </div>
                 </div>
@@ -76,6 +174,25 @@
                             </label>
                             <input type="text" name="nom" id="nom" class="app-form-control" value="{{ old('nom', $article->nom) }}" required>
                             <div class="app-form-text">Nom complet ou description de l'article</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-form-row">
+                    <div class="app-form-col">
+                        <div class="app-form-group">
+                            <label for="unite_mesure" class="app-form-label">
+                                <i class="fas fa-ruler me-2"></i>Unité de mesure
+                            </label>
+                            <select name="unite_mesure" id="unite_mesure" class="app-form-select">
+                                <option value="">Sélectionner une unité</option>
+                                @foreach ($uniteMesures as $uniteMesure)
+                                    <option value="{{ $uniteMesure->id }}" {{ $article->unite_mesure == $uniteMesure->id ? 'selected' : '' }}>
+                                        {{ $uniteMesure->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="app-form-text">Unité de mesure de l'article</div>
                         </div>
                     </div>
                 </div>

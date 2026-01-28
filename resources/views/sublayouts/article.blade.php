@@ -80,6 +80,18 @@
                 <p>Gérer les réceptions d'articles livrés</p>
             </div>
         </a>
+
+        <a href="{{ route('fournisseurs.index') }}" class="dashboard-card info">
+            <div class="card-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+                <h3>Fournisseurs</h3>
+                <p>Afficher la liste des fournisseurs</p>
+            </div>
+        </a>
+
+        
     </div>
 </div>
 

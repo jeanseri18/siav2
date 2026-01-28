@@ -28,7 +28,7 @@
             <table id="Table" class="app-table display">
                 <thead>
                     <tr>
-                        <th>Artisan</th>
+                        <th>Prestataire</th>
                         <th>Contrat</th>
                         <th>Corps de Métier</th>
                         <th>Prestation</th>
@@ -41,12 +41,26 @@
                 <tbody>
                     @foreach($prestations as $prestation)
                     <tr>
-                        <td>
+                        <td width="25%;">
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
-                                    <i class="fas fa-hard-hat text-primary"></i>
+                                    @if($prestation->artisan)
+                                        <i class="fas fa-hard-hat text-primary"></i>
+                                    @elseif($prestation->fournisseur)
+                                        <i class="fas fa-building text-success"></i>
+                                    @else
+                                        <i class="fas fa-user-slash text-secondary"></i>
+                                    @endif
                                 </div>
-                                <span>{{ $prestation->artisan ? $prestation->artisan->nom : 'Non assigné' }}</span>
+                                <span>
+                                    @if($prestation->artisan)
+                                        {{ $prestation->artisan->nom }}  {{ $prestation->artisan->prenoms }}
+                                    @elseif($prestation->fournisseur)
+                                        {{ $prestation->fournisseur->raison_social }}                                         {{ $prestation->fournisseur->prenoms }}
+                                    @else
+                                        Non assigné
+                                    @endif
+                                </span>
                             </div>
                         </td>
                         <td>{{ $prestation->contrat->nom_contrat }}</td>
@@ -88,34 +102,39 @@
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $prestation->id }}">
                                     <li>
                                         <a class="dropdown-item" href="#" onclick="affecterArtisan({{ $prestation->id }})">
-                                            <i class="fas fa-user-plus me-2"></i>Affecter un artisan
+                                            <i class="fas fa-user-plus me-2"></i>Affecter un prestataire
                                         </a>
                                     </li>
+
+                                    
                                     <li>
                                         <a class="dropdown-item" href="{{ route('prestations.edit', $prestation->id) }}">
-                                            <i class="fas fa-edit me-2"></i>Définir les détails
+                                            <i class="fas fa-edit me-2"></i>modifier  les détails
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item" href="#" onclick="voirDetails({{ $prestation->id }})">
-                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        <a class="dropdown-item" href="{{ route('prestations.lignes', $prestation->id) }}">
+                                            <i class="fas fa-list me-2"></i>Créer les lignes prestation
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
+
                                     <li>
-                                        <a class="dropdown-item" href="#" onclick="ajouterComptes({{ $prestation->id }})">
-                                            <i class="fas fa-calculator me-2"></i>Ajouter des comptes
+                                        <a class="dropdown-item" href="{{ route('prestations.voirLignes', $prestation->id) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les lignes prestation
                                         </a>
                                     </li>
+
                                     <li>
-                                        <a class="dropdown-item" href="#" onclick="afficherDecomptes({{ $prestation->id }})">
-                                            <i class="fas fa-list-alt me-2"></i>Afficher les décomptes
+                                        <a class="dropdown-item" href="{{ route('prestations.document', $prestation->id) }}" target="_blank">
+                                            <i class="fas fa-file-pdf me-2"></i>Générer un document
                                         </a>
                                     </li>
+                                    
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="#" onclick="remplacerArtisan({{ $prestation->id }})">
-                                            <i class="fas fa-user-edit me-2"></i>Remplacer l'artisan
+                                            <i class="fas fa-user-edit me-2"></i>Remplacer le prestataire
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
@@ -135,25 +154,34 @@
     </div>
 </div>
 
- <!-- Modal pour affecter un artisan -->
-<div class="modal fade" id="affecterArtisanModal" tabindex="-1" aria-labelledby="affecterArtisanModalLabel" aria-hidden="true">
+ <!-- Modal pour affecter un prestataire -->
+<div class="modal fade" id="affecterArtisanModal" tabindex="-1" aria-labelledby="affecterArtisanModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="affecterArtisanModalLabel">
-                    <i class="fas fa-user-plus me-2"></i>Affecter un artisan
+                    <i class="fas fa-user-plus me-2"></i>Affecter un prestataire
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="affecterArtisanForm" method="POST">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="type_prestataire_hidden" id="type_prestataire_hidden">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="artisan_select" class="form-label">Sélectionner un artisan</label>
+                        <label for="type_prestataire" class="form-label">Type de prestataire</label>
+                        <select name="type_prestataire" id="type_prestataire" class="form-select" onchange="changerTypePrestataire()" required>
+                            <option value="">-- Choisir le type --</option>
+                            <option value="artisan">Artisan</option>
+                            <option value="fournisseur">Fournisseur</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="artisan_select" class="form-label">Sélectionner un prestataire</label>
                         <select name="id_artisan" id="artisan_select" class="form-select" required>
-                            <option value="">-- Choisir un artisan --</option>
-                            <!-- Les artisans seront chargés dynamiquement via JavaScript -->
+                            <option value="">-- Choisir d'abord le type --</option>
+                            <!-- Les prestataires seront chargés dynamiquement via JavaScript -->
                         </select>
                     </div>
                     <div class="mb-3">
@@ -163,20 +191,20 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Affecter l'artisan</button>
+                    <button type="submit" class="btn btn-primary">Affecter le prestataire</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Modal pour remplacer un artisan -->
-<div class="modal fade" id="remplacerArtisanModal" tabindex="-1" aria-labelledby="remplacerArtisanModalLabel" aria-hidden="true">
+<!-- Modal pour remplacer un prestataire -->
+<div class="modal fade" id="remplacerArtisanModal" tabindex="-1" aria-labelledby="remplacerArtisanModalLabel">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="remplacerArtisanModalLabel">
-                    <i class="fas fa-user-edit me-2"></i>Remplacer l'artisan
+                    <i class="fas fa-user-edit me-2"></i>Remplacer le prestataire
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -185,24 +213,24 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Artisan actuel</label>
+                        <label class="form-label">Prestataire actuel</label>
                         <input type="text" id="artisan_actuel" class="form-control" readonly>
                     </div>
                     <div class="mb-3">
-                        <label for="nouvel_artisan" class="form-label">Nouvel artisan</label>
+                        <label for="nouvel_artisan" class="form-label">Nouveau prestataire</label>
                         <select name="id_artisan" id="nouvel_artisan" class="form-select" required>
-                            <option value="">-- Choisir un nouvel artisan --</option>
+                            <option value="">-- Choisir un nouveau prestataire --</option>
                             <!-- Les artisans seront chargés dynamiquement via JavaScript -->
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="motif_remplacement" class="form-label">Motif du remplacement</label>
-                        <textarea name="motif_remplacement" id="motif_remplacement" class="form-control" rows="3" placeholder="Raison du changement d'artisan..."></textarea>
+                        <textarea name="motif_remplacement" id="motif_remplacement" class="form-control" rows="3" placeholder="Raison du changement de prestataire..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-warning">Remplacer l'artisan</button>
+                    <button type="submit" class="btn btn-warning">Remplacer le prestataire</button>
                 </div>
             </form>
         </div>
@@ -210,7 +238,7 @@
 </div>
 
 <!-- Modal pour voir les détails -->
-<div class="modal fade" id="voirDetailsModal" tabindex="-1" aria-labelledby="voirDetailsModalLabel" aria-hidden="true">
+<div class="modal fade" id="voirDetailsModal" tabindex="-1" aria-labelledby="voirDetailsModalLabel">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -230,7 +258,7 @@
 </div>
 
 <!-- Modal pour ajouter des comptes -->
-<div class="modal fade" id="ajouterComptesModal" tabindex="-1" aria-labelledby="ajouterComptesModalLabel" aria-hidden="true">
+<div class="modal fade" id="ajouterComptesModal" tabindex="-1" aria-labelledby="ajouterComptesModalLabel">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -281,25 +309,7 @@
 </div>
 
 <!-- Modal pour afficher les décomptes -->
-<div class="modal fade" id="afficherDecomptesModal" tabindex="-1" aria-labelledby="afficherDecomptesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="afficherDecomptesModalLabel">
-                    <i class="fas fa-list-alt me-2"></i>Décomptes de la prestation
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="decomptesContent">
-                <!-- Le contenu sera chargé dynamiquement -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                <button type="button" class="btn btn-primary" onclick="imprimerDecomptes()">Imprimer</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 @push('styles')
 <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
@@ -334,25 +344,54 @@
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
         
+        // Variable globale pour stocker l'ID de prestation
+        let currentPrestationId = null;
+        
         // Fonctions pour les actions du menu déroulant
         window.affecterArtisan = function(prestationId) {
+            // Stocker l'ID de prestation
+            currentPrestationId = prestationId;
+            
             // Configurer le formulaire pour l'affectation d'artisan
             document.getElementById('affecterArtisanForm').action = `/prestations/${prestationId}/affecter-artisan`;
             
-            // Charger la liste des artisans disponibles
-            fetch(`/prestations/${prestationId}/artisans-disponibles`)
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('artisan_select');
-                    select.innerHTML = '<option value="">-- Choisir un artisan --</option>';
-                    data.artisans.forEach(artisan => {
-                        select.innerHTML += `<option value="${artisan.id}">${artisan.nom}</option>`;
-                    });
-                })
-                .catch(error => console.error('Erreur:', error));
+            // Réinitialiser le formulaire
+            document.getElementById('type_prestataire').value = '';
+            document.getElementById('artisan_select').innerHTML = '<option value="">-- Choisir d\'abord le type --</option>';
             
             // Afficher la modale
             new bootstrap.Modal(document.getElementById('affecterArtisanModal')).show();
+        };
+        
+        window.changerTypePrestataire = function() {
+            const typePrestataire = document.getElementById('type_prestataire').value;
+            const select = document.getElementById('artisan_select');
+            
+            // Mettre à jour le champ caché
+            document.getElementById('type_prestataire_hidden').value = typePrestataire;
+            
+            if (!typePrestataire) {
+                select.innerHTML = '<option value="">-- Choisir d\'abord le type --</option>';
+                return;
+            }
+            
+            // Charger la liste des prestataires disponibles
+            fetch(`/prestations/${currentPrestationId}/artisans-disponibles`)
+                .then(response => response.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">-- Choisir un prestataire --</option>';
+                    
+                    if (typePrestataire === 'artisan' && data.artisans) {
+                        data.artisans.forEach(artisan => {
+                            select.innerHTML += `<option value="${artisan.id}" data-type="artisan">${artisan.nom} ${artisan.prenoms || ''}</option>`;
+                        });
+                    } else if (typePrestataire === 'fournisseur' && data.fournisseurs) {
+                        data.fournisseurs.forEach(fournisseur => {
+                            select.innerHTML += `<option value="${fournisseur.id}" data-type="fournisseur">${fournisseur.nom_raison_sociale} ${fournisseur.prenoms || ''}</option>`;
+                        });
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
         };
         
         window.voirDetails = function(prestationId) {
@@ -378,20 +417,7 @@
             new bootstrap.Modal(document.getElementById('ajouterComptesModal')).show();
         };
         
-        window.afficherDecomptes = function(prestationId) {
-            // Charger les décomptes de la prestation
-            fetch(`/prestations/${prestationId}/decomptes`)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('decomptesContent').innerHTML = html;
-                    new bootstrap.Modal(document.getElementById('afficherDecomptesModal')).show();
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    document.getElementById('decomptesContent').innerHTML = '<div class="alert alert-danger">Erreur lors du chargement des décomptes.</div>';
-                    new bootstrap.Modal(document.getElementById('afficherDecomptesModal')).show();
-                });
-        };
+
         
         window.remplacerArtisan = function(prestationId) {
             // Configurer le formulaire pour le remplacement d'artisan
@@ -498,10 +524,7 @@
                     bootstrap.Modal.getInstance(document.getElementById('ajouterComptesModal')).hide();
                     alert('Compte ajouté avec succès!');
                     
-                    // Mettre à jour le taux d'avancement dans le tableau
-                    if (data.taux_avancement !== undefined) {
-                        updateTauxAvancementDisplay(data.taux_avancement);
-                    }
+
                     
                     // Recharger la page pour afficher les changements
                     location.reload();
@@ -515,12 +538,7 @@
             });
         });
         
-        // Fonction pour mettre à jour l'affichage du taux d'avancement
-        function updateTauxAvancementDisplay(tauxAvancement) {
-            // Cette fonction peut être utilisée pour mettre à jour l'affichage en temps réel
-            // Pour l'instant, on recharge la page, mais on pourrait améliorer cela
-            console.log('Nouveau taux d\'avancement:', tauxAvancement + '%');
-        }
+
         
         window.supprimerPrestation = function(prestationId) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cette prestation ?')) {

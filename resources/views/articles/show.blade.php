@@ -106,10 +106,10 @@
                         <div class="col-md-6">
                             <div class="app-form-group">
                                 <label class="app-form-label">
-                                    <i class="fas fa-money-bill-wave me-2"></i>Prix Unitaire
+                                    <i class="fas fa-money-bill-wave me-2"></i>Prix unitaire (Dernier achat)
                                 </label>
                                 <div class="app-form-control bg-light">
-                                    {{ number_format($article->prix_unitaire, 0, ',', ' ') }} FCFA
+                                    {{ $article->prix_dernier_achat ? number_format($article->prix_dernier_achat, 0, ',', ' ') . ' FCFA' : 'Aucun achat' }}
                                 </div>
                             </div>
                         </div>
@@ -185,6 +185,15 @@
                         </label>
                         <div class="app-form-control bg-light">
                             {{ $article->created_at->format('d/m/Y à H:i') }}
+                        </div>
+                    </div>
+                    
+                    <div class="app-form-group">
+                        <label class="app-form-label">
+                            <i class="fas fa-truck-loading me-2"></i>Date de dernier approvisionnement
+                        </label>
+                        <div class="app-form-control bg-light">
+                            {{ $article->date_dernier_approvisionnement ? \Carbon\Carbon::parse($article->date_dernier_approvisionnement)->format('d/m/Y à H:i') : 'Aucun approvisionnement' }}
                         </div>
                     </div>
                     

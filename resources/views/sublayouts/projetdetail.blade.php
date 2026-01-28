@@ -37,50 +37,6 @@
             </div>
         </div>
 
-        <div class="project-navigation-wrapper">
-            <div class="project-nav-grid">
-                <a href="{{ route('projets.show', ['projet' => session('projet_id')]) }}" class="project-nav-card detail">
-                    <div class="project-nav-icon">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
-                    <h4>Détail Projet</h4>
-                    <p>Informations complètes</p>
-                </a>
-
-                <a href="{{ route('contrats.index') }}" class="project-nav-card contracts">
-                    <div class="project-nav-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
-                    <h4>Contrats</h4>
-                    <p>Gestion des contrats</p>
-                </a>
-
-                <a href="{{ route('documents.index') }}" class="project-nav-card documents">
-                    <div class="project-nav-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <h4>Documents</h4>
-                    <p>Bibliothèque de fichiers</p>
-                </a>
-
-                <a href="{{ route('stock.index') }}" class="project-nav-card stock">
-                    <div class="project-nav-icon">
-                        <i class="fas fa-warehouse"></i>
-                    </div>
-                    <h4>Stock</h4>
-                    <p>Inventaire du projet</p>
-                </a>
-
-                <a href="{{ route('transferts.index') }}" class="project-nav-card transfers">
-                    <div class="project-nav-icon">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <h4>Transferts</h4>
-                    <p>Mouvements de stock</p>
-                </a>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal de Transfert avec les classes modifiées -->
     <div class="modal fade" id="transfertModal" tabindex="-1" aria-labelledby="transfertModalLabel" aria-hidden="true">
@@ -136,7 +92,43 @@
                                     placeholder="Quantité à transférer" min="1" required>
                             </div>
                         </div>
+    
+    // Afficher le bouton supprimer sur tous les éléments sauf le premier
+    updateRemoveButtons();
+}
 
+function removeArticleItem(button) {
+    const item = button.closest('.article-item');
+    item.remove();
+    updateRemoveButtons();
+}
+
+function updateRemoveButtons() {
+    const items = document.querySelectorAll('.article-item');
+    const removeButtons = document.querySelectorAll('.btn-remove-item');
+    
+    removeButtons.forEach(button => {
+        button.style.display = items.length > 1 ? 'inline-flex' : 'none';
+    });
+}
+
+// Ajouter l'événement au bouton quand le DOM est chargé
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-item-btn');
+    console.log('Bouton ajouter trouvé:', addButton);
+    if (addButton) {
+        addButton.addEventListener('click', function() {
+            console.log('Bouton ajouter cliqué');
+            addArticleItem();
+        });
+        // Style pour s'assurer que le bouton est cliquable
+        addButton.style.cursor = 'pointer';
+        addButton.style.opacity = '1';
+    } else {
+        console.error('Bouton ajouter non trouvé');
+    }
+});
+</script>
                         <div class="project-form-group">
                             <label><i class="fas fa-calendar-alt"></i> Date de Transfert</label>
                             <input type="date" name="date_transfert" class="form-control project-modern-input"
@@ -677,4 +669,199 @@
     }
 }
 </style>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<!-- Chrome Style Project Navigation -->
+<div class="chrome-nav-section">
+    <div class="chrome-tab-bar">
+        <div class="chrome-tabs-container">
+            <div class="chrome-tab {{ request()->routeIs('projets.show') ? 'active' : '' }}">
+                <i class="fas fa-info-circle"></i>
+                <span>Détails</span>
+                <a href="{{ route('projets.show', ['projet' => session('projet_id')]) }}"></a>
+            </div>
+            <div class="chrome-tab {{ request()->routeIs('contrats.*') ? 'active' : '' }}">
+                <i class="fas fa-handshake"></i>
+                <span>Contrats</span>
+                <a href="{{ route('contrats.index') }}"></a>
+            </div>
+            <div class="chrome-tab {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                <i class="fas fa-file-alt"></i>
+                <span>Documents</span>
+                <a href="{{ route('documents.index') }}"></a>
+            </div>
+            <div class="chrome-tab {{ request()->routeIs('stock.*') ? 'active' : '' }}">
+                <i class="fas fa-box"></i>
+                <span>Stock</span>
+                <a href="{{ route('stock.index') }}"></a>
+            </div>
+            <div class="chrome-tab {{ request()->routeIs('transferts.*') ? 'active' : '' }}">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Transferts</span>
+                <a href="{{ route('transferts.index') }}"></a>
+            </div>
+        </div>
+        <div class="chrome-contract-info">
+            <span class="contract-name">{{ session('projet_nom') }}</span>
+            <span class="status-indicator active"></span>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chrome Style Navigation */
+.chrome-nav-section {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+.chrome-tab-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.chrome-tabs-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: 0.25rem 0;
+}
+
+.chrome-tabs-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.chrome-tabs-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chrome-tabs-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.chrome-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: max-content;
+    font-size: 0.85rem;
+    color: #495057;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.chrome-tab:hover {
+    background: #dee2e6;
+    transform: translateY(-1px);
+}
+
+.chrome-tab.active {
+    background: #ffffff;
+    color: #033d71;
+    font-weight: 600;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    border-color: #033d71;
+    border-bottom: 2px solid #ffffff;
+    margin-bottom: -1px;
+}
+
+.chrome-tab i {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.chrome-tab.active i {
+    opacity: 1;
+    color: #033d71;
+}
+
+.chrome-tab a {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.chrome-contract-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-left: 1rem;
+    white-space: nowrap;
+}
+
+.chrome-contract-info .contract-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .chrome-tab-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .chrome-tabs-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .chrome-tab {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .chrome-contract-info {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+
 

@@ -69,8 +69,57 @@
 
                         <div class="col-md-6 app-mb-3">
                             <label class="app-form-label app-fw-bold">Régime d'imposition</label>
-                            <p class="app-mb-0">{{ $client->regime_imposition}}</p>
+                            <p class="app-mb-0">{{ $client->regime_imposition ?? 'Non renseigné' }}</p>
                         </div>
+                        
+                        @if($client->n_rccm)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">N° RCCM</label>
+                            <p class="app-mb-0">{{ $client->n_rccm }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->n_cc)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">N° CC</label>
+                            <p class="app-mb-0">{{ $client->n_cc }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->secteur_activite)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">Secteur d'activité</label>
+                            <p class="app-mb-0">{{ $client->secteur_activite }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->delai_paiement)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">Délai de paiement</label>
+                            <p class="app-mb-0">{{ $client->delai_paiement }} jours</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->mode_paiement)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">Mode de paiement</label>
+                            <p class="app-mb-0">{{ $client->mode_paiement }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->boite_postale)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">Boîte postale</label>
+                            <p class="app-mb-0">{{ $client->boite_postale }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($client->bus)
+                        <div class="col-md-6 app-mb-3">
+                            <label class="app-form-label app-fw-bold">Business Unit</label>
+                            <p class="app-mb-0">{{ $client->bus->nom ?? 'Non renseigné' }}</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -113,6 +162,79 @@
                         </div>
                         @endforeach
                     </div>
+                </div>
+            </div>
+            @endif
+            
+            <!-- Contrats liés -->
+            @if($client->contrats && $client->contrats->count() > 0)
+            <div class="app-card app-mb-4">
+                <div class="app-card-header">
+                    <h5 class="app-card-title app-mb-0">
+                        <i class="fas fa-file-contract app-me-2"></i>
+                        Contrats liés ({{ $client->contrats->count() }})
+                    </h5>
+                </div>
+                <div class="app-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Objet</th>
+                                    <th>Montant</th>
+                                    <th>Date début</th>
+                                    <th>Date fin</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($client->contrats as $contrat)
+                                <tr>
+                                    <td><strong>{{ $contrat->reference ?? 'N/A' }}</strong></td>
+                                    <td>{{ $contrat->objet ?? 'Non renseigné' }}</td>
+                                    <td>
+                                        @if($contrat->montant)
+                                            <span class="badge bg-success">{{ number_format($contrat->montant, 0, ',', ' ') }} FCFA</span>
+                                        @else
+                                            <span class="text-muted">Non renseigné</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $contrat->date_debut ? \Carbon\Carbon::parse($contrat->date_debut)->format('d/m/Y') : 'N/A' }}</td>
+                                    <td>{{ $contrat->date_fin ? \Carbon\Carbon::parse($contrat->date_fin)->format('d/m/Y') : 'N/A' }}</td>
+                                    <td>
+                                        @if($contrat->statut)
+                                            <span class="badge bg-{{ $contrat->statut === 'Actif' ? 'success' : ($contrat->statut === 'Terminé' ? 'secondary' : 'warning') }}">
+                                                {{ $contrat->statut }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('contrats.show', $contrat->id) }}" class="btn btn-sm btn-outline-primary" title="Voir le contrat">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="app-card app-mb-4">
+                <div class="app-card-header">
+                    <h5 class="app-card-title app-mb-0">
+                        <i class="fas fa-file-contract app-me-2"></i>
+                        Contrats liés
+                    </h5>
+                </div>
+                <div class="app-card-body text-center">
+                    <i class="fas fa-file-contract fa-3x text-muted app-mb-3"></i>
+                    <p class="text-muted">Aucun contrat associé à ce client.</p>
                 </div>
             </div>
             @endif

@@ -91,7 +91,7 @@
                                         <i class="fas fa-user me-2"></i>Initiateur (Chef de projet)
                                     </label>
                                     <input type="text" class="app-form-control" 
-                                        id="initiateur" name="initiateur" value="{{ Auth::user()->name }}" readonly>
+                                        id="initiateur" name="initiateur" value="{{ Auth::user()->nom }}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -109,10 +109,10 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th>Réf Article <span class="text-danger">*</span></th>
+                                            <th style="width: 25%;">Réf Article <span class="text-danger">*</span></th>
                                             <th>Désignation</th>
-                                            <th>Unité</th>
-                                            <th>Quantité <span class="text-danger">*</span></th>
+                                            <th style="width: 10%;">Unité</th>
+                                            <th style="width: 12%;">Quantité <span class="text-danger">*</span></th>
                                             <th>Commentaire</th>
                                             <th style="width: 80px;">Actions</th>
                                         </tr>
@@ -124,7 +124,7 @@
                                                     <option value="">Sélectionner un article</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" 
-                                                            data-unite="{{ $article->unite_mesure }}"
+                                                            data-unite="{{ $article->uniteMesure->ref ?? '' }}"
                                         data-designation="{{ $article->nom }}"
                                         data-code="{{ $article->reference }}">
                                                             {{ $article->reference }} - {{ $article->nom }} 
@@ -183,7 +183,7 @@
                 <option value="">Sélectionner un article</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" 
-                        data-unite="{{ $article->unite_mesure }}"
+                        data-unite="{{ $article->uniteMesure->ref ?? '' }}"
                         data-designation="{{ $article->nom }}"
                         data-code="{{ $article->reference }}">
                         {{ $article->reference }} - {{ $article->nom }} 
@@ -249,18 +249,16 @@ function handleArticleChange(event) {
     const row = select.closest('tr');
     
     if (selectedOption.value) {
-        // Récupérer les données de l'article sélectionné
-        const articleData = @json($articles->keyBy('id'));
-        const selectedArticle = articleData[selectedOption.value];
+        // Récupérer les données depuis les attributs data de l'option
+        const designation = selectedOption.getAttribute('data-designation') || '';
+        const unite = selectedOption.getAttribute('data-unite') || '';
         
-        if (selectedArticle) {
-            // Remplir automatiquement les champs
-            const designationField = row.querySelector('.designation-field');
-            designationField.value = selectedArticle.nom || '';
-            
-            const uniteField = row.querySelector('.unite-field');
-            uniteField.value = selectedArticle.unite_mesure || '';
-        }
+        // Remplir automatiquement les champs
+        const designationField = row.querySelector('.designation-field');
+        designationField.value = designation;
+        
+        const uniteField = row.querySelector('.unite-field');
+        uniteField.value = unite;
     } else {
         // Vider les champs si aucun article sélectionné
         row.querySelector('.designation-field').value = '';
@@ -293,15 +291,13 @@ $(document).ready(function() {
         const row = $(this).closest('tr');
         
         if (selectedOption.val()) {
-            // Récupérer les données de l'article sélectionné
-            const articleData = @json($articles->keyBy('id'));
-            const selectedArticle = articleData[selectedOption.val()];
+            // Récupérer les données depuis les attributs data de l'option
+            const designation = selectedOption.attr('data-designation') || '';
+            const unite = selectedOption.attr('data-unite') || '';
             
-            if (selectedArticle) {
-                // Remplir automatiquement les champs
-                row.find('.designation-field').val(selectedArticle.nom || '');
-                row.find('.unite-field').val(selectedArticle.unite_mesure || '');
-            }
+            // Remplir automatiquement les champs
+            row.find('.designation-field').val(designation);
+            row.find('.unite-field').val(unite);
         } else {
             // Vider les champs si aucun article sélectionné
             row.find('.designation-field').val('');

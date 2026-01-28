@@ -116,7 +116,9 @@ class BpuController extends Controller
     //     ]);
     // $bpu->updateDerivedValues();
 
-    //     return redirect()->route('bpu.index')->with('success', 'BPU ajouté avec succès.');
+    //     // Redirection intelligente selon la page d'origine
+   // $redirectRoute = $request->input('redirect_to', 'bpu.index');
+ //   return redirect()->route($redirectRoute)->with('success', 'BPU ajouté avec succès.');
     // }
 
     public function edit(Bpu $bpu)
@@ -167,7 +169,9 @@ class BpuController extends Controller
 
     //     $bpu->updateDerivedValues();
 
-    //     return redirect()->route('bpu.index')->with('success', 'BPU mis à jour avec succès.');
+    //     // Redirection intelligente selon la page d'origine
+  //  $redirectRoute = $request->input('redirect_to', 'bpu.index');
+   // return redirect()->route($redirectRoute)->with('success', 'BPU mis à jour avec succès.');
     // }
    
     
@@ -177,30 +181,38 @@ class BpuController extends Controller
 {
     $request->validate([
         'designation' => 'required',
-        'qte' => 'required|numeric',
+        'qte' => 'nullable|numeric',
         'materiaux' => 'required|numeric',
+        'taux_mo' => 'nullable|numeric',
+        'taux_mat' => 'nullable|numeric',
+        'taux_fc' => 'nullable|numeric',
+        'taux_fg' => 'nullable|numeric',
+        'taux_benefice' => 'nullable|numeric',
         'unite' => 'required',
-        'main_oeuvre' => 'required|numeric',
-        'materiel' => 'required|numeric',
         'id_rubrique' => 'required|exists:rubriques,id'
     ]);
 
-    // Création du BPU avec uniquement les données de base
+    // Création du BPU avec les données de base et les taux
     $bpu = Bpu::create([
         'designation' => $request->designation,
-        'qte' => $request->qte,
+        'qte' => $request->qte ?? null,
         'materiaux' => $request->materiaux,
-        'main_oeuvre' => $request->main_oeuvre,
-        'materiel' => $request->materiel,
+        'taux_mo' => $request->taux_mo ?? 0,
+        'taux_mat' => $request->taux_mat ?? 0,
+        'taux_fc' => $request->taux_fc ?? 0,
+        'taux_fg' => $request->taux_fg ?? 0,
+        'taux_benefice' => $request->taux_benefice ?? 0,
         'unite' => $request->unite,
         'id_rubrique' => $request->id_rubrique,
         'contrat_id' => $request->has('contrat_id') && $request->contrat_id ? $request->contrat_id : null,
     ]);
     
-    // La méthode updateDerivedValues s'occupe de tous les calculs
+    // La méthode updateDerivedValues s'occupe de tous les calculs selon les formules BPU
     $bpu->updateDerivedValues();
 
-    return redirect()->route('bpu.index')->with('success', 'BPU ajouté avec succès.');
+    // Redirection intelligente selon la page d'origine
+    $redirectRoute = $request->input('redirect_to', 'bpu.index');
+    return redirect()->route($redirectRoute)->with('success', 'BPU ajouté avec succès.');
 }
 
 public function update(Request $request, $id)
@@ -210,33 +222,43 @@ public function update(Request $request, $id)
     // Validation des données
     $request->validate([
         'designation' => 'required',
-        'qte' => 'required|numeric',
+        'qte' => 'nullable|numeric',
         'materiaux' => 'required|numeric',
+        'taux_mo' => 'nullable|numeric',
+        'taux_mat' => 'nullable|numeric',
+        'taux_fc' => 'nullable|numeric',
+        'taux_fg' => 'nullable|numeric',
+        'taux_benefice' => 'nullable|numeric',
         'unite' => 'required',
-        'main_oeuvre' => 'required|numeric',
-        'materiel' => 'required|numeric',
     ]);
 
-    // Mise à jour des données de base uniquement
+    // Mise à jour des données de base et des taux
     $bpu->update([
         'designation' => $request->designation,
-        'qte' => $request->qte,
+        'qte' => $request->qte ?? null,
         'materiaux' => $request->materiaux,
-        'main_oeuvre' => $request->main_oeuvre,
-        'materiel' => $request->materiel,
+        'taux_mo' => $request->taux_mo ?? 0,
+        'taux_mat' => $request->taux_mat ?? 0,
+        'taux_fc' => $request->taux_fc ?? 0,
+        'taux_fg' => $request->taux_fg ?? 0,
+        'taux_benefice' => $request->taux_benefice ?? 0,
         'unite' => $request->unite,
     ]);
     
-    // La méthode updateDerivedValues s'occupe de tous les calculs
+    // La méthode updateDerivedValues s'occupe de tous les calculs selon les formules BPU
     $bpu->updateDerivedValues();
 
-    return redirect()->route('bpu.index')->with('success', 'BPU mis à jour avec succès.');
+    // Redirection intelligente selon la page d'origine
+    $redirectRoute = $request->input('redirect_to', 'bpu.index');
+    return redirect()->route($redirectRoute)->with('success', 'BPU mis à jour avec succès.');
 }
-    public function destroy(Bpu $bpu)
+    public function destroy(Request $request, Bpu $bpu)
     {
         $bpu->delete();
 
-        return redirect()->route('bpu.index')->with('success', 'BPU supprimé avec succès.');
+        // Redirection intelligente selon la page d'origine
+        $redirectRoute = $request->input('redirect_to', 'bpu.index');
+        return redirect()->route($redirectRoute)->with('success', 'BPU supprimé avec succès.');
     }
 
     /**
@@ -307,15 +329,80 @@ public function update(Request $request, $id)
             }
 
             $copiedCount = 0;
+            $categorieMapping = [];
+            $sousCategorieMapping = [];
+            $rubriqueMapping = [];
             
             foreach ($bpuIds as $bpuId) {
-                $originalBpu = Bpu::find($bpuId);
+                $originalBpu = Bpu::with('rubrique.sousCategorie.categorie')->find($bpuId);
                 
-                if ($originalBpu && !$originalBpu->contrat_id) {
-                    // Vérifier si ce BPU exact n'existe pas déjà dans le contrat
+                if ($originalBpu && !$originalBpu->contrat_id && $originalBpu->rubrique) {
+                    $originalRubrique = $originalBpu->rubrique;
+                    $originalSousCategorie = $originalRubrique->sousCategorie;
+                    $originalCategorie = $originalSousCategorie->categorie;
+                    
+                    // 1. Dupliquer ou récupérer la catégorie pour le contrat
+                    $categorieKey = $originalCategorie->id;
+                    if (!isset($categorieMapping[$categorieKey])) {
+                        $existingCategorie = \App\Models\CategorieRubrique::where('contrat_id', $contratId)
+                            ->where('nom', $originalCategorie->nom)
+                            ->where('type', $originalCategorie->type)
+                            ->first();
+                        
+                        if (!$existingCategorie) {
+                            $newCategorie = $originalCategorie->replicate();
+                            $newCategorie->contrat_id = $contratId;
+                            $newCategorie->save();
+                            $categorieMapping[$categorieKey] = $newCategorie->id;
+                        } else {
+                            $categorieMapping[$categorieKey] = $existingCategorie->id;
+                        }
+                    }
+                    
+                    // 2. Dupliquer ou récupérer la sous-catégorie pour le contrat
+                    $sousCategorieKey = $originalSousCategorie->id;
+                    if (!isset($sousCategorieMapping[$sousCategorieKey])) {
+                        $existingSousCategorie = \App\Models\SousCategorieRubrique::where('contrat_id', $contratId)
+                            ->where('nom', $originalSousCategorie->nom)
+                            ->where('type', $originalSousCategorie->type)
+                            ->where('id_session', $categorieMapping[$categorieKey])
+                            ->first();
+                        
+                        if (!$existingSousCategorie) {
+                            $newSousCategorie = $originalSousCategorie->replicate();
+                            $newSousCategorie->contrat_id = $contratId;
+                            $newSousCategorie->id_session = $categorieMapping[$categorieKey];
+                            $newSousCategorie->save();
+                            $sousCategorieMapping[$sousCategorieKey] = $newSousCategorie->id;
+                        } else {
+                            $sousCategorieMapping[$sousCategorieKey] = $existingSousCategorie->id;
+                        }
+                    }
+                    
+                    // 3. Dupliquer ou récupérer la rubrique pour le contrat
+                    $rubriqueKey = $originalRubrique->id;
+                    if (!isset($rubriqueMapping[$rubriqueKey])) {
+                        $existingRubrique = \App\Models\Rubrique::where('contrat_id', $contratId)
+                            ->where('nom', $originalRubrique->nom)
+                            ->where('type', $originalRubrique->type)
+                            ->where('id_soussession', $sousCategorieMapping[$sousCategorieKey])
+                            ->first();
+                        
+                        if (!$existingRubrique) {
+                            $newRubrique = $originalRubrique->replicate();
+                            $newRubrique->contrat_id = $contratId;
+                            $newRubrique->id_soussession = $sousCategorieMapping[$sousCategorieKey];
+                            $newRubrique->save();
+                            $rubriqueMapping[$rubriqueKey] = $newRubrique->id;
+                        } else {
+                            $rubriqueMapping[$rubriqueKey] = $existingRubrique->id;
+                        }
+                    }
+                    
+                    // 4. Vérifier si ce BPU exact n'existe pas déjà dans le contrat
                     $existingBpu = Bpu::where('contrat_id', $contratId)
                         ->where('designation', $originalBpu->designation)
-                        ->where('id_rubrique', $originalBpu->id_rubrique)
+                        ->where('id_rubrique', $rubriqueMapping[$rubriqueKey])
                         ->where('qte', $originalBpu->qte)
                         ->where('materiaux', $originalBpu->materiaux)
                         ->where('main_oeuvre', $originalBpu->main_oeuvre)
@@ -323,9 +410,10 @@ public function update(Request $request, $id)
                         ->first();
                     
                     if (!$existingBpu) {
-                        // Créer une copie du BPU avec contrat_id
+                        // 5. Créer une copie du BPU avec la nouvelle rubrique et contrat_id
                         $copiedBpu = $originalBpu->replicate();
                         $copiedBpu->contrat_id = $contratId;
+                        $copiedBpu->id_rubrique = $rubriqueMapping[$rubriqueKey];
                         $copiedBpu->save();
                         
                         $copiedCount++;
@@ -336,7 +424,7 @@ public function update(Request $request, $id)
             return response()->json([
                 'success' => true,
                 'copied_count' => $copiedCount,
-                'message' => "$copiedCount BPU ont été copiés avec succès vers le contrat."
+                'message' => "$copiedCount BPU ont été copiés avec succès vers le contrat avec leur hiérarchie complète."
             ]);
             
         } catch (\Exception $e) {

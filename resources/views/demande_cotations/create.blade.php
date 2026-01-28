@@ -4,6 +4,85 @@
 @section('title', 'Nouvelle Demande de Cotation')
 @section('page-title', 'Nouvelle Demande de Cotation')
 
+@section('styles')
+<style>
+    .article-row {
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .article-row:last-child {
+        border-bottom: none;
+    }
+    
+    .article-row td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    .article-row input,
+    .article-row select {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .article-row input:focus,
+    .article-row select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(3, 61, 113, 0.25);
+    }
+    
+    .badge-unite {
+        background-color: var(--primary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    /* Styles personnalisés pour Select2 */
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        min-height: 38px;
+    }
+    
+    .select2-container--default .select2-selection--multiple:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(3, 61, 113, 0.25);
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: var(--primary);
+        border: 1px solid var(--primary);
+        color: white;
+        border-radius: 0.25rem;
+        padding: 2px 8px;
+        margin: 2px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 5px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: #ffcccc;
+    }
+    
+    .select2-dropdown {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--primary);
+    }
+</style>
+@endsection
+
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('demande-cotations.index') }}">Demandes de Cotation</a></li>
 <li class="breadcrumb-item active">Nouvelle</li>
@@ -104,16 +183,16 @@
                         
                         <div class="app-form-group">
                             <label for="conditions_generales" class="app-form-label">
-                                <i class="fas fa-gavel me-2"></i>Conditions générales
+                                <i class="fas fa-clipboard-list me-2"></i>Spécifications particulières
                             </label>
                             <textarea class="app-form-control @error('conditions_generales') is-invalid @enderror" 
-                                id="conditions_generales" name="conditions_generales" rows="3" placeholder="Conditions générales...">{{ old('conditions_generales') }}</textarea>
+                                id="conditions_generales" name="conditions_generales" rows="3" placeholder="Spécifications particulières...">{{ old('conditions_generales') }}</textarea>
                             @error('conditions_generales')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                            <div class="app-form-text">Conditions générales à communiquer aux fournisseurs</div>
+                            <div class="app-form-text">Spécifications particulières à communiquer au fournisseur</div>
                         </div>
                         
                         <div class="app-card mt-4">
@@ -129,7 +208,7 @@
                                     @foreach($fournisseurs as $fournisseur)
                                         <option value="{{ $fournisseur->id }}" 
                                             {{ (old('fournisseur_id') && in_array($fournisseur->id, old('fournisseur_id'))) ? 'selected' : '' }}>
-                                            {{ $fournisseur->nom }}
+                                            {{ $fournisseur->nom_raison_sociale }}{{ $fournisseur->prenoms ? ' - ' . $fournisseur->prenoms : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -158,12 +237,12 @@
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 25%;">Article</th>
-                                            <th style="width: 25%;">Désignation <span class="text-danger">*</span></th>
-                                            <th style="width: 15%;">Quantité <span class="text-danger">*</span></th>
+                                            <th style="width: 20%;">N° ou Ref Article</th>
+                                            <th style="width: 30%;">Désignation <span class="text-danger">*</span></th>
+                                            <th style="width: 15%;">Qté <span class="text-danger">*</span></th>
                                             <th style="width: 15%;">Unité <span class="text-danger">*</span></th>
-                                            <th style="width: 15%;">Spécifications</th>
-                                            <th style="width: 5%;">Actions</th>
+                                            <th style="width: 15%;">Spécification</th>
+                                            <th style="width: 5%;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -173,11 +252,12 @@
                                                     <option value="">-- Sélectionner un article --</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                                                            data-designation="{{ $article->nom }}">
+                                                            data-designation="{{ $article->nom }}" data-reference="{{ $article->reference }}">
                                                             {{ $article->reference }} - {{ $article->nom }}
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                                <input type="hidden" class="article-reference" name="article_reference[]">
                                             </td>
                                             <td>
                                                 <input type="text" class="app-form-control designation" 
@@ -223,57 +303,62 @@
 
 <!-- Template pour nouvelles lignes -->
 <template id="article-row-template">
-    <tr>
-        <td>
-            <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
-                <option value="">-- Sélectionner un article --</option>
-                @foreach($articles as $article)
-                    <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
-                        data-designation="{{ $article->nom }}">
-                        {{ $article->reference }} - {{ $article->nom }}
-                    </option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <input type="text" class="app-form-control designation" 
-                name="designation[]" required placeholder="Désignation...">
-        </td>
-        <td>
-            <input type="number" class="app-form-control" 
-                name="quantite[]" min="1" value="1" required>
-        </td>
-        <td>
-            <input type="text" class="app-form-control unite-mesure" 
-                name="unite_mesure[]" value="Unité" required placeholder="Unité...">
-        </td>
-        <td>
-            <input type="text" class="app-form-control" 
-                name="specifications[]" placeholder="Spécifications...">
-        </td>
-        <td>
-            <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-</template>
+                    <tr>
+                        <td>
+                            <select class="app-form-select article-select" name="article_id[]" onchange="fillArticleInfo(this)">
+                                <option value="">-- Sélectionner un article --</option>
+                                @foreach($articles as $article)
+                                    <option value="{{ $article->id }}" data-unite="{{ $article->unite_mesure }}" 
+                                        data-designation="{{ $article->nom }}" data-reference="{{ $article->reference }}">
+                                        {{ $article->reference }} - {{ $article->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" class="article-reference" name="article_reference[]">
+                        </td>
+                        <td>
+                            <input type="text" class="app-form-control designation" 
+                                name="designation[]" required placeholder="Désignation...">
+                        </td>
+                        <td>
+                            <input type="number" class="app-form-control" 
+                                name="quantite[]" min="1" value="1" required>
+                        </td>
+                        <td>
+                            <input type="text" class="app-form-control unite-mesure" 
+                                name="unite_mesure[]" value="Unité" required placeholder="Unité...">
+                        </td>
+                        <td>
+                            <input type="text" class="app-form-control" 
+                                name="specifications[]" placeholder="Spécifications...">
+                        </td>
+                        <td>
+                            <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" onclick="removeLine(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </template>
 
 @push('scripts')
 <script>
 // Remplir automatiquement les informations d'un article
 function fillArticleInfo(selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const designation = selectedOption.getAttribute('data-designation');
-    const unite = selectedOption.getAttribute('data-unite');
     const row = selectElement.closest('tr');
     
-    if (designation) {
-        row.querySelector('.designation').value = designation;
-    }
-    
-    if (unite) {
-        row.querySelector('.unite-mesure').value = unite;
+    if (selectedOption.value) {
+        const designation = selectedOption.getAttribute('data-designation');
+        const unite = selectedOption.getAttribute('data-unite');
+        const reference = selectedOption.getAttribute('data-reference');
+        
+        row.querySelector('.designation').value = designation || '';
+        row.querySelector('.unite-mesure').value = unite || '';
+        row.querySelector('.article-reference').value = reference || '';
+    } else {
+        row.querySelector('.designation').value = '';
+        row.querySelector('.unite-mesure').value = '';
+        row.querySelector('.article-reference').value = '';
     }
 }
 
@@ -283,11 +368,6 @@ function addArticle() {
     const clone = template.content.cloneNode(true);
     
     document.querySelector('#articles_table tbody').appendChild(clone);
-    
-    // Initialiser Select2 si disponible
-    if (typeof $.fn.select2 !== 'undefined') {
-        $('#articles_table tbody tr:last-child .article-select').select2();
-    }
 }
 
 // Supprimer une ligne
@@ -304,42 +384,53 @@ function removeLine(button) {
 
 // Charger les articles d'une demande d'achat
 function chargerArticlesDemandeAchat(demandeId) {
-    if (!demandeId) return;
+    if (!demandeId) {
+        // Vider le tableau si aucune demande d'achat n'est sélectionnée
+        document.querySelector('#articles_table tbody').innerHTML = '';
+        // Ajouter une ligne vide
+        addArticle();
+        return;
+    }
     
+    // Requête AJAX pour charger les articles de la demande d'achat sélectionnée
     fetch(`/api/demandes-achat/${demandeId}/articles`)
         .then(response => response.json())
         .then(data => {
-            if (data.length > 0) {
-                // Vider le tableau
-                document.querySelector('#articles_table tbody').innerHTML = '';
-                
-                // Ajouter les articles
-                data.forEach(item => {
+            // Vider le tableau actuel
+            document.querySelector('#articles_table tbody').innerHTML = '';
+            
+            // Ajouter chaque article de la demande d'achat
+            if (data.articles && data.articles.length > 0) {
+                data.articles.forEach(article => {
                     const template = document.getElementById('article-row-template');
                     const clone = template.content.cloneNode(true);
                     
-                    // Sélectionner l'article
-                    const select = clone.querySelector('.article-select');
-                    if (item.article_id) {
-                        select.value = item.article_id;
-                    }
+                    // Remplir les champs avec les données de l'article
+                    clone.querySelector('.article-reference').value = article.reference || '';
+                    clone.querySelector('.designation').value = article.designation || '';
+                    clone.querySelector('input[name="quantite[]"]').value = article.quantite || 1;
+                    clone.querySelector('.unite-mesure').value = article.unite_mesure || '';
+                    clone.querySelector('input[name="specifications[]"]').value = article.specifications || '';
                     
-                    // Remplir les champs
-                    clone.querySelector('.designation').value = item.designation || '';
-                    clone.querySelector('input[name="quantite[]"]').value = item.quantite || 1;
-                    clone.querySelector('.unite-mesure').value = item.unite_mesure || 'Unité';
-                    clone.querySelector('input[name="specifications[]"]').value = item.specifications || '';
+                    // Sélectionner l'article dans le select caché
+                    const select = clone.querySelector('.article-select');
+                    if (article.article_id) {
+                        select.value = article.article_id;
+                    }
                     
                     document.querySelector('#articles_table tbody').appendChild(clone);
                 });
-                
-                // Initialiser Select2
-                if (typeof $.fn.select2 !== 'undefined') {
-                    $('.article-select').select2();
-                }
+            } else {
+                // Si aucun article, ajouter une ligne vide
+                addArticle();
             }
         })
-        .catch(error => console.error('Erreur:', error));
+        .catch(error => {
+            console.error('Erreur lors du chargement des articles:', error);
+            alert('Erreur lors du chargement des articles de la demande d\'achat.');
+            // Ajouter une ligne vide en cas d'erreur
+            addArticle();
+        });
 }
 
 // Initialisation au chargement
@@ -347,11 +438,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser Select2 pour la sélection multiple
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2-multiple').select2({
-            placeholder: "Sélectionner un ou plusieurs fournisseurs"
+            placeholder: "Rechercher et sélectionner des fournisseurs...",
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "Aucun fournisseur trouvé";
+                },
+                searching: function() {
+                    return "Recherche en cours...";
+                },
+                inputTooShort: function() {
+                    return "Tapez au moins 1 caractère pour rechercher";
+                }
+            },
+            minimumInputLength: 0
         });
         
-        // Initialiser Select2 pour les articles
-        $('.article-select').select2();
+        // Les sélecteurs d'articles utilisent l'affichage HTML natif
     }
     
     // Événement pour charger les articles d'une demande d'achat
@@ -364,9 +468,23 @@ document.addEventListener('DOMContentLoaded', function() {
 $(document).ready(function() {
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2-multiple').select2({
-            placeholder: "Sélectionner un ou plusieurs fournisseurs"
+            placeholder: "Rechercher et sélectionner des fournisseurs...",
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "Aucun fournisseur trouvé";
+                },
+                searching: function() {
+                    return "Recherche en cours...";
+                },
+                inputTooShort: function() {
+                    return "Tapez au moins 1 caractère pour rechercher";
+                }
+            },
+            minimumInputLength: 0
         });
-        $('.article-select').select2();
+        // Les sélecteurs d'articles restent en HTML natif
     }
 });
 </script>

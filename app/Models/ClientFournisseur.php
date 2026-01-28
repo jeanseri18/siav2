@@ -14,7 +14,7 @@ class ClientFournisseur extends Model {
     ];
     public function bus()
     {
-        return $this->belongsTo(Bu::class, 'id_bu');
+        return $this->belongsTo(BU::class, 'id_bu');
     }
     
     /**
@@ -41,13 +41,7 @@ class ClientFournisseur extends Model {
         return $this->hasOne(ContactPerson::class, 'client_fournisseur_id')->where('contact_principal', true);
     }
     
-    /**
-     * Relation avec les demandes de ravitaillement (en tant que fournisseur)
-     */
-    public function demandesRavitaillement()
-    {
-        return $this->hasMany(DemandeRavitaillement::class, 'fournisseur_id');
-    }
+
     
     /**
      * Relation avec les contrats (en tant que client)
@@ -55,6 +49,14 @@ class ClientFournisseur extends Model {
     public function contrats()
     {
         return $this->hasMany(Contrat::class, 'client_id');
+    }
+    
+    /**
+     * Relation avec les demandes de ravitaillement via les contrats (client)
+     */
+    public function demandesRavitaillement()
+    {
+        return $this->hasManyThrough(DemandeRavitaillement::class, Contrat::class, 'client_id', 'contrat_id', 'id', 'id');
     }
     
     // Accessor pour le nom

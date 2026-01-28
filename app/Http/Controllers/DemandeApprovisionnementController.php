@@ -56,7 +56,7 @@ class DemandeApprovisionnementController extends Controller
             'date_demande' => $request->date_demande,
             'date_reception' => $request->date_reception,
             'projet_id' => $request->projet_id,
-            'initiateur' => $request->initiateur ?? Auth::user()->name,
+            'initiateur' => $request->initiateur ?? Auth::user()->nom_complet,
             'user_id' => Auth::id(),
             'statut' => 'en attente'
         ]);
@@ -85,7 +85,7 @@ class DemandeApprovisionnementController extends Controller
 
     public function show(DemandeApprovisionnement $demandeApprovisionnement)
     {
-        $demandeApprovisionnement->load(['user', 'projet', 'approbateur', 'lignes.article']);
+        $demandeApprovisionnement->load(['user', 'projet', 'approbateur', 'lignes.article.uniteMesure']);
         return view('demande_approvisionnements.show', compact('demandeApprovisionnement'));
     }
 
@@ -178,15 +178,20 @@ class DemandeApprovisionnementController extends Controller
         }
 
         $request->validate([
+            'ligne_ids' => 'required|array',
+            'ligne_ids.*' => 'exists:lignes_demande_approvisionnement,id',
             'quantite_approuvee' => 'required|array',
             'quantite_approuvee.*' => 'integer|min:0'
         ]);
 
         // Mettre à jour les quantités approuvées
-        foreach ($demandeApprovisionnement->lignes as $index => $ligne) {
-            $ligne->update([
-                'quantite_approuvee' => $request->quantite_approuvee[$index]
-            ]);
+        foreach ($request->ligne_ids as $index => $ligneId) {
+            $ligne = $demandeApprovisionnement->lignes()->find($ligneId);
+            if ($ligne) {
+                $ligne->update([
+                    'quantite_approuvee' => $request->quantite_approuvee[$index]
+                ]);
+            }
         }
 
         // Mettre à jour le statut de la demande
@@ -237,7 +242,7 @@ class DemandeApprovisionnementController extends Controller
             'user.bus', 
             'projet', 
             'approbateur', 
-            'lignes.article'
+            'lignes.article.uniteMesure'
         ])->findOrFail($id);
         
         $pdf = PDF::loadView('demande_approvisionnements.pdf', compact('demandeApprovisionnement'))

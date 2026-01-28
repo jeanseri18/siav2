@@ -105,7 +105,7 @@ $request->merge([
             'quantite_stock' => 'required|integer',
             'prix_unitaire' => 'required|numeric',
             'unite_mesure' => 'required',
-            'cout_moyen_pondere' => 'required|numeric',
+            // 'cout_moyen_pondere' => 'required|numeric',
             'categorie_id' => 'required|exists:categories,id',
             'sous_categorie_id' => 'nullable|exists:souscategories,id',
         ]);

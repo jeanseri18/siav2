@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Toggle Function</title>
+    <style>
+        .test-form { display: none; background-color: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .test-form.show { display: block; }
+    </style>
+</head>
+<body>
+    <h1>Test Toggle Function</h1>
+    
+    <button type="button" class="toggle-add-form-btn" data-rubrique-id="1">
+        Ajouter une ligne (Test)
+    </button>
+    
+    <div id="add-form-1" class="test-form">
+        <p>This is the test form that should appear/disappear</p>
+        <button type="button" class="cancel-add-form-btn" data-rubrique-id="1">
+            Annuler (Test)
+        </button>
+    </div>
+    
+    <script>
+        function toggleAddForm(rubriqueId) {
+            console.log('toggleAddForm called with rubriqueId:', rubriqueId);
+            const formRow = document.getElementById('add-form-' + rubriqueId);
+            console.log('Form element found:', formRow);
+            
+            if (formRow) {
+                console.log('Current display:', formRow.style.display);
+                if (formRow.style.display === 'none' || formRow.style.display === '') {
+                    formRow.style.display = 'block';
+                    console.log('Form shown');
+                } else {
+                    formRow.style.display = 'none';
+                    console.log('Form hidden');
+                }
+            } else {
+                console.error('Form element not found for rubriqueId:', rubriqueId);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired');
+            
+            // Ajouter les écouteurs d'événements pour les boutons toggleAddForm
+            document.querySelectorAll('.toggle-add-form-btn').forEach(button => {
+                console.log('Found toggle button:', button);
+                button.addEventListener('click', function() {
+                    const rubriqueId = this.getAttribute('data-rubrique-id');
+                    console.log('Toggle button clicked, rubriqueId:', rubriqueId);
+                    toggleAddForm(rubriqueId);
+                });
+            });
+
+            document.querySelectorAll('.cancel-add-form-btn').forEach(button => {
+                console.log('Found cancel button:', button);
+                button.addEventListener('click', function() {
+                    const rubriqueId = this.getAttribute('data-rubrique-id');
+                    console.log('Cancel button clicked, rubriqueId:', rubriqueId);
+                    toggleAddForm(rubriqueId);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

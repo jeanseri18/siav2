@@ -118,9 +118,15 @@
                                         <i class="fas fa-calendar me-2"></i>Délai de paiement:
                                     </label>
                                     <select name="delai_paiement" class="app-form-select" required>
+                                        <option value="CASH">CASH</option>
+                                        <option value="15">15 jours</option>
                                         <option value="30">30 jours</option>
+                                        <option value="45">45 jours</option>
                                         <option value="60">60 jours</option>
+                                        <option value="75">75 jours</option>
                                         <option value="90">90 jours</option>
+                                        <option value="120">120 jours</option>
+                                        <option value="180">180 jours</option>
                                     </select>
                                 </div>
                             </div>

@@ -253,7 +253,7 @@
         <h3>Informations de validation</h3>
         <div class="info-row">
             <div class="info-label">Créé par:</div>
-            <div class="info-value">{{ $demandeCotation->user ? $demandeCotation->user->name : 'N/A' }}</div>
+            <div class="info-value">{{ $demandeCotation->user ? $demandeCotation->user->nom : 'N/A' }}</div>
         </div>
         <div class="info-row">
             <div class="info-label">Date de création:</div>
