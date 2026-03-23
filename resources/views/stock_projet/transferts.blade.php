@@ -61,6 +61,8 @@
                         <th>Article</th>
                         <th>Quantité</th>
                         <th>Date de transfert</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,9 +84,28 @@
                                 <span>{{ $transfert->projetDestination->nom_projet }}</span>
                             </div>
                         </td>
-                        <td>{{ $transfert->nom_produit }}</td>
+                        <td>{{ $transfert->article->nom }}</td>
                         <td class="app-fw-bold">{{ $transfert->quantite }}</td>
                         <td>{{ $transfert->date_transfert }}</td>
+                        <td>
+                            @if(in_array($transfert->id, $recuIds))
+                                <span class="badge bg-success">Reçu</span>
+                            @else
+                                <span class="badge bg-warning text-dark">En transit</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!in_array($transfert->id, $recuIds))
+                                <form action="{{ route('transferts.receptionner', $transfert->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="app-btn app-btn-success app-btn-sm" onclick="return confirm('Confirmer la réception de ce transfert ?')">
+                                        <i class="fas fa-check me-1"></i> Réceptionner
+                                    </button>
+                                </form>
+                            @else
+                                <span class="text-muted"><i class="fas fa-check-circle"></i> Terminé</span>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

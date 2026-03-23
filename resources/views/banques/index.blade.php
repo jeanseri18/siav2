@@ -16,6 +16,9 @@
                 <i class="fas fa-university me-2"></i>Liste des Banques
             </h2>
             <div class="app-card-actions">
+                <span class="app-badge app-badge-info app-badge-pill">
+                    BU: {{ session('selected_bu') }}
+                </span>
                 <a href="{{ route('banques.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une banque
                 </a>
@@ -41,6 +44,7 @@
                 <thead>
                     <tr>
                         <th>Nom</th>
+                        <th>Solde initial</th>
                         <th>Code Banque</th>
                         <th>Code Guichet</th>
                         <th>Numéro de Compte</th>
@@ -62,6 +66,9 @@
                                 </div>
                                 <span><strong>{{ $banque->nom }}</strong></span>
                             </div>
+                        </td>
+                        <td>
+                            <code class="text-muted">{{ number_format((float) $banque->solde_initial, 0, ',', ' ') }}</code>
                         </td>
                         <td>
                             <span class="app-badge app-badge-secondary app-badge-pill">

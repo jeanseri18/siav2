@@ -61,7 +61,7 @@
                             <div class="mb-3">
                                 <label for="banque_id" class="form-label">Banque</label>
                                 <select class="form-select" id="banque_id" name="banque_id">
-                                    @foreach(\App\Models\Banque::all() as $banque)
+                                    @foreach(\App\Models\Banque::where('bu_id', session('selected_bu'))->get() as $banque)
                                         <option value="{{ $banque->id }}">{{ $banque->nom }}</option>
                                     @endforeach
                                 </select>

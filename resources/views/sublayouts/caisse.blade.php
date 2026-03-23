@@ -59,7 +59,7 @@
                 <p>Faire une demande de dépense</p>
             </div>
         </button>
-        
+
         @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'admin', 'dg']))
         <a href="{{ route('caisse.demandesEnAttente') }}" class="dashboard-card secondary">
             <div class="card-icon">
@@ -150,7 +150,7 @@
                         <label for="banque"><i class="fas fa-university"></i> Banque</label>
                         <select id="banque" name="banque_id" class="form-control-modern" required>
                             <option value="">Sélectionner une banque</option>
-                            @foreach(\App\Models\Banque::all() as $banque)
+                            @foreach(\App\Models\Banque::where('bu_id', session('selected_bu'))->get() as $banque)
                                 <option value="{{ $banque->id }}">{{ $banque->nom }}</option>
                             @endforeach
                         </select>

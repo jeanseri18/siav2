@@ -22,7 +22,10 @@ class LigneDemandeRavitaillement extends Model
     protected $casts = [
         'quantite_demandee' => 'decimal:3',
         'quantite_approuvee' => 'decimal:3',
-        'quantite_livree' => 'decimal:3'
+        'quantite_livree' => 'decimal:3',
+        'quantite_recue' => 'decimal:3',
+        'quantite_retournee' => 'decimal:3',
+        'retour_valide' => 'boolean'
     ];
     
     // Relations

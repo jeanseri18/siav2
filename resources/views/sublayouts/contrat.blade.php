@@ -50,6 +50,18 @@
                 <span>Stock</span>
                 <a href="{{ route('stock_contrat.index') }}"></a>
             </div>
+            <div class="chrome-tab {{ request()->routeIs('planning.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Planning</span>
+                <a href="{{ route('planning.index') }}"></a>
+            </div>
+            <div class="chrome-tab {{ request()->routeIs('taches.*') ? 'active' : '' }}">
+                <i class="fas fa-tasks"></i>
+                <span>Suivie des tâches</span>
+                <a href="{{ route('taches.index') }}"></a>
+            </div>
+
+
             <div class="chrome-tab {{ request()->routeIs('demandes-ravitaillement.*') ? 'active' : '' }}">
                 <i class="fas fa-truck"></i>
                 <span>Ravitaillement</span>

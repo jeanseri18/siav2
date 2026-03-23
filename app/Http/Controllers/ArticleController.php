@@ -25,7 +25,7 @@ class ArticleController extends Controller
         // Récupérer tous les projets de la BU
         $projets_bu = Projet::where('bu_id', $bu_id)->pluck('id')->toArray();
         
-        $articles = Article::with(['categorie', 'sousCategorie', 'fournisseur','uniteMesure'])->get();
+        $articles = Article::with(['categorie', 'sousCategorie', 'fournisseur', 'uniteMesure'])->get();
         return view('articles.index', compact('articles', 'projets_bu'));
     }
 

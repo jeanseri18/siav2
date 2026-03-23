@@ -1,0 +1,76 @@
+Voici la structure que doit avoir votre fichier Excel pour l'import des rubriques via <mcfile name="RubriquesImport.php" path="c:\Users\jeans\Downloads\sia-main\sia-main\app\Imports\RubriquesImport.php"></mcfile>:
+
+## Structure du fichier Excel :
+
+### Colonnes (dans l'ordre) :
+1. **Code** - Peut contenir des mots-clés spéciaux ou le code BPU
+2. **Désignation** - Le nom/titre de l'élément
+3. **Unité** - L'unité de mesure (m², m³, u, etc.)
+4. **Matériaux** - Prix des matériaux (optionnel pour BPU)
+5. **T.MO (%)** - Taux main d'œuvre en % (optionnel pour BPU)
+6. **T.MAT (%)** - Taux matériaux en % (optionnel pour BPU)
+7. **T.FC (%)** - Taux frais chantier en % (optionnel pour BPU)
+8. **T.FG (%)** - Taux frais généraux en % (optionnel pour BPU)
+9. **T.BEN (%)** - Taux bénéfice en % (optionnel pour BPU)
+
+## Types de lignes :
+
+### 1. Catégorie :
+```
+Code: "CATEGORIE" ou "CATÉGORIE"
+Désignation: "Nom de la catégorie"
+Unité: (laisser vide)
+Colonnes suivantes: (laisser vides)
+```
+
+### 2. Sous-catégorie :
+```
+Code: "SOUSCATEGORIE" ou "SOUS-CATEGORIE" ou "SOUS-CATÉGORIE"
+Désignation: "Nom de la sous-catégorie"
+Unité: (laisser vide)
+Colonnes suivantes: (laisser vides)
+```
+
+### 3. Rubrique :
+```
+Code: "RUBRIQUE"
+Désignation: "Nom de la rubrique"
+Unité: (laisser vide)
+Colonnes suivantes: (laisser vides)
+```
+
+### 4. BPU (ligne de prix) :
+```
+Code: "Code BPU" (ex: "BPU001")
+Désignation: "Description du travail"
+Unité: "m²" (ou autre unité)
+Matériaux: 150.50 (prix matériaux)
+T.MO (%): 25 (taux main d'œuvre)
+T.MAT (%): 30 (taux matériaux)
+T.FC (%): 10 (taux frais chantier)
+T.FG (%): 15 (taux frais généraux)
+T.BEN (%): 20 (taux bénéfice)
+```
+
+## Exemple de fichier :
+
+| Code | Désignation | Unité | Matériaux | T.MO (%) | T.MAT (%) | T.FC (%) | T.FG (%) | T.BEN (%) |
+|------|-------------|--------|-----------|----------|-----------|----------|----------|----------|
+| CATEGORIE | Gros œuvre | | | | | | | |
+| SOUSCATEGORIE | Maçonnerie | | | | | | | |
+| RUBRIQUE | Murs et cloisons | | | | | | | |
+| BPU001 | Mur en brique 20cm | m² | 45.00 | 25 | 30 | 10 | 15 | 20 |
+| BPU002 | Cloison plâtre 10cm | m² | 28.50 | 30 | 25 | 12 | 18 | 15 |
+| CATEGORIE | Second œuvre | | | | | | | |
+| SOUSCATEGORIE | Menuiserie | | | | | | | |
+| RUBRIQUE | Portes et fenêtres | | | | | | | |
+| BPU003 | Porte intérieure standard | u | 125.00 | 20 | 35 | 8 | 12 | 25 |
+
+## Notes importantes :
+- Le système détecte automatiquement les lignes de type catégorie, sous-catégorie et rubrique via les mots-clés dans la colonne Code
+- Les lignes BPU doivent avoir un code différent des mots-clés réservés
+- Les valeurs de pourcentage doivent être des nombres (pas de symboles % dans les cellules)
+- Le système calcule automatiquement les valeurs dérivées via la méthode `updateDerivedValues()` du modèle BPU
+- Une catégorie, sous-catégorie et rubrique par défaut sont créées si aucune n'est définie
+- Les lignes vides ou avec des données insuffisantes sont ignorées
+- Le système gère les erreurs ligne par ligne sans arrêter l'import complet

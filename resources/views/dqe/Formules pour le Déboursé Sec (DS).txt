@@ -1,0 +1,87 @@
+Formules pour le Déboursé Sec (DS)
+
+Prix Unitaire Hors Taxes (P.U HT) : = Matériaux + Main d'œuvre (M.O) + Matériel
+(Référence : Somme des colonnes (3) + (4) + (5), ou directement le Montant (DS) du DQE si disponible.)
+Montant Hors Taxes (Montant HT) : = Quantité (Qté) × P.U HT
+(Référence : (1) × (2), où (1) est la Qté du DQE et (2) est le P.U HT calculé.)
+
+Les désignations, unités et quantités sont tirées du DQE (Détail Quantitatif Estimatif). Les composants (Matériaux, M.O, Matériel) proviennent du DQE (Bordereau des Prix Unitaires).
+Formules pour les Frais de Chantier (FC)
+
+Montant Hors Taxes (Montant HT) : = Quantité (Qté) × P.U HT
+(Référence : (1) × (2), où (1) est la Qté du DQE et (2) est le Montant (FC) du DQE.)
+
+Les désignations, unités et quantités sont tirées du DQE. Le P.U HT est directement le Montant (FC) du DQE (pas de ventilation détaillée comme pour le DS).
+Formules pour les Frais Généraux (FG)
+
+Montant Hors Taxes (Montant HT) : = Quantité (Qté) × P.U HT
+(Référence : (1) × (2), où (1) est la Qté du DQE et (2) est le Montant (FG) du DQE.)
+
+Les désignations, unités et quantités sont tirées du DQE. Le P.U HT est directement le Montant (FG) du DQE.
+Formules pour le Bénéfice (B)
+
+Montant Hors Taxes (Montant HT) : = Quantité (Qté) × P.U HT
+(Référence : (1) × (2), où (1) est la Qté du DQE et (2) est le Montant (B) du DQE.)
+
+Les désignations, unités et quantités sont tirées du DQE. Le P.U HT est directement le Montant (B) du DQE.
+Notes générales (tirées de la feuille "Nomenclature des couts") :
+
+Le DS peut être généré à partir du DQE.
+Les FC, FG et Bénéfice peuvent également être générés à partir du DQE.
+La feuille "Déboursé sec" semble vide dans les données fournies, mais elle est probablement destinée à appliquer ces formules dans un tableau concret. Si tu as besoin d'exemples d'application ou de plus de détails sur d'autres feuilles, fournis plus d'informations sur le fichier !
+
+
+
+-- Table principale : DQE (Détail Quantitatif Estimatif)
+CREATE TABLE DQE (
+    DQE_ID INT PRIMARY KEY,
+    Designation VARCHAR(255),
+    Unite VARCHAR(20),
+    Qte DECIMAL(10,2)
+);
+
+-- Table : Déboursé Sec (DS) - avec ventilation
+CREATE TABLE DebourSec (
+    DS_ID INT PRIMARY KEY AUTO_INCREMENT,
+    DQE_ID INT,
+        id_rubrique(rubrique du dqe)
+
+    Materiaux DECIMAL(12,2) DEFAULT 0,
+    MainOeuvre DECIMAL(12,2) DEFAULT 0,
+    Materiel DECIMAL(12,2) DEFAULT 0,
+    P_U_HT DECIMAL(12,2) AS (Materiaux + MainOeuvre + Materiel) STORED,
+    Montant_HT DECIMAL(12,2) AS (P_U_HT * (SELECT Qte FROM DQE WHERE DQE_ID = DebourSec.DQE_ID)) STORED,
+    FOREIGN KEY (DQE_ID) REFERENCES DQE(DQE_ID)
+);
+
+-- Table : Frais de Chantier (FC)
+CREATE TABLE FraisChantier (
+    FC_ID INT PRIMARY KEY AUTO_INCREMENT,
+    DQE_ID INT,
+        id_rubrique(rubrique du dqe)
+
+    P_U_HT DECIMAL(12,2),
+    Montant_HT DECIMAL(12,2) AS (P_U_HT * (SELECT Qte FROM DQE WHERE DQE_ID = FraisChantier.DQE_ID)) STORED,
+    FOREIGN KEY (DQE_ID) REFERENCES DQE(DQE_ID)
+);
+
+-- Table : Frais Généraux (FG)
+CREATE TABLE FraisGeneraux (
+    FG_ID INT PRIMARY KEY AUTO_INCREMENT,
+    DQE_ID INT,
+        id_rubrique(rubrique du dqe)
+
+    P_U_HT DECIMAL(12,2),
+    Montant_HT DECIMAL(12,2) AS (P_U_HT * (SELECT Qte FROM DQE WHERE DQE_ID = FraisGeneraux.DQE_ID)) STORED,
+    FOREIGN KEY (DQE_ID) REFERENCES DQE(DQE_ID)
+);
+
+-- Table : Bénéfice (B)
+CREATE TABLE ligneBenefice (
+    B_ID INT PRIMARY KEY AUTO_INCREMENT,
+    DQE_ID INT,
+    id_rubrique(rubrique du dqe)
+    P_U_HT DECIMAL(12,2),
+    Montant_HT DECIMAL(12,2) AS (P_U_HT * (SELECT Qte FROM DQE WHERE DQE_ID = Benefice.DQE_ID)) STORED,
+    FOREIGN KEY (DQE_ID) REFERENCES DQE(DQE_ID)
+);

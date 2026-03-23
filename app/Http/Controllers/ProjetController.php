@@ -59,7 +59,6 @@ class ProjetController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'date_creation' => 'required|date',
             'nom_projet' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date_debut' => 'required|date',
@@ -68,18 +67,16 @@ class ProjetController extends Controller
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
             'chef_projet_id' => 'nullable|exists:users,id',
             'conducteur_travaux_id' => 'nullable|exists:users,id',
-            'hastva' => 'boolean',
-            'tva_achat' => 'boolean',
             'montant_global' => 'nullable|numeric|min:0',
             'chiffre_affaire_global' => 'nullable|numeric|min:0',
             'total_depenses' => 'nullable|numeric|min:0',
             'statut' => 'required|in:en cours,terminé,annulé',
             'bu_id' => 'required|exists:bus,id',
-            'pays_id' => 'required|exists:pays,id',
-            'ville_id' => 'required|exists:villes,id',
-            'commune_id' => 'required|exists:communes,id',
-            'quartier_id' => 'required|exists:quartiers,id',
-            'secteur_id' => 'required|exists:secteurs,id'
+            'pays_id' => 'nullable|exists:pays,id',
+            'ville_id' => 'nullable|exists:villes,id',
+            'commune_id' => 'nullable|exists:communes,id',
+            'quartier_id' => 'nullable|exists:quartiers,id',
+            'secteur_id' => 'nullable|exists:secteurs,id'
         ]);
         
         $lastReference = \App\Models\Reference::where('nom', 'Code Projet')
@@ -91,7 +88,10 @@ class ProjetController extends Controller
         $newReference = 'Prj_' . now()->format('YmdHis');
         
         // Préparer les données
-        $data = $request->all();
+        $data = $request->except(['hastva', 'tva_achat']);
+        $data['hastva'] = $request->has('hastva');
+        $data['tva_achat'] = $request->has('tva_achat');
+        $data['date_creation'] = now(); // Ajout automatique de la date de création
         $data['ref_projet'] = $newReference;
         $data['created_by'] = auth()->id();
         $data['updated_by'] = auth()->id();
@@ -152,7 +152,6 @@ class ProjetController extends Controller
     public function update(Request $request, Projet $projet)
     {
         $request->validate([
-            'date_creation' => 'required|date',
             'nom_projet' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date_debut' => 'required|date',
@@ -161,22 +160,22 @@ class ProjetController extends Controller
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
             'chef_projet_id' => 'nullable|exists:users,id',
             'conducteur_travaux_id' => 'nullable|exists:users,id',
-            'hastva' => 'boolean',
-            'tva_achat' => 'boolean',
             'montant_global' => 'nullable|numeric|min:0',
             'chiffre_affaire_global' => 'nullable|numeric|min:0',
             'total_depenses' => 'nullable|numeric|min:0',
             'statut' => 'required|in:en cours,terminé,annulé',
             'bu_id' => 'required|exists:bus,id',
-            'pays_id' => 'required|exists:pays,id',
-            'ville_id' => 'required|exists:villes,id',
-            'commune_id' => 'required|exists:communes,id',
-            'quartier_id' => 'required|exists:quartiers,id',
-            'secteur_id' => 'required|exists:secteurs,id'
+            'pays_id' => 'nullable|exists:pays,id',
+            'ville_id' => 'nullable|exists:villes,id',
+            'commune_id' => 'nullable|exists:communes,id',
+            'quartier_id' => 'nullable|exists:quartiers,id',
+            'secteur_id' => 'nullable|exists:secteurs,id'
         ]);
 
         // Préparer les données avec updated_by
-        $data = $request->all();
+        $data = $request->except(['hastva', 'tva_achat', 'date_creation']);
+        $data['hastva'] = $request->has('hastva');
+        $data['tva_achat'] = $request->has('tva_achat');
         $data['updated_by'] = auth()->id();
         
         $projet->update($data);

@@ -1660,7 +1660,7 @@ body {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('caisse.*') ? 'active' : '' }}" href="{{ route('sublayouts_caisse') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_tresorerie') || request()->routeIs('sublayouts_caisse') || request()->routeIs('banque.*') || request()->routeIs('banques.*') ? 'active' : '' }}" href="{{ route('sublayouts_tresorerie') }}">
                             <i class="fas fa-money-bill-wave"></i>
                             <span>Comptabilité</span>
                         </a>
@@ -1814,24 +1814,7 @@ body {
             $(this).remove();
         });
     });
-    
-    // Configuration des messages flash avec Toastr
-    @if(session('success'))
-        toastr.success("{{ session('success') }}");
-    @endif
-    
-    @if(session('error'))
-        toastr.error("{{ session('error') }}");
-    @endif
-    
-    @if(session('warning'))
-        toastr.warning("{{ session('warning') }}");
-    @endif
-    
-    @if(session('info'))
-        toastr.info("{{ session('info') }}");
-    @endif
-    
+
     // Confirmation avant suppression
     $(document).on('click', '.btn-delete', function(e) {
         e.preventDefault();
@@ -1934,6 +1917,22 @@ $(document).ready(function() {
     });
 });
     </script>
+
+    @if(session('success'))
+        <script>toastr.success("{{ session('success') }}");</script>
+    @endif
+
+    @if(session('error'))
+        <script>toastr.error("{{ session('error') }}");</script>
+    @endif
+
+    @if(session('warning'))
+        <script>toastr.warning("{{ session('warning') }}");</script>
+    @endif
+
+    @if(session('info'))
+        <script>toastr.info("{{ session('info') }}");</script>
+    @endif
 
     @stack('scripts') {{-- Inclure les scripts spécifiques à une page --}}
 </body>

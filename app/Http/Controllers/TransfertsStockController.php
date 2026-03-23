@@ -14,8 +14,20 @@ class TransfertsStockController extends Controller
     {
         $projets = Projet::all();
         $articles = Article::all();
-        $transferts = TransfertStock::with(['projetSource', 'projetDestination', 'article'])->get();
-        return view('stock_projet.transferts', compact('transferts','projets','articles'));
+        $transferts = TransfertStock::with(['projetSource', 'projetDestination', 'article'])
+            ->orderBy('date_transfert', 'desc')
+            ->get();
+            
+        // Identifier les transferts déjà reçus
+        $recuIds = \App\Models\MouvementStock::where('type_mouvement', 'transfert')
+            ->where('reference_mouvement', 'like', 'TR-IN-%')
+            ->get()
+            ->map(function($mvt) {
+                return str_replace('TR-IN-', '', $mvt->reference_mouvement);
+            })
+            ->toArray();
+            
+        return view('stock_projet.transferts', compact('transferts','projets','articles', 'recuIds'));
     }
 
     public function create()
@@ -58,29 +70,77 @@ class TransfertsStockController extends Controller
                                       ->where('article_id', $item['article_id'])
                                       ->first();
             
+            $quantiteAvant = $stockSource->quantite;
             $stockSource->decrement('quantite', $item['quantite']);
 
-            // Ajout au stock du projet de destination
-            $stockDestination = StockProjet::firstOrCreate(
-                [
-                    'id_projet' => $projetDestination,
-                    'article_id' => $item['article_id']
-                ],
-                ['quantite' => 0]
-            );
-
-            $stockDestination->increment('quantite', $item['quantite']);
-
             // Enregistrement du transfert
-            TransfertStock::create([
+            $transfert = TransfertStock::create([
                 'id_projet_source' => $projetSource,
                 'id_projet_destination' => $projetDestination,
                 'article_id' => $item['article_id'],
                 'quantite' => $item['quantite'],
                 'date_transfert' => $dateTransfert,
             ]);
+
+            // Enregistrer le mouvement de sortie (Source)
+            \App\Models\MouvementStock::create([
+                'stock_projet_id' => $stockSource->id,
+                'type_mouvement' => 'transfert', // Sortie
+                'quantite' => -$item['quantite'],
+                'quantite_avant' => $quantiteAvant,
+                'quantite_apres' => $stockSource->quantite,
+                'date_mouvement' => $dateTransfert,
+                'reference_mouvement' => 'TR-OUT-' . $transfert->id,
+                'commentaires' => 'Transfert vers projet ' . \App\Models\Projet::find($projetDestination)->nom_projet
+            ]);
         }
 
-        return redirect()->route('transferts.index')->with('success', 'Transfert(s) effectué(s) avec succès.');
+        return redirect()->route('transferts.index')->with('success', 'Transfert(s) initié(s) avec succès. En attente de réception.');
+    }
+
+    public function receptionner(Request $request, TransfertStock $transfert)
+    {
+        // Vérifier si déjà reçu
+        $dejaRecu = \App\Models\MouvementStock::where('reference_mouvement', 'TR-IN-' . $transfert->id)->exists();
+        
+        if ($dejaRecu) {
+            return back()->with('error', 'Ce transfert a déjà été réceptionné.');
+        }
+
+        \DB::beginTransaction();
+
+        try {
+            // Ajout au stock du projet de destination
+            $stockDestination = StockProjet::firstOrCreate(
+                [
+                    'id_projet' => $transfert->id_projet_destination,
+                    'article_id' => $transfert->article_id
+                ],
+                ['quantite' => 0]
+            );
+
+            $quantiteAvant = $stockDestination->quantite;
+            $stockDestination->increment('quantite', $transfert->quantite);
+
+            // Enregistrer le mouvement d'entrée (Destination)
+            \App\Models\MouvementStock::create([
+                'stock_projet_id' => $stockDestination->id,
+                'type_mouvement' => 'transfert', // Entrée
+                'quantite' => $transfert->quantite,
+                'quantite_avant' => $quantiteAvant,
+                'quantite_apres' => $stockDestination->quantite,
+                'date_mouvement' => now(),
+                'reference_mouvement' => 'TR-IN-' . $transfert->id,
+                'commentaires' => 'Réception transfert depuis projet ' . $transfert->projetSource->nom_projet
+            ]);
+
+            \DB::commit();
+
+            return redirect()->route('transferts.index')->with('success', 'Réception confirmée avec succès.');
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return back()->with('error', 'Erreur lors de la réception: ' . $e->getMessage());
+        }
     }
 }

@@ -94,7 +94,7 @@ class ContratController extends Controller
             'date_fin' => 'nullable|date',
             'type_travaux' => 'required',
             'taux_garantie' => 'required|numeric',
-            'client_id' => 'nullable|exists:client_fournisseurs,id',
+            'client_id' => 'required|exists:client_fournisseurs,id',
             'chef_chantier_id' => 'nullable|exists:users,id',
             'montant' => 'nullable|numeric',
             'statut' => 'required|in:en cours,terminé,annulé',

@@ -267,39 +267,158 @@
                         </div>
                     @endif
 
-                    <!-- Action pour marquer comme livrée -->
-                    @if($demandeRavitaillement->statut === 'approuvee')
-                        <div class="row">
+                    <!-- Action pour Livrer (Gestionnaire) -->
+                    @if($demandeRavitaillement->statut === 'approuvee' || $demandeRavitaillement->statut === 'en_cours')
+                        <div class="row mb-4">
                             <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Marquer comme livrée</h5>
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="card-title mb-0"><i class="fas fa-truck me-2"></i>Livraison (Gestionnaire)</h5>
                                     </div>
                                     <div class="card-body">
-                                        <form action="{{ route('demandes-ravitaillement.marquer-livree', $demandeRavitaillement) }}" method="POST">
+                                        <form action="{{ route('demandes-ravitaillement.livrer', $demandeRavitaillement) }}" method="POST">
                                             @csrf
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Article</th>
+                                                            <th>Qté Approuvée</th>
+                                                            <th>Déjà Livré</th>
+                                                            <th>A Livrer</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($demandeRavitaillement->lignes as $ligne)
+                                                            <tr>
+                                                                <td>{{ $ligne->article->nom }}</td>
+                                                                <td>{{ $ligne->quantite_approuvee }}</td>
+                                                                <td>{{ $ligne->quantite_livree }}</td>
+                                                                <td>
+                                                                    <input type="hidden" name="lignes[{{ $loop->index }}][id]" value="{{ $ligne->id }}">
+                                                                    <input type="number" name="lignes[{{ $loop->index }}][quantite_a_livrer]" class="form-control" 
+                                                                           value="{{ max(0, $ligne->quantite_approuvee - $ligne->quantite_livree) }}" min="0" step="0.001">
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                             <div class="row">
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <div class="form-group mb-3">
-                                                        <label for="date_livraison_effective" class="form-label">Date de livraison effective <span class="text-danger">*</span></label>
-                                                        <input type="date" class="form-control" id="date_livraison_effective" name="date_livraison_effective" required>
+                                                        <label class="form-label">Date de livraison</label>
+                                                        <input type="date" name="date_livraison" class="form-control" value="{{ date('Y-m-d') }}" required>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <div class="form-group mb-3">
-                                                        <label for="montant_reel" class="form-label">Montant réel (FCFA)</label>
-                                                        <input type="number" class="form-control" id="montant_reel" name="montant_reel" step="0.01" min="0" placeholder="Montant réel payé">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-group mb-3">
-                                                        <label for="commentaires_livraison" class="form-label">Commentaires</label>
-                                                        <textarea class="form-control" id="commentaires_livraison" name="commentaires" rows="2" placeholder="Commentaires sur la livraison..."></textarea>
+                                                        <label class="form-label">Commentaires</label>
+                                                        <textarea name="commentaires" class="form-control" rows="1"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button type="submit" class="btn btn-primary" onclick="return confirm('Êtes-vous sûr de vouloir marquer cette demande comme livrée ?')">
-                                                <i class="fas fa-truck"></i> Marquer comme livrée
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-save me-2"></i>Enregistrer la livraison
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Action pour Réceptionner (Chef Chantier) -->
+                    @if($demandeRavitaillement->statut === 'livree' || $demandeRavitaillement->statut === 'en_cours')
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="card-title mb-0"><i class="fas fa-check-circle me-2"></i>Réception (Chef Chantier)</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="{{ route('demandes-ravitaillement.receptionner', $demandeRavitaillement) }}" method="POST">
+                                            @csrf
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Article</th>
+                                                            <th>Qté Livrée (Total)</th>
+                                                            <th>Qté Reçue (Physique)</th>
+                                                            <th>Motif (si écart)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($demandeRavitaillement->lignes as $ligne)
+                                                            @if($ligne->quantite_livree > 0)
+                                                                <tr>
+                                                                    <td>{{ $ligne->article->nom }}</td>
+                                                                    <td>{{ $ligne->quantite_livree }}</td>
+                                                                    <td>
+                                                                        <input type="hidden" name="lignes[{{ $loop->index }}][id]" value="{{ $ligne->id }}">
+                                                                        <input type="number" name="lignes[{{ $loop->index }}][quantite_recue]" class="form-control" 
+                                                                               value="{{ $ligne->quantite_livree }}" min="0" step="0.001">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" name="lignes[{{ $loop->index }}][motif_retour]" class="form-control" placeholder="Motif si refus...">
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">Date de réception</label>
+                                                <input type="date" name="date_reception" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="fas fa-check me-2"></i>Confirmer la réception
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Action pour Valider Retour (Gestionnaire) - S'affiche toujours pour permettre correction manuelle -->
+                    @if($demandeRavitaillement->statut === 'livree' || $demandeRavitaillement->statut === 'en_cours')
+                         <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card border-warning">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="card-title mb-0"><i class="fas fa-undo me-2"></i>Valider Retour Stock (Gestionnaire)</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted small">Utilisez ce formulaire pour réintégrer des articles refusés au stock.</p>
+                                        <form action="{{ route('demandes-ravitaillement.valider-retour', $demandeRavitaillement) }}" method="POST">
+                                            @csrf
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-bordered table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Article</th>
+                                                            <th>Quantité à réintégrer</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($demandeRavitaillement->lignes as $ligne)
+                                                            <tr>
+                                                                <td>{{ $ligne->article->nom }}</td>
+                                                                <td>
+                                                                    <input type="hidden" name="lignes[{{ $loop->index }}][article_id]" value="{{ $ligne->article_id }}">
+                                                                    <input type="number" name="lignes[{{ $loop->index }}][quantite_retour]" class="form-control form-control-sm" 
+                                                                           value="0" min="0" step="0.001">
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-100">
+                                                <i class="fas fa-save me-2"></i>Valider le retour
                                             </button>
                                         </form>
                                     </div>

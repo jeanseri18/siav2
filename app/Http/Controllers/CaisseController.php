@@ -9,8 +9,10 @@ use App\Models\BU;
 use App\Models\Banque;
 use App\Models\ModePaiement;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 
 class CaisseController extends Controller
@@ -101,7 +103,10 @@ class CaisseController extends Controller
         // Validation spécifique selon le mode de paiement
         if ($request->mode_paiement == 'cheque') {
             $request->validate([
-                'banque_id' => 'required|exists:banques,id',
+                'banque_id' => [
+                    'required',
+                    Rule::exists('banques', 'id')->where(fn ($query) => $query->where('bu_id', $request->bu_id)),
+                ],
                 'reference_cheque' => 'required|string',
             ]);
         } else { // espece
@@ -367,7 +372,7 @@ class CaisseController extends Controller
         }
         
         // Générer le PDF avec la vue
-        $pdf = \PDF::loadView('caisse.demandedepensepdf', compact('demande', 'bus'));
+        $pdf = Pdf::loadView('caisse.demandedepensepdf', compact('demande', 'bus'));
         
         // Définir le nom du fichier PDF
         $filename = 'demande_depense_' . $demandeId . '.pdf';
@@ -386,7 +391,7 @@ class CaisseController extends Controller
         }
         
         $bus = BU::find($id_bu);
-        $banques = Banque::all();
+        $banques = Banque::where('bu_id', $id_bu)->get();
         
         return view('caisse.approvisionnement', compact('bus', 'banques'));
     }

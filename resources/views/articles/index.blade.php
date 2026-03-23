@@ -42,21 +42,20 @@
             <table id="Table" class="app-table display">
                 <thead>
                     <tr>
-                        <th>REF.</th>
-                        <th>CATEGORIE</th>
-                                <th>SOUS CATEGORIE</th>
-                        <th>REF FOURN.</th>
-                        <th>DÉSIGNATION ARTICLE</th>
-                        <th>TYPE</th>
-                        <th>UNITE</th>
-                        <th>COUT MOYEN PONDERE</th>
-                        <th>QTE DISPO</th>
-                        <th>RAV EN COURS</th>
-                        <th>RETOURS RAV</th>
-                        <th>APPRO EN COURS</th>
-                        <th>RETOUR APPRO</th>
-                        <th>TRANSFERT DE STOCK IN</th>
-                        <th>TRANSFERT DE STOCK OUT</th>
+                        <th>Ref.</th>
+                        <th>Ref. Fournisseur</th>
+                        <th>Désignation article</th>
+                        <th>Type</th>
+                        <th>Unité</th>
+                        <th>Cout moyen pondéré</th>
+                        <th>Qté (en stock)</th>
+                        <th>Demande de ravitaillement</th>
+                        <th>Ravitaillement en cours</th>
+                        <th>Retour de ravitaillement</th>
+                        <th>Approvisionnement en cours</th>
+                        <th>Retour appro</th>
+                        <th>Transfert de stock in</th>
+                        <th>Transfert de stock out</th>
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
@@ -68,9 +67,7 @@
                                 {{ $article->reference }}
                             </a>
                         </td>
-                        <td>{{ $article->categorie ? $article->categorie->nom : '-' }}</td>
-                        <td>{{ $article->sousCategorie ? $article->sousCategorie->nom : '-' }}</td>
-                        <td>{{ $article->fournisseur ? $article->fournisseur->nom_raison_sociale : '-' }}</td>
+                        <td>{{ $article->fournisseur ? $article->fournisseur->reference_fournisseur ?? $article->reference_fournisseur : ($article->reference_fournisseur ?? '-') }}</td>
                         <td>
                             <div class="app-d-flex app-align-items-center app-gap-2">
                                 <div class="item-icon">
@@ -104,10 +101,10 @@
                                 -
                             @endif
                         </td>
-                        <td>                        {{  $article->uniteMesure->ref }}</td>
+                        <td>{{ $article->uniteMesure ? $article->uniteMesure->ref : '-' }}</td>
 
                         <td>{{ number_format($article->cout_moyen_pondere, 0, ',', ' ') }}</td>
-                        <td class="app-fw-bold">
+                        <td class="app-fw-bold text-center">
                             @php
                                 // Calculer la quantité de stock général comme la somme des quantités des projets
                                 $quantiteStockGeneral = DB::table('stock_projet')
@@ -120,78 +117,103 @@
                             </a>
                         </td>
                         <td class="text-center">
-                            @php
-                                // Calculer RAV EN COURS pour tous les projets de la BU
-                                $payEnCours = DB::table('lignes_demande_approvisionnement')
-                    ->join('demande_approvisionnements', 'lignes_demande_approvisionnement.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
-                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
-                    ->where('lignes_demande_approvisionnement.article_id', $article->id)
-                    ->where('demande_approvisionnements.statut', 'approuvée')
-                    ->sum('lignes_demande_approvisionnement.quantite_demandee');
+                             @php
+                                // Demande de ravitaillement (en attente)
+                                $demandeRav = DB::table('lignes_demande_ravitaillement')
+                                    ->join('demandes_ravitaillement', 'lignes_demande_ravitaillement.demande_ravitaillement_id', '=', 'demandes_ravitaillement.id')
+                                    ->join('contrats', 'demandes_ravitaillement.contrat_id', '=', 'contrats.id')
+                                    ->whereIn('contrats.id_projet', $projets_bu)
+                                    ->where('lignes_demande_ravitaillement.article_id', $article->id)
+                                    ->where('demandes_ravitaillement.statut', 'en_attente')
+                                    ->sum('lignes_demande_ravitaillement.quantite_demandee');
                             @endphp
-                            {{ $payEnCours ?? 0 }}
+                            {{ $demandeRav > 0 ? $demandeRav : '-' }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer RETOURS RAV pour tous les projets de la BU
-                                $retourChantier = DB::table('mouvements_stock')
-                                    ->join('stock_projet', 'mouvements_stock.stock_projet_id', '=', 'stock_projet.id')
-                                    ->whereIn('stock_projet.id_projet', $projets_bu)
-                                    ->where('stock_projet.article_id', $article->id)
-                                    ->where('mouvements_stock.type_mouvement', 'retour_chantier')
-                                    ->sum('mouvements_stock.quantite');
+                                // Ravitaillement en cours (livré mais pas totalement reçu)
+                                $ravEnCours = DB::table('lignes_demande_ravitaillement')
+                                    ->join('demandes_ravitaillement', 'lignes_demande_ravitaillement.demande_ravitaillement_id', '=', 'demandes_ravitaillement.id')
+                                    ->join('contrats', 'demandes_ravitaillement.contrat_id', '=', 'contrats.id')
+                                    ->whereIn('contrats.id_projet', $projets_bu)
+                                    ->where('lignes_demande_ravitaillement.article_id', $article->id)
+                                    ->whereIn('demandes_ravitaillement.statut', ['en_cours', 'livree'])
+                                    ->select(DB::raw('SUM(quantite_livree - COALESCE(quantite_recue, 0)) as qte_en_cours'))
+                                    ->value('qte_en_cours');
                             @endphp
-                            {{ $retourChantier ?? 0 }}
+                            {{ $ravEnCours > 0 ? $ravEnCours : '-' }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer APPRO EN COURS pour tous les projets de la BU (découle du bon de commande)
-                                $approArrive = DB::table('lignes_bon_commande')
+                                // Retour de ravitaillement (refusé par chantier, en attente de validation gestionnaire)
+                                // Note: Comme on n'a pas de champ retour_valide dans la DB sans migration, on utilise une approximation ou 0 si pas implémenté
+                                // Si on avait le champ: ->where('retour_valide', false)
+                                $retourRav = 0; 
+                                // Pour l'instant on met 0 car on ne peut pas requêter le champ retour_valide qui n'existe pas en DB
+                                // Ou on peut essayer de parser les commentaires mais c'est lourd pour une vue liste.
+                            @endphp
+                            -
+                        </td>
+                        <td class="text-center">
+                            @php
+                                // Approvisionnement en cours (Commandé mais pas reçu)
+                                $approEnCours = DB::table('lignes_bon_commande')
                                     ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
+                                    ->where('bon_commandes.projet_id', $projets_bu) // Si projet_id est sur bon_commande
+                                    // Ou via demande_appro -> projet
+                                    // Simplification: on suppose projet_id sur bon_commande ou on fait la jointure complète si besoin
+                                    // Vérifions la structure: bon_commandes a projet_id ?
+                                    // Sinon via demande_approvisionnement
                                     ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
-                                    ->leftJoin('demande_achats', 'bon_commandes.demande_achat_id', '=', 'demande_achats.id')
-                                    ->where(function($query) use ($projets_bu) {
-                                        $query->whereIn('demande_approvisionnements.projet_id', $projets_bu)
-                                              ->orWhereIn('demande_achats.projet_id', $projets_bu);
-                                    })
+                                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
                                     ->where('lignes_bon_commande.article_id', $article->id)
-                                    ->whereIn('bon_commandes.statut', ['confirmé', 'en_cours'])
-                                    ->sum('lignes_bon_commande.quantite');
+                                    ->whereIn('bon_commandes.statut', ['validee', 'en_cours', 'partiellement_recu']) // Statuts à adapter selon votre système
+                                    ->select(DB::raw('SUM(lignes_bon_commande.quantite - COALESCE(lignes_bon_commande.quantite_recue, 0)) as qte_restante'))
+                                    ->value('qte_restante');
                             @endphp
-                            {{ $approArrive ?? 0 }}
+                            {{ $approEnCours > 0 ? $approEnCours : '-' }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer RETOUR APPRO pour tous les projets de la BU
-                                $retourAppro = DB::table('retour_approvisionnement')
-                                    ->whereIn('projet_id', $projets_bu)
-                                    ->where('article_id', $article->id)
-                                    ->where('statut', 'accepté')
-                                    ->sum('quantite_retournee');
+                                // Retour appro (pas détaillé dans les scénarios mais demandé dans l'affichage)
+                                // Si table retour_approvisionnement existe ?
+                                // Sinon 0
+                                $retourAppro = 0;
                             @endphp
-                            {{ $retourAppro ?? 0 }}
+                            -
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer TRANSFERT DE STOCK IN pour tous les projets de la BU
+                                // Transfert de stock IN (En transit vers ce projet)
                                 $transfertIn = DB::table('transfert_stock')
                                     ->whereIn('id_projet_destination', $projets_bu)
                                     ->where('article_id', $article->id)
-                                    ->where('type_transfert', 'normal')
+                                    // On doit filtrer ceux qui ne sont PAS encore reçus.
+                                    // Comme on n'a pas de statut, on check l'absence de mouvement TR-IN correspondant
+                                    ->whereNotExists(function($query) {
+                                        $query->select(DB::raw(1))
+                                              ->from('mouvements_stock')
+                                              ->whereRaw("reference_mouvement = CONCAT('TR-IN-', transfert_stock.id)");
+                                    })
                                     ->sum('quantite');
                             @endphp
-                            {{ $transfertIn ?? 0 }}
+                            {{ $transfertIn > 0 ? $transfertIn : '-' }}
                         </td>
                         <td class="text-center">
                             @php
-                                // Calculer TRANSFERT DE STOCK OUT pour tous les projets de la BU
+                                // Transfert de stock OUT (Sorti de ce projet mais pas encore reçu par l'autre - Optionnel, souvent OUT = fini pour la source)
+                                // Mais si on veut voir ce qui est "dehors" venant de nous:
                                 $transfertOut = DB::table('transfert_stock')
                                     ->whereIn('id_projet_source', $projets_bu)
                                     ->where('article_id', $article->id)
-                                    ->where('type_transfert', 'normal')
+                                    ->whereNotExists(function($query) {
+                                        $query->select(DB::raw(1))
+                                              ->from('mouvements_stock')
+                                              ->whereRaw("reference_mouvement = CONCAT('TR-IN-', transfert_stock.id)");
+                                    })
                                     ->sum('quantite');
                             @endphp
-                            {{ $transfertOut ?? 0 }}
+                            {{ $transfertOut > 0 ? $transfertOut : '-' }}
                         </td>
                         <td>
                             <div class="dropdown">

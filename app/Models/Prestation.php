@@ -61,20 +61,4 @@ class Prestation extends Model {
         return $this->hasMany(DecompteLignePrestataire::class, 'idprestation');
     }
 
-    /**
-     * Relation avec les lignes de prestation
-     */
-    public function lignePrestations()
-    {
-        return $this->hasMany(LignePrestation::class, 'id_prestation');
-    }
-
-    /**
-     * Relation avec les décomptes
-     */
-    public function decomptes()
-    {
-        return $this->hasMany(Decompte::class, 'id_prestation');
-    }
-
 }

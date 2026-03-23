@@ -243,7 +243,7 @@ $(document).ready(function() {
                         });
                         
                         // Désactiver le champ client car il est automatiquement défini par le projet
-                        clientSelect.prop('disabled', true);
+                        // clientSelect.prop('disabled', true);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -309,7 +309,7 @@ $(document).ready(function() {
                                         <select name="client_id" id="client_id" class="form-select" required>
                                             <option value="">Sélectionner un client</option>
                                             @foreach ($clients as $client)
-                                                <option value="{{ $client->id }}">
+                                                <option value="{{ $client->id }}" {{ (old('client_id') == $client->id) ? 'selected' : '' }}>
                                                     {{ $client->nom_raison_sociale && $client->prenoms ? $client->nom_raison_sociale . ' ' . $client->prenoms : ($client->nom_raison_sociale ?? $client->prenoms) }}
                                                 </option>
                                             @endforeach

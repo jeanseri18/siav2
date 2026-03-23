@@ -275,35 +275,213 @@ class DemandeRavitaillementController extends Controller
                 'commentaires' => $request->commentaires
             ]);
             
-            // Ajouter les articles au stock du contrat
+            // Initialiser les quantités approuvées (par défaut = demandées)
             foreach ($demandeRavitaillement->lignes as $ligne) {
-                // Vérifier si l'article existe déjà dans le stock du contrat
-                $stockExistant = StockProjet::where('id_contrat', $demandeRavitaillement->contrat_id)
-                    ->where('article_id', $ligne->article_id)
-                    ->first();
-                
-                if ($stockExistant) {
-                    // Augmenter la quantité existante
-                    $stockExistant->increment('quantite', $ligne->quantite_demandee);
-                } else {
-                    // Créer un nouveau stock
-                    StockProjet::create([
-                        'id_projet' => $demandeRavitaillement->contrat->id_projet,
-                        'id_contrat' => $demandeRavitaillement->contrat_id,
-                        'article_id' => $ligne->article_id,
-                        'quantite' => $ligne->quantite_demandee,
-                        'unite_mesure_id' => $ligne->unite_mesure_id ?? $ligne->article->unite_mesure_id,
-                    ]);
-                }
+                $ligne->update([
+                    'quantite_approuvee' => $ligne->quantite_demandee,
+                    'quantite_livree' => 0
+                ]);
             }
             
             DB::commit();
             
-            return back()->with('success', 'Demande approuvée avec succès. Les articles ont été ajoutés au stock du contrat.');
+            return back()->with('success', 'Demande approuvée avec succès. En attente de livraison.');
             
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'Erreur lors de l\'approbation: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Livrer une demande de ravitaillement (Gestionnaire de stock)
+     */
+    public function livrer(Request $request, DemandeRavitaillement $demandeRavitaillement)
+    {
+        if ($demandeRavitaillement->statut !== 'approuvee' && $demandeRavitaillement->statut !== 'en_cours') {
+            return back()->with('error', 'Seules les demandes approuvées ou en cours peuvent être livrées.');
+        }
+
+        $request->validate([
+            'lignes' => 'required|array',
+            'lignes.*.id' => 'required|exists:lignes_demande_ravitaillement,id',
+            'lignes.*.quantite_a_livrer' => 'required|numeric|min:0',
+            'date_livraison' => 'required|date',
+            'commentaires' => 'nullable|string'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $toutLivre = true;
+
+            foreach ($request->lignes as $data) {
+                $ligne = LigneDemandeRavitaillement::findOrFail($data['id']);
+                $quantiteALivrer = $data['quantite_a_livrer'];
+
+                if ($quantiteALivrer > 0) {
+                    // Vérifier le stock disponible dans le projet
+                    $stock = StockProjet::where('id_projet', $demandeRavitaillement->contrat->id_projet)
+                        ->where('article_id', $ligne->article_id)
+                        ->first();
+
+                    if (!$stock || $stock->quantite < $quantiteALivrer) {
+                        throw new \Exception("Stock insuffisant pour l'article " . $ligne->article->nom);
+                    }
+
+                    // Décrémenter le stock
+                    $quantiteAvant = $stock->quantite;
+                    $stock->decrement('quantite', $quantiteALivrer);
+                    
+                    // Enregistrer le mouvement de stock (Sortie)
+                    \App\Models\MouvementStock::create([
+                        'stock_projet_id' => $stock->id,
+                        'type_mouvement' => 'sortie', // Ravitaillement = Sortie vers chantier
+                        'quantite' => -$quantiteALivrer,
+                        'quantite_avant' => $quantiteAvant,
+                        'quantite_apres' => $stock->quantite,
+                        'date_mouvement' => $request->date_livraison,
+                        'user_id' => Auth::id(),
+                        'reference_mouvement' => 'RAV-' . $demandeRavitaillement->reference,
+                        'commentaires' => 'Livraison pour demande ravitaillement ' . $demandeRavitaillement->reference
+                    ]);
+
+                    // Mettre à jour la ligne
+                    $ligne->quantite_livree += $quantiteALivrer;
+                    $ligne->save();
+                }
+
+                if ($ligne->quantite_livree < $ligne->quantite_approuvee) {
+                    $toutLivre = false;
+                }
+            }
+
+            $demandeRavitaillement->update([
+                'statut' => $toutLivre ? 'livree' : 'en_cours',
+                'date_livraison_effective' => $request->date_livraison,
+                'commentaires' => $demandeRavitaillement->commentaires . "\n" . $request->commentaires
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Livraison enregistrée avec succès.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Erreur lors de la livraison: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Réceptionner une livraison (Chef de chantier)
+     */
+    public function receptionner(Request $request, DemandeRavitaillement $demandeRavitaillement)
+    {
+        $request->validate([
+            'lignes' => 'required|array',
+            'lignes.*.id' => 'required|exists:lignes_demande_ravitaillement,id',
+            'lignes.*.quantite_recue' => 'required|numeric|min:0',
+            'lignes.*.motif_retour' => 'nullable|string',
+            'date_reception' => 'required|date'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $receptionDetails = [
+                'date' => $request->date_reception,
+                'items' => []
+            ];
+            
+            $retourNecessaire = false;
+
+            foreach ($request->lignes as $data) {
+                $ligne = LigneDemandeRavitaillement::findOrFail($data['id']);
+                $quantiteRecue = $data['quantite_recue'];
+                $quantiteRetournee = max(0, $ligne->quantite_livree - $quantiteRecue);
+
+                $receptionDetails['items'][$ligne->id] = [
+                    'recu' => $quantiteRecue,
+                    'retour' => $quantiteRetournee,
+                    'motif' => $data['motif_retour'] ?? null
+                ];
+
+                if ($quantiteRetournee > 0) {
+                    $retourNecessaire = true;
+                }
+            }
+            
+            // Stocker les détails de réception dans le commentaire (JSON encode)
+            // On ajoute au commentaire existant ou on utilise un format spécifique
+            $newComment = "RECEPTION_LOG: " . json_encode($receptionDetails);
+            
+            $demandeRavitaillement->update([
+                'commentaires' => $demandeRavitaillement->commentaires . "\n" . $newComment
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Réception enregistrée.' . ($retourNecessaire ? ' Des articles ont été refusés et doivent être retournés au stock.' : ''));
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Erreur lors de la réception: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Valider le retour en stock (Gestionnaire de stock)
+     */
+    public function validerRetour(Request $request, DemandeRavitaillement $demandeRavitaillement)
+    {
+        // Cette fonction analyse les commentaires pour trouver les retours non traités
+        // C'est un peu "hacky" sans table dédiée, mais ça évite la migration.
+        
+        DB::beginTransaction();
+
+        try {
+            // Logique simplifiée: On suppose que le gestionnaire valide manuellement les quantités à réintégrer
+            // via un formulaire qui liste les articles.
+            
+            $request->validate([
+                'lignes' => 'required|array',
+                'lignes.*.article_id' => 'required|exists:articles,id',
+                'lignes.*.quantite_retour' => 'required|numeric|min:0'
+            ]);
+            
+            foreach ($request->lignes as $data) {
+                if ($data['quantite_retour'] > 0) {
+                    $stock = StockProjet::where('id_projet', $demandeRavitaillement->contrat->id_projet)
+                        ->where('article_id', $data['article_id'])
+                        ->first();
+
+                    if ($stock) {
+                        $quantiteAvant = $stock->quantite;
+                        $stock->increment('quantite', $data['quantite_retour']);
+
+                        // Enregistrer le mouvement de stock (Entrée/Retour)
+                        \App\Models\MouvementStock::create([
+                            'stock_projet_id' => $stock->id,
+                            'type_mouvement' => 'retour_chantier',
+                            'quantite' => $data['quantite_retour'],
+                            'quantite_avant' => $quantiteAvant,
+                            'quantite_apres' => $stock->quantite,
+                            'date_mouvement' => now(),
+                            'user_id' => Auth::id(),
+                            'reference_mouvement' => 'RET-RAV-' . $demandeRavitaillement->reference,
+                            'commentaires' => 'Retour suite à refus sur demande ' . $demandeRavitaillement->reference
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Retours validés et réintégrés au stock.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Erreur lors de la validation du retour: ' . $e->getMessage());
         }
     }
     

@@ -21,6 +21,16 @@
         <form action="{{ route('projets.update', $projet->id) }}" method="POST" class="app-card-body">
             @csrf
             @method('PUT')
+
+            @if ($errors->any())
+                <div class="alert alert-danger mb-4">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             
             <div class="row">
                 <div class="col-md-6">
@@ -125,7 +135,7 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <div class="app-form-check">
-                            <input type="checkbox" name="hastva" id="hastva" 
+                            <input type="checkbox" name="hastva" id="hastva" value="1"
                                    class="app-form-check-input" 
                                    {{ old('hastva', $projet->hastva) ? 'checked' : '' }}>
                             <label for="hastva" class="app-form-check-label">
@@ -135,7 +145,7 @@
                     </div>
                     <div class="mb-3">
                         <div class="app-form-check">
-                            <input type="checkbox" name="tva_achat" id="tva_achat" 
+                            <input type="checkbox" name="tva_achat" id="tva_achat" value="1"
                                    class="app-form-check-input" 
                                    {{ old('tva_achat', $projet->tva_achat) ? 'checked' : '' }}>
                             <label for="tva_achat" class="app-form-check-label">

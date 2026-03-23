@@ -12,6 +12,10 @@
                 <input type="text" name="nom" class="form-control" value="{{ $banque->nom }}" required>
             </div>
             <div class="mb-3">
+                <label for="solde_initial" class="form-label">Solde initial</label>
+                <input type="number" name="solde_initial" class="form-control" step="0.01" value="{{ $banque->solde_initial }}">
+            </div>
+            <div class="mb-3">
                 <label for="code_banque" class="form-label">Code Banque</label>
                 <input type="text" name="code_banque" class="form-control" value="{{ $banque->code_banque }}">
             </div>

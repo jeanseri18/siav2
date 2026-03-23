@@ -285,7 +285,7 @@
                 </div>
                 <h3>Gestion de la Trésorerie</h3>
                 <p>Gérer la comptabilité et les opérations financières</p>
-                <button class="card-btn" onclick="navigate('sublayouts_caisse')">
+                <button class="card-btn" onclick="navigate('sublayouts_tresorerie')">
                     Accéder <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
