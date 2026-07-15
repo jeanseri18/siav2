@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\BU;
 use App\Models\BUAssociat;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -19,20 +20,31 @@ class UserController extends Controller
     // Show the form to create a new user
     public function create()
     {
-        $buses = BU::all(); // Get all bus data to assign
-        return view('users.create', compact('buses'));
+        $buses = BU::all();
+        $roles = User::roleOptionsForUserManagement();
+
+        return view('users.create', compact('buses', 'roles'));
     }
 
     // Store a new user
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'role' => 'required|in:employe,admin',
-            'status' => 'required|in:actif,inactif',
-        ]);
+        $roleKeys = array_keys(User::roleOptionsForUserManagement());
+        $request->validate(
+            [
+                'name' => 'required|string',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|min:6',
+                'role' => ['required', Rule::in($roleKeys)],
+                'status' => 'required|in:actif,inactif',
+                'buses' => 'required|array|min:1',
+                'buses.*' => 'exists:bus,id',
+            ],
+            [
+                'buses.required' => 'Cochez au moins une unité (BU) pour que l’utilisateur puisse se connecter correctement.',
+                'buses.min' => 'Cochez au moins une unité (BU) pour que l’utilisateur puisse se connecter correctement.',
+            ]
+        );
 
         $user = new User();
         $user->nom = $request->name;
@@ -60,18 +72,21 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        $buses = Bu::all(); // Get all bus data to assign
-        $assignedBuses = $user->bus()->pluck('bu_id')->toArray(); // Get the buses assigned to the user
-        return view('users.edit', compact('user', 'buses', 'assignedBuses'));
+        $buses = BU::all();
+        $assignedBuses = $user->bus()->pluck('bu_id')->toArray();
+        $roles = User::roleOptionsForUserManagement();
+
+        return view('users.edit', compact('user', 'buses', 'assignedBuses', 'roles'));
     }
 
     // Update an existing user
     public function update(Request $request, $id)
     {
+        $roleKeys = array_keys(User::roleOptionsForUserManagement());
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required|in:employe,admin',
+            'role' => ['required', Rule::in($roleKeys)],
             'status' => 'required|in:actif,inactif',
         ]);
 

@@ -16,20 +16,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #033d71;
             padding-bottom: 20px;
         }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
         .company-info {
             text-align: right;
         }
         .title {
             font-size: 24px;
             font-weight: bold;
-            color: #007bff;
+            color: #033d71;
             margin-bottom: 5px;
         }
         .subtitle {
@@ -126,21 +123,22 @@
         .total-final {
             font-weight: bold;
             font-size: 18px;
-            border-top: 2px solid #007bff;
+            border-top: 2px solid #033d71;
             padding-top: 10px;
         }
     </style>
 </head>
 <body>
+@php
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+@endphp
     <div class="header">
         <div>
-            @if($demandeApprovisionnement->user && $demandeApprovisionnement->user->bus && $demandeApprovisionnement->user->bus->logo)
-                <img src="{{ public_path('storage/' . $demandeApprovisionnement->user->bus->logo) }}" alt="Logo" class="logo">
-            @endif
+            @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo'])
         </div>
         <div class="company-info">
             <div class="title">DEMANDE D'APPROVISIONNEMENT</div>
-            <div class="subtitle">{{ $demandeApprovisionnement->user && $demandeApprovisionnement->user->bus ? $demandeApprovisionnement->user->bus->nom : 'Entreprise' }}</div>
+            <div class="subtitle">{{ $pdfBranding['nom_entreprise'] }}</div>
         </div>
     </div>
 
@@ -283,9 +281,7 @@
 
     <div class="footer">
         <p>Document généré le {{ date('d/m/Y H:i') }}</p>
-        @if($demandeApprovisionnement->user && $demandeApprovisionnement->user->bus)
-        <p>{{ $demandeApprovisionnement->user->bus->nom }}</p>
-        @endif
+        <p>{{ $pdfBranding['nom_entreprise'] }}</p>
     </div>
 </body>
 </html>

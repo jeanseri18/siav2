@@ -9,24 +9,62 @@ use App\Models\Article;
 use App\Models\Reference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Support\PdfBranding;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeAchatController extends Controller
 {
     public function index()
     {
-        $demandes = DemandeAchat::with(['user', 'projet', 'lignes.article'])->get();
+        $demandes = DemandeAchat::with(['user', 'projet', 'lignes.article'])
+            ->withCount('demandeCotations')
+            ->get();
         return view('demande_achats.index', compact('demandes'));
     }
 
-    public function create()
+    public function exportListePdf()
+    {
+        $buId = session('selected_bu') ? (int) session('selected_bu') : null;
+        $demandes = $this->demandesAchatForListing($buId);
+        $pdfBranding = PdfBranding::forBu($buId);
+
+        $pdf = PDF::loadView('demande_achats.liste-export', [
+            'demandes' => $demandes,
+            'pdfBranding' => $pdfBranding,
+            'documentTitle' => 'Liste des demandes d\'achat',
+        ])
+            ->setPaper('a4', 'landscape')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
+        return $pdf->stream('liste-demandes-achat-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+    }
+
+    private function demandesAchatForListing(?int $buId = null)
+    {
+        $query = DemandeAchat::with(['user', 'projet', 'approbateur', 'lignes'])
+            ->withCount('lignes')
+            ->orderByDesc('date_demande')
+            ->orderByDesc('id');
+
+        if ($buId) {
+            $query->whereHas('projet', fn ($q) => $q->where('bu_id', $buId));
+        }
+
+        return $query->get();
+    }
+
+    public function create(Request $request)
     {
         $projets = Projet::all();
         $articles = Article::with(['categorie', 'uniteMesure'])->get();
         $demandesApprovisionnement = \App\Models\DemandeApprovisionnement::with(['projet', 'lignes.article.uniteMesure'])
             ->where('statut', 'approuvée')
             ->get();
-        return view('demande_achats.create', compact('projets', 'articles', 'demandesApprovisionnement'));
+        $demandeApprovisionnementPreselectId = $request->filled('demande_approvisionnement_id')
+            ? (int) $request->query('demande_approvisionnement_id')
+            : null;
+
+        return view('demande_achats.create', compact('projets', 'articles', 'demandesApprovisionnement', 'demandeApprovisionnementPreselectId'));
     }
 
     public function store(Request $request)
@@ -103,6 +141,7 @@ class DemandeAchatController extends Controller
     public function show(DemandeAchat $demandeAchat)
     {
         $demandeAchat->load(['user', 'projet', 'approbateur', 'lignes.article']);
+        $demandeAchat->loadCount('demandeCotations');
         return view('demande_achats.show', compact('demandeAchat'));
     }
 
@@ -281,8 +320,11 @@ class DemandeAchatController extends Controller
             'approbateur', 
             'lignes.article'
         ])->findOrFail($id);
+
+        $buId = $demandeAchat->projet?->bu_id ?? (session('selected_bu') ? (int) session('selected_bu') : null);
+        $pdfBranding = PdfBranding::forBu($buId);
         
-        $pdf = PDF::loadView('demande_achats.pdf', compact('demandeAchat'))
+        $pdf = PDF::loadView('demande_achats.pdf', compact('demandeAchat', 'pdfBranding'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->download('Demande_Achat_' . $demandeAchat->reference . '.pdf');

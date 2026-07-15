@@ -64,7 +64,7 @@
                             </label>
                             <input type="password" name="password" id="password" class="app-form-control" required>
                             <div class="app-form-text">Mot de passe sécurisé</div>
-                        </div>
+                        </div> 
                         
                         <div class="app-form-row">
                             <div class="app-form-col">
@@ -73,8 +73,9 @@
                                         <i class="fas fa-user-tag me-2"></i>Rôle
                                     </label>
                                     <select name="role" id="role" class="app-form-select">
-                                        <option value="employe">employe</option>
-                                        <option value="admin">Admin</option>
+                                        @foreach($roles as $value => $label)
+                                            <option value="{{ $value }}" {{ old('role', 'employe') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
                                     </select>
                                     <div class="app-form-text">Niveau d'accès de l'utilisateur</div>
                                 </div>

@@ -18,17 +18,24 @@
                 <i class="fas fa-boxes me-2"></i>Liste des Stocks pour le Projet
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('stock_contrat.export.pdf')" />
                 <div class="btn-group me-2" role="group">
+                    @if(auth()->user()->hasPermission('stock.historique.show'))
                     <a href="{{ route('stock_contrat.historique') }}" class="app-btn app-btn-info app-btn-icon">
                         <i class="fas fa-history"></i> Historique
                     </a>
+                    @endif
+                    @if(auth()->user()->hasPermission('stock.allhistorique.show'))
                     <a href="{{ route('stock_contrat.historique_complet') }}" class="app-btn app-btn-info app-btn-icon">
                         <i class="fas fa-list-ul"></i> Historique Complet
                     </a>
+                    @endif
                 </div>
+                @if(auth()->user()->hasPermission('stock.contrat.create'))
                 <a href="{{ route('stock_contrat.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un article au stock
                 </a>
+                @endif
             </div>
         </div>
 
@@ -170,22 +177,29 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('stock.details.show'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('stock_contrat.show', $stock->id) }}">
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('stock.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('stock_contrat.edit', $stock->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('stock.transfert'))
                                     <li>
                                         <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" 
                                            onclick="populateTransfertModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
                                             <i class="fas fa-exchange-alt me-2"></i>Transférer
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('stock.livraison.show'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#livraisonModal" 
@@ -193,6 +207,7 @@
                                             <i class="fas fa-truck me-2"></i>Livraison Chantier
                                         </a>
                                     </li>
+                                    @endif
                                     <li>
                                         <a class="dropdown-item text-info" href="#" data-bs-toggle="modal" data-bs-target="#retourChantierModal" 
                                            onclick="populateRetourChantierModal({{ $stock->id }}, '{{ $stock->article ? $stock->article->designation_article : 'N/A' }}', {{ $stock->quantite }})">
@@ -205,6 +220,7 @@
                                             <i class="fas fa-reply me-2"></i>Retour Projet
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('stock.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('stock_contrat.destroy', $stock->id) }}" method="POST" class="delete-form">
@@ -215,6 +231,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

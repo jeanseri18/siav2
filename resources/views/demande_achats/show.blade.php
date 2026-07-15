@@ -12,6 +12,7 @@
 @section('content')
 
 <div class="container app-fade-in">
+    <x-stock-flux-nav module="achat" context="show" />
     <div class="app-card" style="background: var(--primary); color: var(--white); margin-bottom: var(--spacing-lg);">
         <div class="app-card-body">
             <h2 class="app-fw-bold app-mb-3">Détails de la Demande d'Achat</h2>
@@ -222,13 +223,21 @@
                                 </button>
                             @endif
                             
-                            @if($demandeAchat->statut == 'approuvée')
+                            @if($demandeAchat->statut == 'approuvée' && $demandeAchat->demande_cotations_count === 0)
                                 <a href="{{ route('demande-cotations.create', ['demande_achat_id' => $demandeAchat->id]) }}" class="app-btn app-btn-primary app-btn-icon">
                                     <i class="fas fa-file-invoice me-2"></i> Créer demande de cotation
                                 </a>
-                                <a href="{{ route('bon-commandes.create', ['demande_achat_id' => $demandeAchat->id]) }}" class="app-btn app-btn-info app-btn-icon">
-                                    <i class="fas fa-shopping-cart me-2"></i> Créer bon de commande
-                                </a>
+                            @endif
+                            @if($demandeAchat->statut == 'approuvée')
+                                @if($demandeAchat->peutAssocierNouveauBonCommande())
+                                    <a href="{{ route('bon-commandes.create', ['demande_achat_id' => $demandeAchat->id]) }}" class="app-btn app-btn-info app-btn-icon">
+                                        <i class="fas fa-shopping-cart me-2"></i> Créer bon de commande
+                                    </a>
+                                @else
+                                    <span class="text-muted small ms-2 align-middle">
+                                        <i class="fas fa-info-circle me-1"></i>Un bon de commande actif existe déjà pour cette demande (annulez-le pour en créer un autre).
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     </div>

@@ -27,13 +27,12 @@
                         
 
                         
-                        <div class="app-form-group">
-                            <label for="logo" class="app-form-label">
-                                <i class="fas fa-image me-2"></i>Logo:
-                            </label>
-                            <input type="file" name="logo" class="app-form-control">
-                            <div class="app-form-text">Logo qui apparaîtra sur les documents (format recommandé: PNG ou JPG)</div>
-                        </div>
+                        <x-photo-dropzone
+                            name="logo"
+                            id="logo"
+                            label="Logo"
+                            help="Logo qui apparaîtra sur les documents (PNG ou JPG recommandé). Glissez-déposez ou cliquez."
+                        />
                         
                         <div class="app-form-group">
                             <label for="nom_entreprise" class="app-form-label">

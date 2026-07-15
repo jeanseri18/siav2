@@ -8,6 +8,7 @@
 @endsection
 
 @section('content')
+@include('partials.datatables-bs5-assets')
 
 <div class="app-fade-in">
     <div class="app-card">
@@ -16,6 +17,7 @@
                 <i class="fas fa-map-marker-alt me-2"></i>Liste des Secteurs
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'secteurs')" />
                 <a href="{{ route('secteurs.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un secteur
                 </a>
@@ -37,7 +39,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="Table" class="app-table display">
+            <table id="Table" class="app-table">
                 <thead>
                     <tr>
                         <th>Nom du secteur</th>
@@ -83,17 +85,25 @@
                             </div>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('secteurs.edit', $secteur->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('secteurs.destroy', $secteur->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('secteurs.edit', $secteur->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('secteurs.destroy', $secteur->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
@@ -104,20 +114,13 @@
     </div>
 </div>
 
-@push('styles')
-<link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
-@endpush
-
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Configuration DataTable
         $('#Table').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            columnDefs: [{ orderable: false, searchable: false, targets: -1 }],
             buttons: [
                 {
                     extend: 'collection',

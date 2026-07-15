@@ -8,10 +8,13 @@ use App\Models\Contrat;
 use App\Models\UniteMesure;
 use App\Models\DemandeRavitaillement;
 use App\Models\MouvementStock;
+use App\Http\Controllers\Concerns\ExportsListPdf;
 use Illuminate\Http\Request;
  
 class StockProjetController extends Controller
 {
+    use ExportsListPdf;
+
     public function index()
 {
     // Vérifier si l'id_projet est défini dans la session
@@ -28,6 +31,35 @@ class StockProjetController extends Controller
     // Retourner la vue avec les stocks récupérés
     return view('stock_projet.index', compact('stocks','projets','articles','projet_id'));
 }
+
+    public function exportListePdf()
+    {
+        $projetId = session('projet_id');
+        if (! $projetId) {
+            return redirect()->route('projets.index')->with('error', 'Aucun projet sélectionné');
+        }
+
+        $stocks = StockProjet::where('id_projet', $projetId)
+            ->with(['article', 'uniteMesure'])
+            ->get();
+
+        $rows = [];
+        foreach ($stocks as $stock) {
+            $rows[] = [
+                $stock->article?->reference ?? '—',
+                $stock->article?->nom ?? '—',
+                $stock->uniteMesure?->nom ?? $stock->article?->uniteMesure?->nom ?? '—',
+                (string) ($stock->quantite ?? 0),
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Inventaire du projet',
+            ['Réf. article', 'Désignation', 'Unité', 'Quantité'],
+            $rows,
+            'liste-stock-projet'
+        );
+    }
 
     public function create()
     {
@@ -113,6 +145,36 @@ class StockProjetController extends Controller
     
         // Retourner la vue avec les stocks récupérés
         return view('stock_contrat.index', compact('stocks','projets','articles','contrat_id'));
+    }
+
+    public function exportContratListePdf()
+    {
+        $contratId = session('contrat_id');
+        if (! $contratId) {
+            return redirect()->route('contrats.index')->with('error', 'Aucun contrat sélectionné');
+        }
+
+        $stocks = StockProjet::where('id_contrat', $contratId)
+            ->with(['article', 'uniteMesure', 'contrat'])
+            ->get();
+
+        $rows = [];
+        foreach ($stocks as $stock) {
+            $rows[] = [
+                $stock->article?->reference ?? '—',
+                $stock->article?->nom ?? '—',
+                $stock->uniteMesure?->nom ?? $stock->article?->uniteMesure?->nom ?? '—',
+                (string) ($stock->quantite ?? 0),
+                $stock->contrat?->ref_contrat ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des stocks contrat',
+            ['Réf. article', 'Désignation', 'Unité', 'Quantité', 'Contrat'],
+            $rows,
+            'liste-stock-contrat'
+        );
     }
     
         public function create_contrat()

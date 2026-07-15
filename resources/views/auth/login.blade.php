@@ -4,7 +4,7 @@
 {{-- Page de connexion améliorée --}}
 @extends('layouts.auth')
 
-@section('title', 'Connexion | SIA')
+@section('title', 'Connexion')
 
 @section('content')
 <div class="container">

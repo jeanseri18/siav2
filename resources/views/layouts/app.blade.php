@@ -4,16 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="title" content="@yield('title', 'Système de Gestion')">
+    <meta name="title" content="@yield('title', 'Tableau de bord') | {{ config('app.name') }}">
     <meta name="author" content="SIA">
     <meta name="description" content="Système de gestion complet pour le suivi des projets, stocks et finances.">
     <meta name="keywords" content="gestion, projets, finance, dashboard, ERP">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name', 'Dashboard')) | SIA</title>
+    <title>@yield('title', 'Tableau de bord') | {{ config('app.name') }}</title>
 
-    <!-- Favicon -->
-    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <!-- Favicon XBTP -->
+    <link rel="icon" type="image/png" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
 
     <!-- Global styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" crossorigin="anonymous">
@@ -42,8 +43,12 @@
 :root {
     /* Palette de couleurs principale */
     --primary: #033d71;
-    --primary-light: #0A8CFF;
-    --primary-dark: #022445;
+    --primary-light: #033d71;
+    --primary-dark: #033d71;
+    --bs-primary: #033d71;
+    --bs-primary-rgb: 3, 61, 113;
+    --bs-link-color: #033d71;
+    --bs-link-hover-color: #033d71;
     --secondary: #6c757d;
     --success: #28a745;
     --danger: #dc3545;
@@ -63,6 +68,24 @@
     --gray-700: #495057;
     --gray-800: #343a40;
     --gray-900: #212529;
+
+    /* Taille unique des boutons */
+    --btn-padding-y: 0.5rem;
+    --btn-padding-x: 1rem;
+    --btn-font-size: 0.875rem;
+    --btn-line-height: 1.5;
+    --btn-min-height: 2.375rem;
+    --btn-gap: 0.375rem;
+
+    /* Taille unique des champs de formulaire */
+    --field-padding-y: 0.5rem;
+    --field-padding-x: 0.875rem;
+    --field-font-size: 0.875rem;
+    --field-line-height: 1.5;
+    --field-min-height: 2.375rem;
+    --field-border-width: 1px;
+    --field-border-color: var(--gray-300);
+    --field-border-radius: var(--border-radius-md);
     
     /* Variables d'espacement */
     --spacing-xs: 0.25rem;
@@ -134,7 +157,8 @@ body {
     transition: var(--transition-base);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
-    overflow: hidden;
+    /* visible : sinon les tableaux larges (ex. bon de commande) sont coupés par overflow:hidden */
+    overflow: visible;
 }
 
 .app-card:hover {
@@ -255,59 +279,102 @@ body {
 }
 
 .app-form-group {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
-.app-form-label {
+.app-form-label,
+.form-label {
     display: block;
     margin-bottom: var(--spacing-sm);
     font-weight: 600;
+    font-size: var(--field-font-size);
     color: var(--gray-700);
 }
 
-.app-form-control {
+.app-form-control,
+.app-form-select,
+.form-control,
+.form-select,
+.form-control-sm,
+.form-control-lg,
+.form-select-sm,
+.form-select-lg,
+select.form-control,
+input.form-control,
+textarea.form-control {
     display: block;
     width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    line-height: 1.5;
+    min-height: var(--field-min-height);
+    height: var(--field-min-height);
+    padding: var(--field-padding-y) var(--field-padding-x) !important;
+    font-size: var(--field-font-size) !important;
+    line-height: var(--field-line-height) !important;
+    font-weight: 400;
     color: var(--gray-800);
     background-color: var(--white);
     background-clip: padding-box;
-    border: 2px solid var(--gray-300);
-    border-radius: var(--border-radius-md);
-    transition: var(--transition-base);
+    border: var(--field-border-width) solid var(--field-border-color) !important;
+    border-radius: var(--field-border-radius) !important;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.app-form-control:focus {
-    border-color: var(--primary-light);
+textarea.app-form-control,
+textarea.form-control,
+textarea.form-control-sm,
+textarea.form-control-lg {
+    height: auto !important;
+    min-height: 6rem;
+    resize: vertical;
+    line-height: 1.5 !important;
+}
+
+input[type="file"].app-form-control,
+input[type="file"].form-control {
+    height: auto !important;
+    min-height: var(--field-min-height);
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+}
+
+div.app-form-control {
+    display: flex;
+    align-items: center;
+}
+
+.app-form-control:focus,
+.app-form-select:focus,
+.form-control:focus,
+.form-select:focus,
+.form-control-sm:focus,
+.form-control-lg:focus {
+    border-color: var(--primary) !important;
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(3, 55, 101, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(3, 61, 113, 0.15);
 }
 
-.app-form-select {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: var(--gray-800);
-    background-color: var(--white);
-    background-clip: padding-box;
-    border: 2px solid var(--gray-300);
-    border-radius: var(--border-radius-md);
-    transition: var(--transition-base);
+.app-form-control:disabled,
+.app-form-select:disabled,
+.form-control:disabled,
+.form-select:disabled,
+.app-form-control[readonly],
+.form-control[readonly] {
+    background-color: var(--gray-100);
+    opacity: 1;
+}
+
+.app-form-select,
+.form-select,
+.form-select-sm,
+.form-select-lg,
+select.app-form-control,
+select.form-control {
+    padding-right: 2.25rem !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 16px 12px;
     appearance: none;
-}
-
-.app-form-select:focus {
-    border-color: var(--primary-light);
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(3, 55, 101, 0.15);
 }
 
 .app-form-check {
@@ -316,22 +383,70 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
-.app-form-check-input {
-    width: 1.25rem;
-    height: 1.25rem;
+.app-form-check-input,
+.form-check-input {
+    width: 1.125rem;
+    height: 1.125rem;
     margin-right: var(--spacing-sm);
-    border: 2px solid var(--gray-400);
+    border: var(--field-border-width) solid var(--gray-400);
     border-radius: var(--border-radius-sm);
 }
 
-.app-form-check-label {
+.app-form-check-label,
+.form-check-label {
     margin-bottom: 0;
+    font-size: var(--field-font-size);
 }
 
-.app-form-text {
+.app-form-text,
+.form-text {
     margin-top: var(--spacing-xs);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: var(--gray-600);
+}
+
+.input-group > .app-form-control,
+.input-group > .form-control,
+.input-group > .form-select,
+.input-group > .app-form-select {
+    min-height: var(--field-min-height);
+    height: var(--field-min-height);
+}
+
+.input-group > .app-btn,
+.input-group > .btn {
+    min-height: var(--field-min-height);
+    height: var(--field-min-height);
+}
+
+/* Select2 aligné sur les champs */
+.select2-container .select2-selection--single {
+    min-height: var(--field-min-height) !important;
+    height: var(--field-min-height) !important;
+    border: var(--field-border-width) solid var(--field-border-color) !important;
+    border-radius: var(--field-border-radius) !important;
+    padding: 0 var(--field-padding-x);
+    display: flex !important;
+    align-items: center;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: var(--field-font-size) !important;
+    line-height: var(--field-line-height) !important;
+    padding-left: 0 !important;
+    color: var(--gray-800);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    top: 0 !important;
+    right: 0.5rem !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(3, 61, 113, 0.15);
 }
 
 .app-form-row {
@@ -474,24 +589,46 @@ body {
 }
 
 /* ===== Boutons ===== */
-.app-btn {
-    display: inline-block;
+.app-btn,
+a.app-btn,
+a.app-btn:link,
+a.app-btn:visited,
+a.app-btn:hover,
+a.app-btn:focus,
+a.app-btn:active {
+    text-decoration: none !important;
+}
+
+.app-btn,
+.app-btn-sm,
+.app-btn-lg,
+.btn,
+.btn-sm,
+.btn-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--btn-gap);
     font-weight: 500;
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
     user-select: none;
     border: 1px solid transparent;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: var(--border-radius-md);
+    padding: var(--btn-padding-y) var(--btn-padding-x) !important;
+    font-size: var(--btn-font-size) !important;
+    line-height: var(--btn-line-height) !important;
+    min-height: var(--btn-min-height);
+    height: var(--btn-min-height);
+    box-sizing: border-box;
+    border-radius: var(--border-radius-md) !important;
     transition: var(--transition-base);
     cursor: pointer;
 }
 
-.app-btn:focus, .app-btn:hover {
-    text-decoration: none;
+.app-btn:focus, .app-btn:hover,
+.btn:focus, .btn:hover {
+    text-decoration: none !important;
     box-shadow: 0 0 0 0.2rem rgba(3, 55, 101, 0.25);
     transform: translateY(-2px);
 }
@@ -577,7 +714,9 @@ body {
     text-decoration: none;
     background-color: transparent;
     border: none;
-    padding: 0;
+    padding: 0 !important;
+    min-height: auto;
+    height: auto;
 }
 
 .app-btn-link:hover {
@@ -587,20 +726,8 @@ body {
     transform: none;
 }
 
-.app-btn-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    border-radius: var(--border-radius-sm);
-}
-
-.app-btn-lg {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-    border-radius: var(--border-radius-lg);
-}
-
 .app-btn-block {
-    display: block;
+    display: flex;
     width: 100%;
 }
 
@@ -608,11 +735,17 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-sm);
+    gap: var(--btn-gap);
 }
 
-.app-btn-icon i, .app-btn-icon svg {
-    font-size: 1.25em;
+.app-btn-icon i,
+.app-btn-icon svg,
+.app-btn i,
+.app-btn svg,
+.btn i,
+.btn svg {
+    font-size: 1em;
+    line-height: 1;
 }
 
 /* ===== Alertes ===== */
@@ -794,6 +927,14 @@ body {
     flex-direction: column !important;
 }
 
+.app-d-grid {
+    display: grid !important;
+}
+
+.app-d-grid > form {
+    display: grid;
+}
+
 .app-gap-1 {
     gap: var(--spacing-xs) !important;
 }
@@ -890,6 +1031,13 @@ body {
     margin-bottom: var(--spacing-xl) !important;
 }
 
+/* Défilement horizontal des tableaux sur tous les écrans (classe aussi redondante dans la media query mobile) */
+.app-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
 .app-p-0 {
     padding: 0 !important;
 }
@@ -944,15 +1092,6 @@ body {
         width: 100%;
         justify-content: space-between;
     }
-    
-    .app-table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .app-btn {
-        padding: 0.5rem 1rem;
-    }
 }
 
 /* ===== DataTables personnalisé ===== */
@@ -966,20 +1105,28 @@ body {
 }
 
 .dataTables_wrapper .dataTables_length select {
-    padding: 0.375rem 1.75rem 0.375rem 0.75rem;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--border-radius-sm);
+    min-height: var(--field-min-height);
+    height: var(--field-min-height);
+    padding: var(--field-padding-y) 2rem var(--field-padding-y) var(--field-padding-x);
+    font-size: var(--field-font-size);
+    border: var(--field-border-width) solid var(--field-border-color);
+    border-radius: var(--field-border-radius);
     color: var(--gray-700);
     background-color: var(--white);
+    box-sizing: border-box;
 }
 
 .dataTables_wrapper .dataTables_filter input {
-    padding: 0.375rem 0.75rem;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--border-radius-sm);
+    min-height: var(--field-min-height);
+    height: var(--field-min-height);
+    padding: var(--field-padding-y) var(--field-padding-x);
+    font-size: var(--field-font-size);
+    border: var(--field-border-width) solid var(--field-border-color);
+    border-radius: var(--field-border-radius);
     color: var(--gray-700);
     background-color: var(--white);
     margin-left: 0.5rem;
+    box-sizing: border-box;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
@@ -1004,13 +1151,21 @@ body {
 }
 
 .dataTables_wrapper .dt-buttons .dt-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: var(--primary);
     color: var(--white);
     border: none;
-    border-radius: var(--border-radius-sm);
-    padding: 0.375rem 0.75rem;
+    border-radius: var(--border-radius-md);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    font-size: var(--btn-font-size);
+    line-height: var(--btn-line-height);
+    min-height: var(--btn-min-height);
+    height: var(--btn-min-height);
     margin-right: 0.25rem;
     transition: var(--transition-base);
+    box-sizing: border-box;
 }
 
 .dataTables_wrapper .dt-buttons .dt-button:hover {
@@ -1145,8 +1300,8 @@ body {
     --gray-700: #aaaaaa;
     --gray-800: #dddddd;
     --gray-900: #f0f0f0;
-    --primary: #1a76cc;
-    --primary-light: #3a96ec;
+    --primary: #033d71;
+    --primary-light: #033d71;
     --light: #2d2d2d;
     --dark: #f0f0f0;
     
@@ -1220,14 +1375,14 @@ body {
 .navbar-nav .nav-link {
     color: white !important;
     font-weight: 500;
-    padding: 1rem 1.25rem;
+    padding: 0.6rem 1rem;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     transition: var(--transition-base);
-    border-radius: 0;
-    margin: 0;
+    border-radius: 0.5rem;
+    margin: 0.45rem 0.2rem;
     white-space: nowrap;
 }
 
@@ -1241,6 +1396,7 @@ body {
     background-color: var(--warning);
     color: #033d71 !important;
     font-weight: 600;
+    border-radius: 0.5rem;
 }
 
 .navbar-nav .nav-link i {
@@ -1393,7 +1549,7 @@ body {
     <style>
     :root {
         --primary-color: #033d71;
-        --secondary-color: #0A8CFF;
+        --secondary-color: #033d71;
         --success-color: #28a745;
         --warning-color: #ffc107;
         --danger-color: #dc3545;
@@ -1596,6 +1752,116 @@ body {
     width: auto;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
+
+/* ===== Cards dashboard sublayouts : blanc / bleu + hover inversé ===== */
+.dashboard-card,
+a.dashboard-card,
+button.dashboard-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #033d71 !important;
+    border: none !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 0.5rem 1.25rem rgba(3, 61, 113, 0.1) !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.dashboard-card::before,
+.dashboard-card::after,
+a.dashboard-card::before,
+a.dashboard-card::after,
+button.dashboard-card::before,
+button.dashboard-card::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+}
+
+.dashboard-card .card-icon,
+.dashboard-card .card-icon i,
+.dashboard-card.primary .card-icon,
+.dashboard-card.primary .card-icon i,
+.dashboard-card.success .card-icon,
+.dashboard-card.success .card-icon i,
+.dashboard-card.info .card-icon,
+.dashboard-card.info .card-icon i,
+.dashboard-card.warning .card-icon,
+.dashboard-card.warning .card-icon i,
+.dashboard-card.secondary .card-icon,
+.dashboard-card.secondary .card-icon i,
+.dashboard-card.contracts .card-icon,
+.dashboard-card.contracts .card-icon i,
+.dashboard-card.import .card-icon,
+.dashboard-card.import .card-icon i,
+.dashboard-card.config .card-icon,
+.dashboard-card.config .card-icon i {
+    color: #033d71 !important;
+    -webkit-text-fill-color: #033d71 !important;
+    background: none !important;
+}
+
+.dashboard-card .card-content,
+.dashboard-card .card-content h3,
+.dashboard-card .card-content p,
+.dashboard-card .card-action,
+.dashboard-card .card-badge,
+.dashboard-card .card-stats,
+.dashboard-card .stat-number,
+.dashboard-card .stat-label,
+.dashboard-card .feature-item,
+.dashboard-card .feature-item i {
+    color: #033d71 !important;
+    -webkit-text-fill-color: #033d71 !important;
+}
+
+.dashboard-card .card-content h3 {
+    font-weight: 700 !important;
+}
+
+.dashboard-card .card-content p {
+    opacity: 0.85;
+}
+
+.dashboard-card:hover,
+a.dashboard-card:hover,
+button.dashboard-card:hover,
+.dashboard-card:focus,
+a.dashboard-card:focus,
+button.dashboard-card:focus {
+    background: #033d71 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    transform: translateY(-4px);
+    box-shadow: 0 1rem 2rem rgba(3, 61, 113, 0.28) !important;
+    text-decoration: none !important;
+}
+
+.dashboard-card:hover .card-icon,
+.dashboard-card:hover .card-icon i,
+.dashboard-card:hover .card-content,
+.dashboard-card:hover .card-content h3,
+.dashboard-card:hover .card-content p,
+.dashboard-card:hover .card-action,
+.dashboard-card:hover .card-action i,
+.dashboard-card:hover .card-badge,
+.dashboard-card:hover .card-stats,
+.dashboard-card:hover .stat-number,
+.dashboard-card:hover .stat-label,
+.dashboard-card:hover .feature-item,
+.dashboard-card:hover .feature-item i,
+.dashboard-card:hover *,
+a.dashboard-card:hover *,
+button.dashboard-card:hover * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.dashboard-card:hover .card-content p {
+    opacity: 0.95;
+}
     </style>
 </head>
 
@@ -1616,7 +1882,7 @@ body {
     <nav class="navbar navbar-expand-lg app-navbar">
         <div class="container-fluid">
             <!-- Brand/Logo -->
-            <a class="navbar-brand" href="{{ route('dashboard') }}">
+            <a class="navbar-brand" href="{{ route('menu') }}" title="Menu principal">
                 <img src="{{ asset('Logo_XBTP_Png/Logo_Blanc.png') }}" alt="XBTP" class="navbar-logo">
             </a>
 
@@ -1630,19 +1896,19 @@ body {
                 <!-- Main navigation -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('statistiques.index') }}">
+                        <a class="nav-link {{ request()->routeIs('dashboard', 'statistiques.*') ? 'active' : '' }}" href="{{ route('statistiques.index') }}">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sublayouts_bu') ? 'active' : '' }}" href="{{ route('sublayouts_bu') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_bu', 'bu.*') ? 'active' : '' }}" href="{{ route('sublayouts_bu') }}">
                             <i class="fas fa-building"></i>
                             <span>Business Units</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('projets.*') ? 'active' : '' }}" href="{{ route('sublayouts_projet') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_projet', 'sublayouts_projetdetail', 'sublayouts_contrat', 'projets.*', 'contrats.*') ? 'active' : '' }}" href="{{ route('sublayouts_projet') }}">
                             <i class="fas fa-project-diagram"></i>
                             <span>Projets</span>
                             @if(isset($projetsEnAttente) && $projetsEnAttente > 0)
@@ -1651,7 +1917,7 @@ body {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('articles.*') ? 'active' : '' }}" href="{{ route('sublayouts_article') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_article', 'articles.*', 'demande-approvisionnements.*', 'demande-achats.*', 'demande-cotations.*', 'bon-commandes.*', 'receptions.*', 'fournisseurs.*') ? 'active' : '' }}" href="{{ route('sublayouts_article') }}">
                             <i class="fas fa-boxes"></i>
                             <span>Stock</span>
                             @if(isset($articlesAlerte) && $articlesAlerte > 0)
@@ -1660,25 +1926,25 @@ body {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sublayouts_tresorerie') || request()->routeIs('sublayouts_caisse') || request()->routeIs('banque.*') || request()->routeIs('banques.*') ? 'active' : '' }}" href="{{ route('sublayouts_tresorerie') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_tresorerie', 'sublayouts_caisse', 'sublayouts_banque', 'banque.*', 'banques.*', 'caisse.*', 'bu-budget.*') ? 'active' : '' }}" href="{{ route('sublayouts_tresorerie') }}">
                             <i class="fas fa-money-bill-wave"></i>
                             <span>Comptabilité</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('ventes.*') ? 'active' : '' }}" href="{{ route('sublayouts_vente') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_vente', 'ventes.*', 'clients.*') ? 'active' : '' }}" href="{{ route('sublayouts_vente') }}">
                             <i class="fas fa-shopping-cart"></i>
                             <span>Vente</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('until') ? 'active' : '' }}" href="{{ route('sublayouts_until') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_until', 'until', 'config-global.*') ? 'active' : '' }}" href="{{ route('sublayouts_until') }}">
                             <i class="fas fa-tools"></i>
                             <span>Utilitaire</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('sublayouts_user') }}">
+                        <a class="nav-link {{ request()->routeIs('sublayouts_user', 'users.*') ? 'active' : '' }}" href="{{ route('sublayouts_user') }}">
                             <i class="fas fa-users-cog"></i>
                             <span>Accès</span>
                         </a>
@@ -1935,6 +2201,7 @@ $(document).ready(function() {
     @endif
 
     @stack('scripts') {{-- Inclure les scripts spécifiques à une page --}}
+
 </body>
 
 </html>

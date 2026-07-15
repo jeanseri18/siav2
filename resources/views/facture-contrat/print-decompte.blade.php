@@ -124,6 +124,19 @@ function numberToWords($number) {
     </style>
 </head>
 <body>
+@php
+    $clientDecompte = $factureDecompte->factureContrat->dqe->contrat->client;
+    $delaiReglement = $clientDecompte->delai_paiement ?? null;
+    $delaiJours = 30;
+    if (filled($delaiReglement) && preg_match('/(\d+)/', (string) $delaiReglement, $matchDelai)) {
+        $delaiJours = max(1, (int) $matchDelai[1]);
+    }
+    $dateEcheance = $factureDecompte->date_facture->copy()->addDays($delaiJours);
+    $tauxTvaDecompte = (float) $factureDecompte->montant_ht > 0
+        ? round(((float) $factureDecompte->montant_ttc - (float) $factureDecompte->montant_ht) / (float) $factureDecompte->montant_ht * 100, 0)
+        : 0;
+    $montantTvaDecompte = max(0, (float) $factureDecompte->montant_ttc - (float) $factureDecompte->montant_ht);
+@endphp
 
     <div class="header">
         <h1 class="invoice-title">FACTURE</h1>
@@ -133,18 +146,28 @@ function numberToWords($number) {
         <tr>
             <td class="left-col">
                 <strong>FACTURER À :</strong><br>
-                {{ $factureDecompte->factureContrat->dqe->contrat->client->nom }}<br>
-                N° Compte client : {{ $factureDecompte->factureContrat->dqe->contrat->client->code_client ?? 'CLU00010' }}<br>
-                N° CC : {{ $factureDecompte->factureContrat->dqe->contrat->numero_contrat }}<br>
-                Téléphone : {{ $factureDecompte->factureContrat->dqe->contrat->client->telephone ?? '27 22 44 09 25' }}<br>
-                Adresse : {{ $factureDecompte->factureContrat->dqe->contrat->client->adresse ?? 'Abidjan, Cocody' }}<br>
-                Boîte postale : {{ $factureDecompte->factureContrat->dqe->contrat->client->boite_postale ?? '01 BP 4387 01' }}
+                {{ $clientDecompte->nom_raison_sociale ?? $clientDecompte->nom ?? '—' }}<br>
+                @if(filled($clientDecompte->code))
+                    N° Compte client : {{ $clientDecompte->code }}<br>
+                @endif
+                @if(filled($factureDecompte->factureContrat->dqe->contrat->numero_contrat))
+                    N° CC : {{ $factureDecompte->factureContrat->dqe->contrat->numero_contrat }}<br>
+                @endif
+                @if(filled($clientDecompte->telephone))
+                    Téléphone : {{ $clientDecompte->telephone }}<br>
+                @endif
+                @if(filled($clientDecompte->adresse_localisation))
+                    Adresse : {{ $clientDecompte->adresse_localisation }}<br>
+                @endif
+                @if(filled($clientDecompte->boite_postale))
+                    Boîte postale : {{ $clientDecompte->boite_postale }}
+                @endif
             </td>
             <td class="right-col">
                 <strong>N° de la facture :</strong> {{ $factureDecompte->numero }}<br>
                 <strong>Date de facturation :</strong> {{ $factureDecompte->date_facture->format('d/m/Y') }}<br>
-                <strong>Délai de règlement :</strong> 30 jours<br>
-                <strong>Échéance :</strong> {{ $factureDecompte->date_facture->addDays(30)->format('d/m/Y') }}
+                <strong>Délai de règlement :</strong> {{ filled($delaiReglement) ? $delaiReglement : ($delaiJours . ' jours') }}<br>
+                <strong>Échéance :</strong> {{ $dateEcheance->format('d/m/Y') }}
             </td>
         </tr>
     </table>
@@ -180,8 +203,8 @@ function numberToWords($number) {
             <td>{{ number_format($factureDecompte->montant_ht, 2, ',', ' ') }}</td>
         </tr>
         <tr>
-            <td>TVA (18%)</td>
-            <td>{{ number_format($factureDecompte->montant_ht * 0.18, 2, ',', ' ') }}</td>
+            <td>TVA ({{ $tauxTvaDecompte }}%)</td>
+            <td>{{ number_format($montantTvaDecompte, 2, ',', ' ') }}</td>
         </tr>
         <tr class="total-line">
             <td><strong>TOTAL TTC</strong></td>

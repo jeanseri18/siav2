@@ -34,7 +34,7 @@
 
     @foreach ($categories as $categorie)
         <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
-            <tr bgcolor="#5EB3F6" height="40px">
+            <tr bgcolor="#033d71" height="40px">
                 <td colspan="16">
                     <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
                 </td>

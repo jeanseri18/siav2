@@ -68,13 +68,11 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="ref_projet" class="app-form-label">Référence du projet</label>
-                        <input type="text" name="ref_projet" id="ref_projet" 
-                               class="app-form-control @error('ref_projet') is-invalid @enderror" 
-                               value="{{ old('ref_projet') }}" required>
-                        @error('ref_projet')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <span class="app-form-label d-block">Référence du projet</span>
+                        <p class="app-form-control bg-light text-muted small mb-0 py-2 px-3 rounded border" style="cursor: default;">
+                            <i class="fas fa-magic me-1 text-secondary"></i>
+                            Générée automatiquement à l’enregistrement (format&nbsp;: <code>Prj_AAAAMMJJhhmmss</code>).
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -90,29 +88,9 @@
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="date_debut" class="app-form-label">Date de début</label>
-                        <input type="date" name="date_debut" id="date_debut" 
-                               class="app-form-control @error('date_debut') is-invalid @enderror" 
-                               value="{{ old('date_debut') }}" required>
-                        @error('date_debut')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="date_fin" class="app-form-label">Date de fin</label>
-                        <input type="date" name="date_fin" id="date_fin" 
-                               class="app-form-control @error('date_fin') is-invalid @enderror" 
-                               value="{{ old('date_fin') }}">
-                        @error('date_fin')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+            <div class="alert alert-info mb-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                Les <strong>dates de début et de fin du projet</strong> ne se saisissent pas ici : elles sont calculées automatiquement à partir des dates des <strong>contrats</strong> (plus ancienne date de début, plus récente date de fin).
             </div>
             
             <div class="row">
@@ -174,35 +152,21 @@
                     </div>
                 </div>
                 <div class="col-md-6">
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-calculator me-1"></i>
+                        Ces montants sont <strong>calculés automatiquement</strong> (contrats, facturation, bons de commande) — non saisis à la création.
+                    </p>
                     <div class="mb-3">
-                        <label for="montant_global" class="app-form-label">Montant global</label>
-                        <input type="number" name="montant_global" id="montant_global" 
-                               class="app-form-control @error('montant_global') is-invalid @enderror" 
-                               value="{{ old('montant_global') }}" 
-                               step="0.01" min="0">
-                        @error('montant_global')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="app-form-label">Montant global</label>
+                        <input type="text" class="app-form-control bg-light text-muted" value="—" readonly tabindex="-1" aria-readonly="true" style="cursor: not-allowed;">
                     </div>
                     <div class="mb-3">
-                        <label for="chiffre_affaire_global" class="app-form-label">Chiffre d'affaire global</label>
-                        <input type="number" name="chiffre_affaire_global" id="chiffre_affaire_global" 
-                               class="app-form-control @error('chiffre_affaire_global') is-invalid @enderror" 
-                               value="{{ old('chiffre_affaire_global') }}" 
-                               step="0.01" min="0">
-                        @error('chiffre_affaire_global')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="app-form-label">Chiffre d'affaire global</label>
+                        <input type="text" class="app-form-control bg-light text-muted" value="—" readonly tabindex="-1" aria-readonly="true" style="cursor: not-allowed;">
                     </div>
                     <div class="mb-3">
-                        <label for="total_depenses" class="app-form-label">Total Dépenses</label>
-                        <input type="number" name="total_depenses" id="total_depenses" 
-                               class="app-form-control @error('total_depenses') is-invalid @enderror" 
-                               value="{{ old('total_depenses') }}" 
-                               step="0.01" min="0">
-                        @error('total_depenses')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="app-form-label">Total dépenses</label>
+                        <input type="text" class="app-form-control bg-light text-muted" value="—" readonly tabindex="-1" aria-readonly="true" style="cursor: not-allowed;">
                     </div>
                 </div>
             </div>
@@ -212,6 +176,7 @@
                     <div class="mb-3">
                         <label for="statut" class="app-form-label">Statut du projet</label>
                         <select name="statut" id="statut" class="app-form-control @error('statut') is-invalid @enderror" required>
+                            <option value="non débuté" {{ old('statut', 'non débuté') == 'non débuté' ? 'selected' : '' }}>Non débuté</option>
                             <option value="en cours" {{ old('statut') == 'en cours' ? 'selected' : '' }}>En cours</option>
                             <option value="terminé" {{ old('statut') == 'terminé' ? 'selected' : '' }}>Terminé</option>
                             <option value="annulé" {{ old('statut') == 'annulé' ? 'selected' : '' }}>Annulé</option>
@@ -220,19 +185,10 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="mb-3">
-                        <label for="bu_id" class="app-form-label">Business Unit</label>
-                        <select name="bu_id" id="bu_id" class="app-form-control @error('bu_id') is-invalid @enderror" required>
-                            <option value="">Sélectionner une BU</option>
-                            @foreach($bus as $bu)
-                                <option value="{{ $bu->id }}" {{ old('bu_id') == $bu->id ? 'selected' : '' }}>
-                                    {{ $bu->nom }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('bu_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                    <div class="alert alert-light border mb-3 py-2 px-3" role="status">
+                        <i class="fas fa-building me-2 text-primary"></i>
+                        <strong>BU :</strong> {{ $buCourante->nom ?? '—' }}
+                        <span class="d-block small text-muted mt-1 mb-0">Le projet est rattaché à la BU sélectionnée à la connexion.</span>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -261,6 +217,25 @@
                             @endforeach
                         </select>
                         @error('ville_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="commune_id" class="app-form-label">Commune</label>
+                        <select name="commune_id" id="commune_id" class="app-form-control @error('commune_id') is-invalid @enderror">
+                            <option value="">Sélectionner une commune</option>
+                        </select>
+                        @error('commune_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="secteur_id" class="app-form-label">Secteur <span class="text-muted small">(localisation)</span></label>
+                        <input type="hidden" name="quartier_id" id="quartier_id" value="{{ old('quartier_id') }}">
+                        <select name="secteur_id" id="secteur_id" class="app-form-control @error('secteur_id') is-invalid @enderror">
+                            <option value="">Sélectionner un secteur</option>
+                        </select>
+                        @error('secteur_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -294,4 +269,15 @@
         </form>
     </div>
 </div>
+
+@php
+    $locationInit = [
+        'ville_id' => old('ville_id'),
+        'commune_id' => old('commune_id'),
+        'secteur_id' => old('secteur_id'),
+        'quartier_id' => old('quartier_id'),
+    ];
+@endphp
+@include('projets.partials.location-cascade-scripts')
+@include('projets.partials.client-secteur-sync')
 @endsection

@@ -44,7 +44,7 @@
 }
 
 .categorie-header {
-    background-color: #0d6efd !important;
+    background-color: #033d71 !important;
     color: white !important;
     font-weight: 700;
 }
@@ -94,11 +94,13 @@
                     <span class="badge bg-secondary">Archivé</span>
                 @endif
             </p>
-        </div>
+        </div> 
         <div class="col-md-6 text-end">
+            @if(auth()->user()->hasPermission('dqe.edit'))
             <a href="{{ route('dqe.edit', $dqe->id) }}" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Éditer
             </a>
+            @endif
             <a href="{{ route('dqe.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Retour
             </a>

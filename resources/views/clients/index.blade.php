@@ -17,9 +17,16 @@
                 <i class="fas fa-users me-2"></i>Liste des Clients
             </h2>
             <div class="app-card-actions">
+                @if(auth()->user()->hasPermission('clients.export.pdf'))
+                <a href="{{ route('clients.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
+                @endif
+                @if(auth()->user()->hasPermission('clients.create'))
                 <a href="{{ route('clients.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-user-plus"></i> Ajouter un Client
                 </a>
+                @endif
             </div>
         </div>
 
@@ -39,7 +46,7 @@
 
         <div class="app-card-body app-table-responsive">
             <table id="Table" class="app-table">
-                <thead>
+                <thead> 
                     <tr>
                         <th>Code</th>
                         <th>Nom Prénoms /Raison sociale</th>
@@ -90,18 +97,25 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('clients.view'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('clients.show', $client->id) }}">
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('clients.update'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('clients.edit', $client) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('clients.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
+
+                                       
                                         <form action="{{ route('clients.destroy', $client) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
@@ -109,7 +123,9 @@
                                                 <i class="fas fa-trash-alt me-2"></i>Supprimer
                                             </button>
                                         </form>
+                                        
                                     </li>
+                                     @endif
                                 </ul>
                             </div>
                         </td>

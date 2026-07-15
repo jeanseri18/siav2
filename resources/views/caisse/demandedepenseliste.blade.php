@@ -24,10 +24,37 @@
             </div>
         </div>
 
-        <div class="app-card-body app-table-responsive">
+        <div class="app-card-body">
+            @php
+                $wrapFormEncaisse = $peutEnregistrerDepensesEnCaisse ?? false;
+            @endphp
+            @if($wrapFormEncaisse)
+                <div class="alert alert-info d-flex align-items-start gap-2 mb-3" role="alert">
+                    <i class="fas fa-info-circle mt-1"></i>
+                    <div>
+                        <strong>Enregistrement caisse</strong> — Les approbations (responsable, RAF) ne modifient pas le solde.
+                        Cochez une ou plusieurs lignes au statut <strong>Approuvé RAF</strong>, puis cliquez sur <strong>Enregistrer en caisse</strong> pour créer les sorties au <strong>brouillard de la BU de la demande</strong> et mettre à jour les soldes (recalcul automatique).
+                    </div>
+                </div>
+                <form action="{{ route('caisse.enregistrerDepensesEnCaisse') }}" method="POST" id="formEncaissementDepenses" onsubmit="return validerSelectionDepensesCaisse();" class="d-none">
+                    @csrf
+                </form>
+                <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+                    <button type="submit" class="app-btn app-btn-success" id="btnEnregistrerDepensesCaisse" disabled form="formEncaissementDepenses">
+                        <i class="fas fa-cash-register me-1"></i> Enregistrer en caisse (sélection)
+                    </button>
+                </div>
+            @endif
+
+            <div class="app-table-responsive">
             <table id="Table" class="app-table">
                 <thead>
                     <tr>
+                        @if($wrapFormEncaisse)
+                            <th class="text-center" style="width: 44px;" data-orderable="false">
+                                <input type="checkbox" id="demandeDepenseCheckAll" class="form-check-input" title="Tout sélectionner (lignes éligibles)">
+                            </th>
+                        @endif
                         <th>Date</th>
                         <th>Demandeur</th>
                         <th>BU</th>
@@ -42,6 +69,13 @@
                 <tbody>
                     @foreach($demandesDepenses as $demande)
                         <tr>
+                            @if($wrapFormEncaisse)
+                                <td class="text-center align-middle">
+                                    @if($demande->statut == 'approuve_raf')
+                                        <input type="checkbox" class="form-check-input js-depense-caisse-cb" name="demande_ids[]" value="{{ $demande->id }}" form="formEncaissementDepenses">
+                                    @endif
+                                </td>
+                            @endif
                             <td>{{ $demande->created_at->format('d/m/Y H:i') }}</td>
                             <td>{{ $demande->user ? $demande->user->nom . ' ' . $demande->user->prenom : 'N/A' }}</td>
                             <td>{{ $demande->bu ? $demande->bu->nom : 'N/A' }}</td>
@@ -64,7 +98,7 @@
                                     </span>
                                 @elseif($demande->statut == 'validée')
                                     <span class="app-badge app-badge-success app-badge-pill">
-                                        <i class="fas fa-check-circle me-1"></i> Validée
+                                        <i class="fas fa-check-circle me-1"></i> Validée (caisse)
                                     </span>
                                 @elseif($demande->statut == 'rejete')
                                     <span class="app-badge app-badge-danger app-badge-pill">
@@ -78,13 +112,10 @@
                             </td>
                             <td>
                                 <div class="app-d-flex app-gap-1 flex-wrap">
-                                    <!-- Bouton pour voir la demande en PDF -->
                                     <a href="{{ route('caisse.voirDemandeDepensePDF', $demande->id) }}" target="_blank" class="app-btn app-btn-primary app-btn-sm app-btn-icon" title="Voir en PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
-                                    
-                                    <!-- Boutons d'approbation pour responsable hiérarchique -->
-                                    @if($demande->statut == 'en_attente_responsable' && $demande->responsable_hierarchique_id == Auth::id())
+                                    @if($demande->statut == 'en_attente_responsable' && ($demande->responsable_hierarchique_id == Auth::id() || in_array(Auth::user()->role, ['admin', 'dg'])))
                                         <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'responsable', 'approuver')" title="Approuver">
                                             <i class="fas fa-check"></i>
                                         </button>
@@ -92,8 +123,6 @@
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @endif
-                                    
-                                    <!-- Boutons d'approbation pour RAF -->
                                     @if($demande->statut == 'approuve_responsable' && in_array(Auth::user()->role, ['admin', 'dg']))
                                         <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'raf', 'approuver')" title="Approuver RAF">
                                             <i class="fas fa-check-double"></i>
@@ -102,22 +131,13 @@
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @endif
-                                    
-                                    <!-- Bouton de validation finale -->
-                                    @if($demande->statut == 'approuve_raf' && in_array(Auth::user()->role, ['caissier', 'admin', 'dg']))
-                                        <form action="{{ route('caisse.validerDemandeDepense', $demande->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Valider pour paiement">
-                                                <i class="fas fa-money-bill"></i>
-                                            </button>
-                                        </form>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>
@@ -161,6 +181,14 @@
         $('#Table').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            @if($wrapFormEncaisse ?? false)
+            order: [[1, 'desc']],
+            columnDefs: [
+                { orderable: false, searchable: false, targets: 0 }
+            ],
+            @else
+            order: [[0, 'desc']],
+            @endif
             buttons: [
                 {
                     extend: 'collection',
@@ -179,8 +207,47 @@
         
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
+
+        @if($wrapFormEncaisse ?? false)
+        (function () {
+            function updateDepenseCaisseSubmitBtn() {
+                const n = document.querySelectorAll('input.js-depense-caisse-cb:checked').length;
+                const btn = document.getElementById('btnEnregistrerDepensesCaisse');
+                if (btn) {
+                    btn.disabled = n === 0;
+                }
+            }
+            const checkAll = document.getElementById('demandeDepenseCheckAll');
+            if (checkAll) {
+                checkAll.addEventListener('change', function () {
+                    document.querySelectorAll('input.js-depense-caisse-cb').forEach(function (cb) {
+                        cb.checked = checkAll.checked;
+                    });
+                    updateDepenseCaisseSubmitBtn();
+                });
+            }
+            document.getElementById('Table')?.addEventListener('change', function (e) {
+                if (e.target && e.target.classList.contains('js-depense-caisse-cb')) {
+                    updateDepenseCaisseSubmitBtn();
+                }
+            });
+        })();
+        @endif
     });
-    
+
+    function validerSelectionDepensesCaisse() {
+        @if($wrapFormEncaisse ?? false)
+        const n = document.querySelectorAll('input.js-depense-caisse-cb:checked').length;
+        if (n === 0) {
+            alert('Veuillez cocher au moins une demande au statut « Approuvé RAF ».');
+            return false;
+        }
+        return confirm('Enregistrer ' + n + ' dépense(s) au brouillard de caisse et mettre à jour les soldes des BU concernées ?');
+        @else
+        return false;
+        @endif
+    }
+
     // Fonction pour gérer les approbations
     function approuverDemande(demandeId, type, action) {
         const modal = new bootstrap.Modal(document.getElementById('approbationModal'));

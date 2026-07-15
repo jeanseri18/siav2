@@ -26,13 +26,13 @@
         }
         
         .document-header {
-            border-bottom: 3px solid #0d6efd;
+            border-bottom: 3px solid #033d71;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
         
         .document-title {
-            color: #0d6efd;
+            color: #033d71;
             font-size: 28px;
             font-weight: bold;
             margin-bottom: 10px;
@@ -239,7 +239,7 @@
             <div class="info-row">
                 <div class="info-label">Montant total :</div>
                 <div class="info-value">
-                    <strong style="font-size: 18px; color: #0d6efd;">
+                    <strong style="font-size: 18px; color: #033d71;">
                         {{ number_format($prestation->montant ?? 0, 0, ',', ' ') }} FCFA
                     </strong>
                 </div>

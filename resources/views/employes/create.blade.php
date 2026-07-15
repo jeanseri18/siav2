@@ -147,13 +147,13 @@
                     </div>
                     
                     <div class="col-md-12 mb-3">
-                        <label for="photo" class="form-label">Photo de Profil</label>
-                        <input type="file" class="form-control @error('photo') is-invalid @enderror" 
-                               id="photo" name="photo" accept="image/*">
-                        @error('photo')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Formats acceptés: JPG, PNG, GIF. Taille max: 2MB</div>
+                        <x-photo-dropzone
+                            name="photo"
+                            id="photo"
+                            label="Photo de Profil"
+                            :circle="true"
+                            help="Formats acceptés: JPG, PNG, GIF. Taille max: 2MB"
+                        />
                     </div>
                 </div>
                 
@@ -169,17 +169,9 @@
                         <label for="role" class="form-label">Rôle/Fonction <span class="text-danger">*</span></label>
                         <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
                             <option value="">Sélectionner un rôle...</option>
-                            <option value="chef_projet" {{ old('role') === 'chef_projet' ? 'selected' : '' }}>Chef de Projet</option>
-                            <option value="conducteur_travaux" {{ old('role') === 'conducteur_travaux' ? 'selected' : '' }}>Conducteur de Travaux</option>
-                            <option value="chef_chantier" {{ old('role') === 'chef_chantier' ? 'selected' : '' }}>Chef de Chantier</option>
-                            <option value="comptable" {{ old('role') === 'comptable' ? 'selected' : '' }}>Comptable</option>
-                            <option value="magasinier" {{ old('role') === 'magasinier' ? 'selected' : '' }}>Magasinier</option>
-                            <option value="acheteur" {{ old('role') === 'acheteur' ? 'selected' : '' }}>Acheteur</option>
-                            <option value="controleur_gestion" {{ old('role') === 'controleur_gestion' ? 'selected' : '' }}>Contrôleur de Gestion</option>
-                            <option value="secretaire" {{ old('role') === 'secretaire' ? 'selected' : '' }}>Secrétaire</option>
-                            <option value="chauffeur" {{ old('role') === 'chauffeur' ? 'selected' : '' }}>Chauffeur</option>
-                            <option value="gardien" {{ old('role') === 'gardien' ? 'selected' : '' }}>Gardien</option>
-                            <option value="employe" {{ old('role') === 'employe' ? 'selected' : '' }}>Employé</option>
+                            @foreach($roles as $value => $label)
+                                <option value="{{ $value }}" {{ old('role') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         @error('role')
                             <div class="invalid-feedback">{{ $message }}</div>

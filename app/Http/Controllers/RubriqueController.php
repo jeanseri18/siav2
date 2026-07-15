@@ -14,8 +14,8 @@ class RubriqueController extends Controller
             'id_soussession' => 'required|exists:souscategorierubriques,id',
         ]);
         
-        $contratId = session('contrat_id');
-        
+        $contratId = $request->boolean('bpu_utilitaires') ? null : session('contrat_id');
+
         Rubrique::create([
             'nom' => $request->nom,
             'id_soussession' => $request->id_soussession,

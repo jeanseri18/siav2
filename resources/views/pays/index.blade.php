@@ -8,6 +8,7 @@
 @endsection
 
 @section('content')
+@include('partials.datatables-bs5-assets')
 
 <div class="app-fade-in">
     <div class="app-card">
@@ -16,6 +17,7 @@
                 <i class="fas fa-globe me-2"></i>Liste des Pays
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'pays')" />
                 <a href="{{ route('pays.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un pays
                 </a>
@@ -37,7 +39,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="paysTable" class="app-table display">
+            <table id="paysTable" class="app-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -58,17 +60,25 @@
                             </div>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('pays.edit', $p->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('pays.destroy', $p->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('pays.edit', $p->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('pays.destroy', $p->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
@@ -86,11 +96,16 @@
         $('#paysTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            columnDefs: [{ orderable: false, searchable: false, targets: -1 }],
             buttons: [
                 {
                     extend: 'collection',
                     text: '<i class="fas fa-file-export"></i> Exporter',
                     buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                },
+                {
+                    extend: 'colvis',
+                    text: '<i class="fas fa-columns"></i> Colonnes'
                 }
             ],
             language: {

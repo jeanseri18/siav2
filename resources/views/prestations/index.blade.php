@@ -18,9 +18,12 @@
                 <i class="fas fa-tools me-2"></i>Liste des Prestations
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('prestations.export.pdf')" />
+                @if(auth()->user()->hasPermission('prestations.create'))
                 <a href="{{ route('prestations.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une prestation
                 </a>
+                @endif
             </div>
         </div>
 
@@ -100,49 +103,58 @@
                                     <i class="fas fa-cog me-1"></i>Actions
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $prestation->id }}">
+                                    @if(auth()->user()->hasPermission('prestations.affecte'))
                                     <li>
                                         <a class="dropdown-item" href="#" onclick="affecterArtisan({{ $prestation->id }})">
                                             <i class="fas fa-user-plus me-2"></i>Affecter un prestataire
                                         </a>
                                     </li>
+                                    @endif
 
-                                    
+                                    @if(auth()->user()->hasPermission('prestations.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('prestations.edit', $prestation->id) }}">
                                             <i class="fas fa-edit me-2"></i>modifier  les détails
                                         </a>
                                     </li>
-
+                                    @endif
+                                    @if(auth()->user()->hasPermission('prestations.create'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('prestations.lignes', $prestation->id) }}">
                                             <i class="fas fa-list me-2"></i>Créer les lignes prestation
                                         </a>
                                     </li>
-
+                                    @endif
+                                    @if(auth()->user()->hasPermission('prestations.show'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('prestations.voirLignes', $prestation->id) }}">
                                             <i class="fas fa-eye me-2"></i>Voir les lignes prestation
                                         </a>
                                     </li>
-
+                                    @endif
+                                    @if(auth()->user()->hasPermission('prestations.generate'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('prestations.document', $prestation->id) }}" target="_blank">
                                             <i class="fas fa-file-pdf me-2"></i>Générer un document
                                         </a>
                                     </li>
-                                    
+                                    @endif
+                                    @if(auth()->user()->hasPermission('prestations.remplacer'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="#" onclick="remplacerArtisan({{ $prestation->id }})">
                                             <i class="fas fa-user-edit me-2"></i>Remplacer le prestataire
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('prestations.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item text-danger" href="#" onclick="supprimerPrestation({{ $prestation->id }})">
                                             <i class="fas fa-trash-alt me-2"></i>Supprimer
                                         </a>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

@@ -40,7 +40,7 @@
                                 <option value="{{ $projet->id }}" data-projet-id="{{ $projet->id }}" @if(session('projet_id') == $projet->id) selected @endif>{{ $projet->nom_projet }}</option>
                                 @endforeach
                             </select>
-                            <div class="app-form-text">Le projet d'où provient le stock</div>
+                            <div class="app-form-text">Uniquement les articles présents dans l’inventaire du projet source</div>
                         </div>
                     </div>
 
@@ -85,12 +85,12 @@
                             <div class="col-md-6">
                                 <div class="app-form-group">
                                     <label class="app-form-label">
-                                        <i class="fas fa-box me-2"></i>Article
+                                        <i class="fas fa-box me-2"></i>Article (inventaire projet source)
                                     </label>
                                     <select name="items[0][article_id]" class="app-form-select article-select" required>
                                         <option value="">-- Sélectionner un article --</option>
-                                        @foreach($articles as $article)
-                                        <option value="{{ $article->id }}">{{ $article->nom }}</option>
+                                        @foreach($stocksSource ?? [] as $stock)
+                                        <option value="{{ $stock->article_id }}">{{ $stock->article?->nom ?? 'Article' }} — Dispo: {{ $stock->quantite }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -131,32 +131,59 @@ document.addEventListener('DOMContentLoaded', function() {
     let articleIndex = 1;
     const articlesContainer = document.getElementById('articles-container');
     const addArticleBtn = document.getElementById('add-article-btn');
+    const stockProjetBaseUrl = @json(url('/transferts/stock-projet'));
+
+    function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    async function loadInventaireForProjet(projetId) {
+        const selects = document.querySelectorAll('#articles-container .article-select');
+        if (!projetId) {
+            const empty = '<option value="">-- Choisir d’abord le projet source --</option>';
+            selects.forEach(s => { s.innerHTML = empty; });
+            return;
+        }
+        try {
+            const res = await fetch(stockProjetBaseUrl + '/' + projetId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            const lignes = data.lignes || [];
+            let html = '<option value="">-- Article (inventaire) --</option>';
+            lignes.forEach(l => {
+                html += '<option value="' + l.article_id + '">' + escapeHtml(l.nom) + ' — Dispo: ' + l.quantite_disponible + '</option>';
+            });
+            selects.forEach(s => { s.innerHTML = html; });
+        } catch (e) {
+            console.error(e);
+            selects.forEach(s => { s.innerHTML = '<option value="">Erreur de chargement</option>'; });
+        }
+    }
 
     function updateRemoveButtons() {
         const removeButtons = document.querySelectorAll('.remove-article-btn');
-        removeButtons.forEach((btn, index) => {
+        removeButtons.forEach((btn) => {
             btn.style.display = removeButtons.length > 1 ? 'block' : 'none';
         });
     }
 
     function addArticleItem() {
+        const firstSelect = document.querySelector('#articles-container .article-select');
+        const opts = firstSelect ? firstSelect.innerHTML : '<option value="">-- Aucune ligne d’inventaire --</option>';
+
         const articleItem = document.createElement('div');
         articleItem.className = 'article-item mb-3 border rounded p-3';
         articleItem.setAttribute('data-index', articleIndex);
-        
+
         articleItem.innerHTML = `
             <div class="row">
                 <div class="col-md-6">
                     <div class="app-form-group">
                         <label class="app-form-label">
-                            <i class="fas fa-box me-2"></i>Article
+                            <i class="fas fa-box me-2"></i>Article (inventaire projet source)
                         </label>
-                        <select name="items[${articleIndex}][article_id]" class="app-form-select article-select" required>
-                            <option value="">-- Sélectionner un article --</option>
-                            @foreach($articles as $article)
-                            <option value="{{ $article->id }}">{{ $article->nom }}</option>
-                            @endforeach
-                        </select>
+                        <select name="items[${articleIndex}][article_id]" class="app-form-select article-select" required>${opts}</select>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -174,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `;
-        
+
         articlesContainer.appendChild(articleItem);
         articleIndex++;
         updateRemoveButtons();
@@ -194,18 +221,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Gestion de la soumission du formulaire
     document.getElementById('transfertForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const form = this;
         const articles = document.querySelectorAll('.article-item');
         let isValid = true;
-        
-        articles.forEach((article, index) => {
+
+        articles.forEach((article) => {
             const articleSelect = article.querySelector('.article-select');
             const quantiteInput = article.querySelector('.quantite-input');
-            
+
             if (!articleSelect.value || !quantiteInput.value || quantiteInput.value < 1) {
                 isValid = false;
                 articleSelect.classList.add('is-invalid');
@@ -215,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 quantiteInput.classList.remove('is-invalid');
             }
         });
-        
+
         if (isValid) {
             form.submit();
         } else {
@@ -223,28 +249,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Filtrage des projets (empêcher de sélectionner le même projet)
     const projetSource = document.getElementById('projet_source');
     const projetDestination = document.getElementById('projet_destination');
-    
+
     function filterProjetOptions() {
         const sourceValue = projetSource.value;
         const destinationValue = projetDestination.value;
-        
+
         Array.from(projetSource.options).forEach(option => {
             if (option.value !== '') {
                 option.style.display = '';
                 option.disabled = false;
             }
         });
-        
+
         Array.from(projetDestination.options).forEach(option => {
             if (option.value !== '') {
                 option.style.display = '';
                 option.disabled = false;
             }
         });
-        
+
         if (sourceValue) {
             Array.from(projetDestination.options).forEach(option => {
                 if (option.value === sourceValue) {
@@ -252,12 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.disabled = true;
                 }
             });
-            
+
             if (destinationValue === sourceValue) {
                 projetDestination.value = '';
             }
         }
-        
+
         if (destinationValue) {
             Array.from(projetSource.options).forEach(option => {
                 if (option.value === destinationValue) {
@@ -265,17 +290,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.disabled = true;
                 }
             });
-            
+
             if (sourceValue === destinationValue) {
                 projetSource.value = '';
             }
         }
     }
-    
+
+    async function onProjetSourceChange() {
+        await loadInventaireForProjet(projetSource.value);
+        filterProjetOptions();
+    }
+
     if (!projetSource.disabled) {
-        projetSource.addEventListener('change', filterProjetOptions);
+        projetSource.addEventListener('change', onProjetSourceChange);
     }
     projetDestination.addEventListener('change', filterProjetOptions);
+
+    if (projetSource.value && !projetSource.disabled) {
+        loadInventaireForProjet(projetSource.value);
+    }
+    filterProjetOptions();
 });
 </script>
 @endpush

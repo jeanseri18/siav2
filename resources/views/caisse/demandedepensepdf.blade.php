@@ -16,7 +16,8 @@
             margin-bottom: 30px;
         }
         .logo {
-            max-width: 150px;
+            display: inline-block;
+            border: 0;
             margin-bottom: 10px;
         }
         .title {
@@ -89,7 +90,18 @@
 <body>
     <div class="header">
         @if($bus && $bus->logo)
-            <img src="{{ public_path('storage/' . $bus->logo) }}" alt="Logo" class="logo">
+            @php
+                $legacyLogoPath = public_path('storage/' . $bus->logo);
+                $legacyLogoDims = \App\Support\PdfBranding::logoDisplaySize(is_file($legacyLogoPath) ? $legacyLogoPath : null, 150, 70);
+            @endphp
+            <img
+                src="{{ $legacyLogoPath }}"
+                alt="Logo"
+                class="logo"
+                width="{{ $legacyLogoDims['width'] }}"
+                height="{{ $legacyLogoDims['height'] }}"
+                style="width: {{ $legacyLogoDims['width'] }}px; height: {{ $legacyLogoDims['height'] }}px;"
+            >
         @endif
         <div class="title">DEMANDE DE DÉPENSE</div>
         <div class="subtitle">{{ $bus->nom }}</div>

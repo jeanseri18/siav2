@@ -10,6 +10,7 @@
     </div>
     
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('ventes.show'))
         <a href="{{ route('ventes.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-shopping-bag"></i>
@@ -20,7 +21,8 @@
             </div>
            
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('ventes.create'))
         <a href="{{ route('ventes.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -31,7 +33,8 @@
             </div>
            
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('ventes.report.form'))
         <a href="{{ route('ventes.report.form') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-chart-bar"></i>
@@ -42,7 +45,8 @@
             </div>
 
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('vente.clients.show'))
         <a href="{{ route('clients.index') }}" class="dashboard-card warning">
             <div class="card-icon">
                 <i class="fas fa-users"></i>
@@ -51,7 +55,7 @@
                 <h3>Liste des Clients</h3>
                 <p>Gérer la liste des clients</p>
             </div>
-        </a>
+        </a>@endif
     </div>
 </div>
 
@@ -59,13 +63,13 @@
 :root {
     /* Variables harmonisées avec app.blade.php */
     --primary-color: var(--primary, #033d71);
-    --secondary-color: var(--primary-light, #0A8CFF);
+    --secondary-color: var(--primary-light, #033d71);
     --success-color: var(--success, #28a745);
     --info-color: var(--info, #17a2b8);
     --warning-color: var(--warning, #ffc107);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
-    --gradient-success: linear-gradient(135deg,  var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
+    --gradient-success: linear-gradient(135deg,  var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
     --gradient-utilities: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);

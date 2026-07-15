@@ -8,6 +8,7 @@
 @endsection
 
 @section('content')
+@include('partials.datatables-bs5-assets')
 
 <div class="app-fade-in">
     <div class="app-card">
@@ -16,6 +17,7 @@
                 <i class="fas fa-building me-2"></i>Liste des Communes
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'communes')" />
                 <a href="{{ route('communes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une commune
                 </a>
@@ -37,7 +39,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="communesTable" class="app-table display">
+            <table id="communesTable" class="app-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -103,6 +105,7 @@
         $('#communesTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            columnDefs: [{ orderable: false, searchable: false, targets: -1 }],
             buttons: [
                 {
                     extend: 'collection',

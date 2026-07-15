@@ -1,8 +1,8 @@
-{{-- Page Index - Brouillard de Caisse --}}
+{{-- Page caisse / historique --}}
 @extends('layouts.app')
 
-@section('title', 'Brouillard de Caisse')
-@section('page-title', 'Brouillard de Caisse')
+@section('title', 'Caisse')
+@section('page-title', 'Caisse')
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('caisse.brouillard') }}">Caisse</a></li>
@@ -25,6 +25,11 @@
                     <div class="mb-3">
                         <label for="montant" class="form-label">Montant</label>
                         <input type="number" class="form-control" id="montant" name="montant" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_operation" class="form-label">Date de l'opération</label>
+                        <input type="date" class="form-control" id="date_operation" name="date_operation"
+                               value="{{ old('date_operation', now()->format('Y-m-d')) }}" required>
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description (optionnel)</label>
@@ -93,7 +98,23 @@ function openModal(modalId) {
 
 @section('content')
 
+@php
+    $canManageBrouillard = in_array(Auth::user()->role, ['admin', 'dg', 'caissier', 'chef_projet', 'conducteur_travaux', 'controleur_caisse'], true);
+@endphp
+
 <div class="app-fade-in">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+    @endif
     <div class="d-flex justify-content-between mb-3">
         <h3 class="mb-0">Gestion de Caisse</h3>
         <a href="{{ route('caisse.approvisionnement') }}" class="app-btn app-btn-primary">
@@ -111,35 +132,48 @@ function openModal(modalId) {
                     </h2>
                 </div>
                 <div class="app-card-body">
-                    <div class="row">
-                        <div class="col-md-2 col-sm-6 mb-3">
-                            <div class="text-center p-3 border rounded">
-                                <h6 class="text-muted mb-2">Solde Début Mois</h6>
-                                <div class="h4 fw-bold text-info">{{ number_format((float)$soldeDebutMois, 2, ',', ' ') }}</div>
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-3 mb-1 caisse-kpi-row">
+                        <div class="col d-flex flex-column">
+                            <div class="text-center p-3 border rounded dashboard-kpi-card h-100 flex-grow-1 d-flex flex-column justify-content-center" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#modalSoldeDebutMois" title="Dernier solde enregistré avant le 1er du mois">
+                                <h6 class="text-muted mb-2 small text-uppercase fw-semibold">Caisse au début du mois</h6>
+                                <div class="h4 fw-bold text-info mb-2">{{ number_format((float)$soldeDebutMois, 2, ',', ' ') }}</div>
+                                <small class="text-muted mt-auto">Voir le détail</small>
                             </div>
                         </div>
-                        <div class="col-md-2 col-sm-6 mb-3">
-                            <div class="text-center p-3 border rounded">
-                                <h6 class="text-muted mb-2">Solde Actuel</h6>
-                                <div class="h4 fw-bold text-primary">{{ number_format((float)$soldeActuel, 2, ',', ' ') }}</div>
+                        <div class="col d-flex flex-column">
+                            <div class="text-center p-3 border rounded dashboard-kpi-card h-100 flex-grow-1 d-flex flex-column justify-content-center" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#modalSoldeActuel" title="Tous les mouvements de caisse">
+                                <h6 class="text-muted mb-2 small text-uppercase fw-semibold">Solde caisse actuel</h6>
+                                <div class="h4 fw-bold text-primary mb-2">{{ number_format((float)$soldeActuel, 2, ',', ' ') }}</div>
+                                <small class="text-muted mt-auto">Voir le détail</small>
+                            </div>
+                            @if($canManageBrouillard)
+                                <form action="{{ route('caisse.brouillard.remiseAZero') }}" method="POST" class="mt-2" onsubmit="return confirm('Une écriture d\'ajustement sera ajoutée au brouillard pour ramener le solde à zéro (l\'historique est conservé). Continuer ?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100 text-wrap">
+                                        Remettre le solde à zéro
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                        <div class="col d-flex flex-column">
+                            <div class="text-center p-3 border rounded dashboard-kpi-card h-100 flex-grow-1 d-flex flex-column justify-content-center" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#modalSortiesMois" title="Sorties et dépenses enregistrées ce mois-ci">
+                                <h6 class="text-muted mb-2 small text-uppercase fw-semibold">Dépenses du mois</h6>
+                                <div class="h4 fw-bold text-danger mb-2">{{ number_format((float)$totalSortiesMois, 2, ',', ' ') }}</div>
+                                <small class="text-muted mt-auto">Voir le détail</small>
                             </div>
                         </div>
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <div class="text-center p-3 border rounded">
-                                <h6 class="text-muted mb-2">Total Sorties Mois</h6>
-                                <div class="h4 fw-bold text-danger">{{ number_format((float)$totalSortiesMois, 2, ',', ' ') }}</div>
+                        <div class="col d-flex flex-column">
+                            <div class="text-center p-3 border rounded dashboard-kpi-card h-100 flex-grow-1 d-flex flex-column justify-content-center" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#modalApproMois" title="Entrées d’approvisionnement du mois">
+                                <h6 class="text-muted mb-2 small text-uppercase fw-semibold">Total appro. mois</h6>
+                                <div class="h4 fw-bold text-success mb-2">{{ number_format((float)$totalApproMois, 2, ',', ' ') }}</div>
+                                <small class="text-muted mt-auto">Voir le détail</small>
                             </div>
                         </div>
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <div class="text-center p-3 border rounded">
-                                <h6 class="text-muted mb-2">Total Approvisionnements</h6>
-                                <div class="h4 fw-bold text-success">{{ number_format((float)$totalApproMois, 2, ',', ' ') }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6 mb-3">
-                            <div class="text-center p-3 border rounded">
-                                <h6 class="text-muted mb-2">Solde Mois</h6>
-                                <div class="h4 fw-bold {{ ($soldeActuel - $soldeDebutMois) >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format((float)($soldeActuel - $soldeDebutMois), 2, ',', ' ') }}</div>
+                        <div class="col d-flex flex-column">
+                            <div class="text-center p-3 border rounded dashboard-kpi-card h-100 flex-grow-1 d-flex flex-column justify-content-center" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#modalSoldeMois" title="Écart : solde actuel − caisse au début du mois">
+                                <h6 class="text-muted mb-2 small text-uppercase fw-semibold">Variation du mois</h6>
+                                <div class="h4 fw-bold {{ ($soldeActuel - $soldeDebutMois) >= 0 ? 'text-success' : 'text-danger' }} mb-2">{{ number_format((float)($soldeActuel - $soldeDebutMois), 2, ',', ' ') }}</div>
+                                <small class="text-muted mt-auto">Voir le détail</small>
                             </div>
                         </div>
                     </div>
@@ -262,7 +296,7 @@ function openModal(modalId) {
                         </div>
                     </div>
                     <div class="mt-3 text-center">
-                        <small class="text-muted">Dernière mise à jour: {{ $brouillardCaisse->first() ? $brouillardCaisse->first()->created_at->format('d/m/Y H:i') : 'Jamais' }}</small>
+                        <small class="text-muted">Dernière ligne (tri date opération): {{ $brouillardCaisse->first() ? $brouillardCaisse->first()->date_affichage : 'Aucune' }}</small>
                     </div>
                 </div>
             </div>
@@ -272,7 +306,7 @@ function openModal(modalId) {
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-money-check-alt me-2"></i>Brouillard de Caisse de {{ $bus->nom }}
+                <i class="fas fa-money-check-alt me-2"></i>{{ $bus->nom }}
             </h2>
         </div>
 
@@ -283,16 +317,20 @@ function openModal(modalId) {
                         <th>Date</th>
                         <th>Type</th>
                         <th>Montant</th>
+                        <th>Devise</th>
                         <th>Motif</th>
                         <th>Solde Cumulé</th>
+                        @if($canManageBrouillard)
+                        <th class="text-end">Actions</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($brouillardCaisse as $item)
                         <tr>
-                            <td>{{ $item->created_at }}</td>
+                            <td>{{ $item->date_affichage }}</td>
                             <td>
-                                @if($item->type == 'Entrée')
+                                @if(\App\Models\BrouillardCaisse::estTypeEntree($item->type))
                                     <span class="app-badge app-badge-success app-badge-pill">
                                         <i class="fas fa-arrow-up me-1"></i> Entrée
                                     </span>
@@ -302,13 +340,40 @@ function openModal(modalId) {
                                     </span>
                                 @endif
                             </td>
-                            <td class="app-fw-bold">{{ $item->montant }}</td>
+                            <td class="app-fw-bold">{{ number_format((float) $item->montant, 2, ',', ' ') }} FCFA</td>
+                            <td><span class="text-muted small">FCFA</span></td>
                             <td>{{ $item->motif }}</td>
                             <td>
                                 <span class="app-badge app-badge-info app-badge-pill">
-                                    {{ $item->solde_cumule }}
+                                    {{ number_format((float) $item->solde_cumule, 2, ',', ' ') }} FCFA
                                 </span>
                             </td>
+                            @if($canManageBrouillard)
+                            <td class="text-end text-nowrap position-relative">
+                                <div class="dropdown">
+                                    <button class="app-btn app-btn-outline-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-auto-close="true" aria-expanded="false" title="Actions">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li>
+                                            <button type="button" class="dropdown-item js-open-edit-brouillard" data-edit="{{ json_encode(['id' => $item->id, 'type' => $item->type, 'montant' => (float) $item->montant, 'motif' => $item->motif], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}">
+                                                <i class="fas fa-edit me-2"></i>Modifier
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('caisse.brouillard.destroy', $item) }}" method="POST" onsubmit="return confirm('Supprimer définitivement cette transaction ? Les soldes seront recalculés.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>
@@ -317,8 +382,207 @@ function openModal(modalId) {
     </div>
 </div>
 
+{{-- Modaux détail KPI tableau de bord --}}
+<div class="modal fade" id="modalSoldeDebutMois" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Caisse au début du mois — détail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Valeur = dernier solde cumulé enregistré avant le {{ $debutMois->format('d/m/Y') }} (00:00).</p>
+                @if($ligneReferenceDebutMois)
+                    <div class="table-responsive">
+                        <table class="table table-sm app-table mb-0">
+                            <thead><tr><th>Date</th><th>Type</th><th>Montant</th><th>Motif</th><th>Solde cumulé</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ $ligneReferenceDebutMois->date_affichage }}</td>
+                                    <td>{{ $ligneReferenceDebutMois->type }}</td>
+                                    <td>{{ number_format((float) $ligneReferenceDebutMois->montant, 2, ',', ' ') }}</td>
+                                    <td>{{ $ligneReferenceDebutMois->motif }}</td>
+                                    <td>{{ number_format((float) $ligneReferenceDebutMois->solde_cumule, 2, ',', ' ') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="mb-0 text-muted">Aucune écriture avant cette date — solde de début considéré comme 0.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSoldeActuel" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Solde caisse actuel — historique complet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Type</th><th>Montant</th><th>Motif</th><th>Solde cumulé</th></tr></thead>
+                        <tbody>
+                            @forelse($brouillardChrono as $row)
+                                <tr>
+                                    <td>{{ $row->date_affichage }}</td>
+                                    <td>{{ \App\Models\BrouillardCaisse::estTypeEntree($row->type) ? 'Entrée' : 'Sortie' }}</td>
+                                    <td>{{ number_format((float) $row->montant, 2, ',', ' ') }}</td>
+                                    <td>{{ $row->motif }}</td>
+                                    <td>{{ number_format((float) $row->solde_cumule, 2, ',', ' ') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted py-4">Aucun mouvement</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSortiesMois" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dépenses du mois (total {{ number_format((float) $totalSortiesMois, 2, ',', ' ') }})</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Montant</th><th>Motif</th><th>Solde cumulé</th></tr></thead>
+                        <tbody>
+                            @forelse($sortiesMoisListe as $row)
+                                <tr>
+                                    <td>{{ $row->date_affichage }}</td>
+                                    <td>{{ number_format((float) $row->montant, 2, ',', ' ') }}</td>
+                                    <td>{{ $row->motif }}</td>
+                                    <td>{{ number_format((float) $row->solde_cumule, 2, ',', ' ') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted py-4">Aucune sortie ce mois-ci</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalApproMois" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Total appro. mois ({{ number_format((float) $totalApproMois, 2, ',', ' ') }})</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Montant</th><th>Motif</th><th>Solde cumulé</th></tr></thead>
+                        <tbody>
+                            @forelse($entreesMoisListe as $row)
+                                <tr>
+                                    <td>{{ $row->date_affichage }}</td>
+                                    <td>{{ number_format((float) $row->montant, 2, ',', ' ') }}</td>
+                                    <td>{{ $row->motif }}</td>
+                                    <td>{{ number_format((float) $row->solde_cumule, 2, ',', ' ') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted py-4">Aucune entrée ce mois-ci</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSoldeMois" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Variation du mois ({{ number_format((float)($soldeActuel - $soldeDebutMois), 2, ',', ' ') }}) — écritures du mois</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Le solde affiché sur la carte « Solde caisse actuel » correspond au dernier solde cumulé ; la « Variation du mois » = solde actuel − caisse au début du mois. Ci-dessous : toutes les lignes du brouillard depuis le {{ $debutMois->format('d/m/Y') }}.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Type</th><th>Montant</th><th>Motif</th><th>Solde cumulé</th></tr></thead>
+                        <tbody>
+                            @forelse($mouvementsMoisChrono as $row)
+                                <tr>
+                                    <td>{{ $row->date_affichage }}</td>
+                                    <td>{{ \App\Models\BrouillardCaisse::estTypeEntree($row->type) ? 'Entrée' : 'Sortie' }}</td>
+                                    <td>{{ number_format((float) $row->montant, 2, ',', ' ') }}</td>
+                                    <td>{{ $row->motif }}</td>
+                                    <td>{{ number_format((float) $row->solde_cumule, 2, ',', ' ') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted py-4">Aucune écriture ce mois-ci</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if($canManageBrouillard)
+<div class="modal fade" id="editBrouillardModal" tabindex="-1" aria-labelledby="editBrouillardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editBrouillardForm" method="POST" action="#">
+                @csrf
+                @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editBrouillardModalLabel">Modifier l'écriture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_brouillard_type" class="form-label">Type</label>
+                        <select name="type" id="edit_brouillard_type" class="form-select" required>
+                            <option value="Entrée">Entrée</option>
+                            <option value="Sortie">Sortie</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_brouillard_montant" class="form-label">Montant (FCFA)</label>
+                        <input type="number" name="montant" id="edit_brouillard_montant" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_brouillard_motif" class="form-label">Motif</label>
+                        <textarea name="motif" id="edit_brouillard_motif" class="form-control" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 @push('styles')
 <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/b-print-3.2.0/r-3.0.3/datatables.min.css" rel="stylesheet">
+<style>
+.dashboard-kpi-card { cursor: pointer; transition: box-shadow .15s ease, border-color .15s ease; }
+.dashboard-kpi-card:hover { box-shadow: 0 .25rem .75rem rgba(3, 61, 113, .12); border-color: var(--primary, #033d71) !important; }
+.caisse-kpi-row > .col { min-width: 0; }
+</style>
 @endpush
 
 @push('scripts')
@@ -331,6 +595,14 @@ function openModal(modalId) {
         $('#Table').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            order: [[0, 'desc']],
+            columnDefs: [
+                @if($canManageBrouillard)
+                { responsivePriority: 1, targets: [0, 1, -1] },
+                @else
+                { responsivePriority: 1, targets: [0, 1] },
+                @endif
+            ],
             buttons: [
                 {
                     extend: 'collection',
@@ -349,6 +621,28 @@ function openModal(modalId) {
         
         // Amélioration visuelle des boutons DataTables
         $('.dt-buttons .dt-button').addClass('app-btn app-btn-outline-primary app-btn-sm me-2');
+
+        @if($canManageBrouillard)
+        const editForm = document.getElementById('editBrouillardForm');
+        const editBaseUrl = @json(url('caisse/brouillard'));
+        $(document).on('click', '.js-open-edit-brouillard', function (e) {
+            e.preventDefault();
+            const raw = this.getAttribute('data-edit');
+            if (!raw) return;
+            let d;
+            try {
+                d = JSON.parse(raw);
+            } catch (err) {
+                console.error('data-edit JSON invalide', err, raw);
+                return;
+            }
+            editForm.action = editBaseUrl + '/' + encodeURIComponent(d.id);
+            document.getElementById('edit_brouillard_type').value = d.type;
+            document.getElementById('edit_brouillard_montant').value = d.montant;
+            document.getElementById('edit_brouillard_motif').value = d.motif;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editBrouillardModal')).show();
+        });
+        @endif
         
         // Gestion de l'affichage des champs selon le mode de paiement
         $('input[name="mode_paiement"]').change(function() {

@@ -1,1784 +1,916 @@
 @extends('layouts.app')
 
+@section('title', 'Tableau de bord')
+@section('page-title', 'Tableau de bord KPI')
+
 @section('content')
-<div class="dashboard-container">
-    <!-- Header du Dashboard -->
-    <div class="dashboard-header">
-        <div class="header-content">
-            <h1 class="dashboard-title">
-                <i class="fas fa-chart-pie"></i>
-                Tableau de Bord Complet
-            </h1>
-            <p class="dashboard-subtitle">Vue d'ensemble complète des performances</p>
-        </div>
+@php
+    $fmt = fn ($v) => number_format((float) $v, 0, ',', ' ');
+@endphp
 
-    </div>
- <div class="financial-summary">
-        <h3 class="section-title">
-            <i class="fas fa-wallet"></i>
-            Résumé Financier
-        </h3>
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-title">Solde de Caisse</div>
-                <div class="summary-value {{ $soldeCaisse >= 0 ? 'positive' : 'negative' }}">
-                    {{ number_format((float)$soldeCaisse, 0, ',', ' ') }} CFA
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">Montant Contrats Actifs</div>
-                <div class="summary-value">
-                    {{ number_format($montantContratsTotal, 0, ',', ' ') }} CFA
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">Bons de Commande</div>
-                <div class="summary-value">
-                    {{ number_format($montantBonCommandes, 0, ',', ' ') }} CFA
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">Demandes de Dépense</div>
-                <div class="summary-value">
-                    {{ number_format($montantDemandesDepense, 0, ',', ' ') }} CFA
-                </div>
-            </div>
+<div class="app-fade-in dash-fintech">
+    {{-- En-tête + filtres compacts --}}
+    <div class="dash-topbar">
+        <div class="dash-topbar__title">
+            <h1>Tableau de bord</h1>
+            <p class="mb-0">{{ $bus->nom ?? 'BU' }} · <span id="lastUpdateBadge">MAJ {{ now()->format('H:i') }}</span></p>
         </div>
-    </div>
-    <!-- Cartes de Statistiques Principales -->
-    <div class="stats-grid">
-        <!-- Projets -->
-        <div class="stat-card projects">
-            <div class="stat-icon">
-                <i class="fas fa-project-diagram"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $projetsEnCours }}</div>
-                <div class="stat-label">Projets en Cours</div>
-                <div class="stat-sublabel">{{ $totalProjets }} au total</div>
-                <div class="stat-trend {{ isset($tendancesProjets) && $tendancesProjets > 0 ? 'positive' : (isset($tendancesProjets) && $tendancesProjets < 0 ? 'negative' : '') }}">
-                    <i class="fas fa-arrow-{{ isset($tendancesProjets) && $tendancesProjets > 0 ? 'up' : (isset($tendancesProjets) && $tendancesProjets < 0 ? 'down' : 'right') }}"></i>
-                    <span>{{ isset($tendancesProjets) ? abs($tendancesProjets) : 0 }}% ce mois</span>
-                </div>
-            </div>
-            <div class="stat-progress">
-                <div class="progress-bar" style="width: {{ $totalProjets > 0 ? ($projetsEnCours / $totalProjets) * 100 : 0 }}%"></div>
-            </div>
-        </div>
-
-        <!-- Revenus -->
-        <div class="stat-card revenue">
-            <div class="stat-icon">
-                <i class="fas fa-money-bill-wave"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ number_format($revenusTotaux, 0, ',', ' ') }}</div>
-                <div class="stat-currency">CFA</div>
-                <div class="stat-label">Revenus Totaux</div>
-                <div class="stat-trend {{ isset($tendancesFinancieres['revenus']) && $tendancesFinancieres['revenus'] > 0 ? 'positive' : (isset($tendancesFinancieres['revenus']) && $tendancesFinancieres['revenus'] < 0 ? 'negative' : '') }}">
-                    <i class="fas fa-arrow-{{ isset($tendancesFinancieres['revenus']) && $tendancesFinancieres['revenus'] > 0 ? 'up' : (isset($tendancesFinancieres['revenus']) && $tendancesFinancieres['revenus'] < 0 ? 'down' : 'right') }}"></i>
-                    <span>{{ isset($tendancesFinancieres['revenus']) ? abs($tendancesFinancieres['revenus']) : 0 }}% ce trimestre</span>
-                </div>
-            </div>
-            <div class="stat-chart">
-                <canvas id="revenueSparkline" width="80" height="30"></canvas>
-            </div>
-        </div>
-
-        <!-- Dépenses -->
-        <div class="stat-card expenses">
-            <div class="stat-icon">
-                <i class="fas fa-credit-card"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ number_format($depensesTotales, 0, ',', ' ') }}</div>
-                <div class="stat-currency">CFA</div>
-                <div class="stat-label">Dépenses Totales</div>
-                <div class="stat-trend {{ isset($tendancesFinancieres['depenses']) && $tendancesFinancieres['depenses'] < 0 ? 'positive' : (isset($tendancesFinancieres['depenses']) && $tendancesFinancieres['depenses'] > 0 ? 'negative' : '') }}">
-                    <i class="fas fa-arrow-{{ isset($tendancesFinancieres['depenses']) && $tendancesFinancieres['depenses'] < 0 ? 'down' : (isset($tendancesFinancieres['depenses']) && $tendancesFinancieres['depenses'] > 0 ? 'up' : 'right') }}"></i>
-                    <span>{{ isset($tendancesFinancieres['depenses']) ? abs($tendancesFinancieres['depenses']) : 0 }}% ce mois</span>
-                </div>
-            </div>
-            <div class="stat-chart">
-                <canvas id="expensesSparkline" width="80" height="30"></canvas>
-            </div>
-        </div>
-
-        <!-- Stock -->
-        <div class="stat-card stock">
-            <div class="stat-icon">
-                <i class="fas fa-boxes"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $articlesEnStock }}</div>
-                <div class="stat-label">Articles en Stock</div>
-                <div class="stat-sublabel">{{ $categoriesStock ?? 'N/A' }} catégories</div>
-                <div class="stat-trend {{ isset($articlesAlerte) && $articlesAlerte > 0 ? 'warning' : 'positive' }}">
-                    <i class="fas fa-{{ isset($articlesAlerte) && $articlesAlerte > 0 ? 'exclamation-triangle' : 'check-circle' }}"></i>
-                    <span>{{ isset($articlesAlerte) && $articlesAlerte > 0 ? $articlesAlerte . ' alertes' : 'Niveau optimal' }}</span>
-                </div>
-            </div>
-            <div class="stock-indicator">
-                <div class="indicator-item">
-                    <span class="indicator-dot high"></span>
-                    <span>Élevé</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-dot medium"></span>
-                    <span>Moyen</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-dot low"></span>
-                    <span>Faible</span>
-                </div>
-            </div>
-        </div>
+        <form method="GET" action="{{ route('statistiques.index') }}" id="dashboardFiltersForm" class="dash-filters">
+            <select name="periode" id="periode" class="form-select form-select-sm dash-filter-select">
+                @foreach([
+                    '1m' => 'Ce mois',
+                    '3m' => '3 derniers mois',
+                    '6m' => '6 derniers mois',
+                    '12m' => '12 derniers mois',
+                    'ytd' => 'Année en cours',
+                    'all' => 'Toute la période',
+                    'custom' => 'Personnalisée',
+                ] as $value => $label)
+                <option value="{{ $value }}" @selected(($filters['periode'] ?? '12m') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="date_debut" id="date_debut"
+                   class="form-control form-control-sm dash-filter-select custom-date-field {{ ($filters['periode'] ?? '') === 'custom' ? '' : 'd-none' }}"
+                   value="{{ $filters['date_debut']?->format('Y-m-d') }}">
+            <input type="date" name="date_fin" id="date_fin"
+                   class="form-control form-control-sm dash-filter-select custom-date-field {{ ($filters['periode'] ?? '') === 'custom' ? '' : 'd-none' }}"
+                   value="{{ $filters['date_fin']?->format('Y-m-d') }}">
+            <select name="projet_id" id="projet_id" class="form-select form-select-sm dash-filter-select">
+                <option value="">Tous les projets</option>
+                @foreach($projets as $projet)
+                <option value="{{ $projet->id }}" @selected(($filters['projet_id'] ?? null) == $projet->id)>
+                    {{ $projet->ref_projet }} — {{ \Illuminate\Support\Str::limit($projet->nom_projet, 24) }}
+                </option>
+                @endforeach
+            </select>
+            <select name="contrat_id" id="contrat_id" class="form-select form-select-sm dash-filter-select">
+                <option value="">Tous les contrats</option>
+                @foreach($contrats as $contrat)
+                <option value="{{ $contrat->id }}"
+                        data-projet="{{ $contrat->id_projet }}"
+                        @selected(($filters['contrat_id'] ?? null) == $contrat->id)>
+                    {{ $contrat->ref_contrat }}
+                </option>
+                @endforeach
+            </select>
+            <button type="submit" class="app-btn app-btn-primary app-btn-sm">
+                <i class="fas fa-filter"></i> Appliquer
+            </button>
+            <a href="{{ route('statistiques.index') }}" class="app-btn app-btn-secondary app-btn-sm" title="Réinitialiser">
+                <i class="fas fa-undo"></i>
+            </a>
+        </form>
     </div>
 
-    <!-- Section Graphiques -->
-    <div class="charts-section">
-        <div class="chart-container main-chart">
-            <div class="chart-header">
-                <h3 class="chart-title">
-                    <i class="fas fa-chart-line"></i>
-                    Évolution Financière
-                </h3>
-                <div class="chart-controls">
-                    <button class="btn-chart-filter active" data-period="month">Mensuel</button>
-                    <button class="btn-chart-filter" data-period="quarter">Trimestriel</button>
-                    <button class="btn-chart-filter" data-period="year">Annuel</button>
+    {{-- Ligne haute : hero solde + résumé + actions --}}
+    <div class="row g-3 mb-3">
+        <div class="col-xl-6">
+            <div class="dash-card dash-hero h-100">
+                <div class="dash-card__label">Solde caisse BU</div>
+                <div class="dash-hero__value {{ $soldeCaisse >= 0 ? '' : 'is-negative' }}">
+                    {{ $fmt($soldeCaisse) }} <span>FCFA</span>
                 </div>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="evolutionChart"></canvas>
+                @if($articlesAlerte > 0)
+                <div class="dash-hero__alert">
+                    <i class="fas fa-exclamation-triangle"></i> {{ $articlesAlerte }} alerte(s) stock
+                </div>
+                @endif
+                <div class="dash-hero__chart">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="dash-card__label mb-0">Évolution financière</span>
+                        <div class="dash-pills">
+                            <button type="button" class="dash-pill btn-granularite active" data-granularite="month">Mensuel</button>
+                            <button type="button" class="dash-pill btn-granularite" data-granularite="quarter">Trim.</button>
+                            <button type="button" class="dash-pill btn-granularite" data-granularite="year">Annuel</button>
+                        </div>
+                    </div>
+                    <div class="chart-box chart-box-hero">
+                        <canvas id="chartEvolutionFinanciere"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="chart-grid">
-            <div class="chart-container secondary-chart">
-                <div class="chart-header">
-                    <h4 class="chart-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Répartition des Dépenses
-                    </h4>
+        <div class="col-xl-3 col-md-6">
+            <div class="dash-card dash-summary h-100">
+                <div class="dash-card__label">Résumé période</div>
+                <div class="dash-summary__item">
+                    <div>
+                        <div class="dash-summary__name">Entrées caisse</div>
+                        <div class="dash-summary__hint">Revenus</div>
+                    </div>
+                    <div class="dash-summary__amount is-up">{{ $fmt($summary['revenus_caisse']) }}</div>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="expensesChart"></canvas>
+                <div class="dash-summary__item">
+                    <div>
+                        <div class="dash-summary__name">Sorties caisse</div>
+                        <div class="dash-summary__hint">Dépenses</div>
+                    </div>
+                    <div class="dash-summary__amount is-down">{{ $fmt($summary['depenses_caisse']) }}</div>
+                </div>
+                <div class="dash-summary__item">
+                    <div>
+                        <div class="dash-summary__name">Montant BC</div>
+                        <div class="dash-summary__hint">{{ $fmt($summary['total_bon_commandes']) }} commandes</div>
+                    </div>
+                    <div class="dash-summary__amount">{{ $fmt($summary['montant_bon_commandes']) }}</div>
+                </div>
+                <div class="dash-summary__item">
+                    <div>
+                        <div class="dash-summary__name">Montant contrats</div>
+                        <div class="dash-summary__hint">{{ $fmt($summary['total_contrats']) }} contrats</div>
+                    </div>
+                    <div class="dash-summary__amount">{{ $fmt($summary['montant_contrats']) }}</div>
                 </div>
             </div>
+        </div>
 
-            <div class="chart-container secondary-chart">
-                <div class="chart-header">
-                    <h4 class="chart-title">
-                        <i class="fas fa-chart-bar"></i>
-                        Performance Projets
-                    </h4>
+        <div class="col-xl-3 col-md-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__label">Actions rapides</div>
+                <div class="dash-quick">
+                    <a href="{{ route('sublayouts_projet') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-project-diagram"></i></span>
+                        <span>Projets</span>
+                    </a>
+                    <a href="{{ route('sublayouts_article') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-boxes"></i></span>
+                        <span>Stock</span>
+                    </a>
+                    <a href="{{ route('sublayouts_tresorerie') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-wallet"></i></span>
+                        <span>Trésorerie</span>
+                    </a>
+                    <a href="{{ route('sublayouts_vente') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-shopping-cart"></i></span>
+                        <span>Vente</span>
+                    </a>
+                    <a href="{{ route('bon-commandes.index') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-file-invoice"></i></span>
+                        <span>BC</span>
+                    </a>
+                    <a href="{{ route('sublayouts_until') }}" class="dash-quick__item">
+                        <span class="dash-quick__icon"><i class="fas fa-ellipsis-h"></i></span>
+                        <span>Plus</span>
+                    </a>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="projectsChart"></canvas>
+                <div class="dash-card__label mt-4 mb-2">Évolution BC</div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartEvolutionBc"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Alertes et Notifications -->
-    @if(isset($alertes) && count($alertes) > 0)
-    <div class="alerts-section">
-        <h3 class="section-title">
-            <i class="fas fa-bell"></i>
-            Alertes et Notifications
-        </h3>
-        <div class="alerts-grid">
-            @foreach($alertes as $alerte)
-            <div class="alert-item {{ $alerte['type'] }}">
-                <div class="alert-icon">
-                    <i class="fas fa-{{ $alerte['type'] == 'warning' ? 'exclamation-triangle' : ($alerte['type'] == 'success' ? 'check-circle' : ($alerte['type'] == 'danger' ? 'times-circle' : 'info-circle')) }}"></i>
-                </div>
-                <div class="alert-content">
-                    <h5>{{ $alerte['titre'] }}</h5>
-                    <p>{{ $alerte['message'] }}</p>
-                </div>
-                <div class="alert-action">
-                    <button class="btn-alert">{{ $alerte['action'] }}</button>
+    {{-- KPI chiffres --}}
+    <div class="row g-3 mb-3">
+        <div class="col-md-3 col-sm-6">
+            <div class="dash-card dash-kpi">
+                <div class="dash-kpi__icon"><i class="fas fa-shopping-cart"></i></div>
+                <div>
+                    <div class="dash-kpi__value" id="kpiBcCount">{{ $fmt($summary['total_bon_commandes']) }}</div>
+                    <div class="dash-kpi__label">Bons de commande</div>
+                    <div class="dash-kpi__sub">{{ $fmt($summary['montant_bon_commandes']) }} FCFA</div>
                 </div>
             </div>
-            @endforeach
         </div>
-    </div>
-    @endif
-
-    <!-- Section Performance des Projets -->
-    <div class="project-performance-section">
-        <h3 class="section-title">
-            <i class="fas fa-tasks"></i>
-            Performance des Projets
-        </h3>
-        <div class="performance-table-container">
-            <table class="performance-table">
-                <thead>
-                    <tr>
-                        <th>Projet</th>
-                        <th>Statut</th>
-                        <th>Contrats</th>
-                        <th>Montant Total</th>
-                        <th>Performance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($performanceProjets as $projet)
-                    <tr>
-                        <td>{{ $projet->nom_projet }}</td>
-                        <td>
-                            <span class="status-badge {{ $projet->statut == 'en cours' ? 'active' : ($projet->statut == 'terminé' ? 'completed' : 'pending') }}">
-                                {{ ucfirst($projet->statut) }}
-                            </span>
-                        </td>
-                        <td>{{ $projet->nb_contrats }}</td>
-                        <td>{{ number_format($projet->montant_total ?? 0, 0, ',', ' ') }} CFA</td>
-                        <td>
-                            @php
-                                // Simuler un pourcentage de performance basé sur le statut
-                                $performance = $projet->statut == 'terminé' ? 100 : 
-                                             ($projet->statut == 'en cours' ? rand(50, 95) : 
-                                             rand(10, 40));
-                            @endphp
-                            <div class="progress-bar-small">
-                                <div class="progress-bar-fill" style="width: {{ $performance }}%" data-value="{{ $performance }}%"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="col-md-3 col-sm-6">
+            <div class="dash-card dash-kpi">
+                <div class="dash-kpi__icon"><i class="fas fa-file-contract"></i></div>
+                <div>
+                    <div class="dash-kpi__value" id="kpiContratsCount">{{ $fmt($summary['total_contrats']) }}</div>
+                    <div class="dash-kpi__label">Contrats</div>
+                    <div class="dash-kpi__sub">{{ $fmt($summary['montant_contrats']) }} FCFA</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="dash-card dash-kpi">
+                <div class="dash-kpi__icon"><i class="fas fa-project-diagram"></i></div>
+                <div>
+                    <div class="dash-kpi__value" id="kpiProjetsCount">{{ $fmt($summary['total_projets']) }}</div>
+                    <div class="dash-kpi__label">Projets</div>
+                    <div class="dash-kpi__sub">{{ $summary['projets_en_cours'] }} en cours</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="dash-card dash-kpi">
+                <div class="dash-kpi__icon"><i class="fas fa-hard-hat"></i></div>
+                <div>
+                    <div class="dash-kpi__value">{{ $fmt($summary['total_artisans']) }}</div>
+                    <div class="dash-kpi__label">Artisans</div>
+                    <div class="dash-kpi__sub">{{ $summary['total_sous_categories'] }} sous-catégories</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Résumé Financier -->
-   
+    {{-- Répartitions --}}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">BC par fournisseur</h3>
+                </div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartBcFournisseur"></canvas>
+                </div>
+                @include('statistiques.partials.kpi-table', [
+                    'rows' => $charts['bonCommandesParFournisseur'],
+                    'columns' => ['label' => 'Fournisseur', 'total' => 'Nbre BC', 'montant' => 'Montant (FCFA)'],
+                ])
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">BC par statut</h3>
+                </div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartBcStatut"></canvas>
+                </div>
+                @include('statistiques.partials.kpi-table', [
+                    'rows' => $charts['bonCommandesParStatut'],
+                    'columns' => ['label' => 'Statut', 'total' => 'Nombre'],
+                ])
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">Projets par client</h3>
+                </div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartProjetsClient"></canvas>
+                </div>
+                @include('statistiques.partials.kpi-table', [
+                    'rows' => $charts['projetsParClient'],
+                    'columns' => ['label' => 'Client', 'total' => 'Nbre projets'],
+                ])
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">Contrats par client</h3>
+                </div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartContratsClient"></canvas>
+                </div>
+                @include('statistiques.partials.kpi-table', [
+                    'rows' => $charts['contratsParClient'],
+                    'columns' => ['label' => 'Client', 'total' => 'Nbre contrats', 'montant' => 'Montant (FCFA)'],
+                ])
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">Artisans par corps de métier</h3>
+                </div>
+                <div class="chart-box chart-box-sm">
+                    <canvas id="chartArtisansMetier"></canvas>
+                </div>
+                @include('statistiques.partials.kpi-table', [
+                    'rows' => $charts['artisansParCorpsMetier'],
+                    'columns' => ['label' => 'Corps de métier', 'total' => 'Nbre artisans'],
+                ])
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dash-card h-100">
+                <div class="dash-card__header">
+                    <h3 class="dash-card__title">Catalogue articles</h3>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="dash-card__label">Sous-catégories</div>
+                        <div class="chart-box chart-box-sm">
+                            <canvas id="chartSousCategories"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="dash-card__label">Articles par catégorie</div>
+                        <div class="chart-box chart-box-sm">
+                            <canvas id="chartArticlesCategorie"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-:root {
-    --primary-color: #033d71;
-    --secondary-color: #0A8CFF;
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --info-color: #17a2b8;
-    --light-bg: #f8f9fa;
-    --white: #ffffff;
-    --text-dark: #2d3436;
-    --text-muted: #636e72;
-    --gradient-primary: linear-gradient(135deg, #033d71 0%, #0A8CFF 100%);
-    --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-    --gradient-danger: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-    --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
-    --shadow-medium: 0 8px 25px rgba(0,0,0,0.15);
-    --shadow-heavy: 0 15px 35px rgba(0,0,0,0.2);
-    --border-radius: 12px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.dash-fintech {
+    background: #f8f9fa;
+    margin: -0.5rem -0.75rem;
+    padding: 1.25rem 1rem 2rem;
+    min-height: calc(100vh - 100px);
 }
 
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-    background: var(--light-bg);
-    min-height: 100vh;
+.dash-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
 }
 
-/* Header du Dashboard */
-.dashboard-header {
+.dash-topbar__title h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #033d71;
+    margin: 0 0 0.2rem;
+}
+
+.dash-topbar__title p {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.dash-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dash-filter-select {
+    width: auto;
+    min-width: 140px;
+    max-width: 200px;
+    border-radius: 999px !important;
+    border-color: #e9ecef !important;
+    background: #fff !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    font-size: 0.8rem !important;
+    padding: 0.25rem 0.85rem !important;
+}
+
+.dash-card {
+    background: #fff;
+    border: none;
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    padding: 1.25rem 1.35rem;
+}
+
+.dash-card__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+}
+
+.dash-card__header {
+    margin-bottom: 0.75rem;
+}
+
+.dash-card__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #033d71;
+    margin: 0;
+}
+
+.dash-hero__value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #033d71;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+}
+
+.dash-hero__value span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.dash-hero__value.is-negative {
+    color: #dc3545;
+}
+
+.dash-hero__alert {
+    font-size: 0.8rem;
+    color: #b45309;
+    margin-bottom: 0.75rem;
+}
+
+.dash-pills {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.dash-pill {
+    border: 1px solid #e9ecef;
+    background: #fff;
+    color: #64748b;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    cursor: pointer;
+}
+
+.dash-pill.active,
+.dash-pill:hover {
+    background: #033d71;
+    border-color: #033d71;
+    color: #fff;
+}
+
+.dash-summary__item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem 2rem;
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #f1f3f5;
 }
 
-.dashboard-title {
-    font-size: 2.5rem;
+.dash-summary__item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dash-summary__name {
+    font-weight: 600;
+    color: #033d71;
+    font-size: 0.9rem;
+}
+
+.dash-summary__hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.dash-summary__amount {
     font-weight: 700;
-    color: var(--primary-color);
-    margin: 0;
+    color: #033d71;
+    font-size: 0.95rem;
+}
+
+.dash-summary__amount.is-up { color: #10b981; }
+.dash-summary__amount.is-down { color: #ef4444; }
+
+.dash-quick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.dash-quick__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.dash-quick__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(3, 61, 113, 0.08);
+    color: #033d71;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.dash-quick__item:hover {
+    color: #033d71;
+    text-decoration: none;
+}
+
+.dash-quick__item:hover .dash-quick__icon {
+    background: #033d71;
+    color: #fff;
+}
+
+.dash-kpi {
     display: flex;
     align-items: center;
     gap: 1rem;
+    height: 100%;
 }
 
-.dashboard-title i {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.dashboard-subtitle {
-    color: var(--text-muted);
-    margin: 0.5rem 0 0 0;
-    font-size: 1.1rem;
-}
-
-
-
-/* Grille des Statistiques */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    box-shadow: var(--shadow-light);
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    transition: var(--transition);
-}
-
-.stat-card.projects::before {
-    background: var(--gradient-primary);
-}
-
-.stat-card.revenue::before {
-    background: var(--gradient-success);
-}
-
-.stat-card.expenses::before {
-    background: var(--gradient-danger);
-}
-
-.stat-card.stock::before {
-    background: var(--gradient-warning);
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-heavy);
-}
-
-.stat-icon {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+.dash-kpi__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(3, 61, 113, 0.08);
+    color: #033d71;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    color: var(--white);
-    opacity: 0.9;
+    font-size: 1.15rem;
+    flex-shrink: 0;
 }
 
-.stat-card.projects .stat-icon {
-    background: var(--gradient-primary);
+.dash-kpi__value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #033d71;
+    line-height: 1.15;
 }
 
-.stat-card.revenue .stat-icon {
-    background: var(--gradient-success);
+.dash-kpi__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
-.stat-card.expenses .stat-icon {
-    background: var(--gradient-danger);
+.dash-kpi__sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.1rem;
 }
 
-.stat-card.stock .stat-icon {
-    background: var(--gradient-warning);
-}
-
-.stat-content {
+.dash-fintech .chart-box {
     position: relative;
+    height: 220px;
+    margin-bottom: 0.75rem;
+}
+
+.dash-fintech .chart-box-hero {
+    height: 200px;
+    margin-bottom: 0;
+}
+
+.dash-fintech .chart-box-sm {
+    height: 200px;
+}
+
+.dash-fintech .chart-empty-msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    pointer-events: none;
     z-index: 1;
 }
 
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-dark);
-    line-height: 1;
-    margin-bottom: 0.5rem;
-}
-
-.stat-currency {
-    display: inline-block;
-    font-size: 1rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    margin-left: 0.5rem;
-}
-
-.stat-label {
-    font-size: 1rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.stat-sublabel {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-}
-
-.stat-trend {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.stat-trend.positive {
-    color: var(--success-color);
-}
-
-.stat-trend.negative {
-    color: var(--danger-color);
-}
-
-.stat-trend.warning {
-    color: var(--warning-color);
-}
-
-.stat-progress {
-    margin-top: 1rem;
-    height: 4px;
-    background: #e9ecef;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--gradient-primary);
-    border-radius: 2px;
-    transition: width 1s ease-in-out;
-}
-
-.stock-indicator {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.indicator-item {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+.dash-fintech .kpi-mini-table {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    margin-top: 0.5rem;
 }
 
-.indicator-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.indicator-dot.high { background: var(--success-color); }
-.indicator-dot.medium { background: var(--warning-color); }
-.indicator-dot.low { background: var(--danger-color); }
-
-/* Section Graphiques */
-.charts-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.chart-container {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
-    overflow: hidden;
-}
-
-.chart-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.chart-title {
-    font-size: 1.2rem;
+.dash-fintech .kpi-mini-table thead th {
+    background: #f8f9fa;
+    color: #64748b;
     font-weight: 600;
-    color: var(--text-dark);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.chart-controls {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-chart-filter {
-    padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
-    background: var(--white);
-    color: var(--text-muted);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-chart-filter.active,
-.btn-chart-filter:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
-}
-
-.chart-wrapper {
-    padding: 1.5rem;
-    position: relative;
-    height: 400px;
-}
-
-.main-chart .chart-wrapper {
-    height: 500px;
-}
-
-.chart-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.secondary-chart .chart-wrapper {
-    height: 250px;
-}
-
-/* Alertes */
-.alerts-section {
-    margin: 3rem 0;
-}
-
-.section-title {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.section-title i {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.alerts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 1rem;
-}
-
-.alert-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
-    border-left: 4px solid;
-}
-
-.alert-item.warning {
-    border-left-color: var(--warning-color);
-}
-
-.alert-item.success {
-    border-left-color: var(--success-color);
-}
-
-.alert-item.danger {
-    border-left-color: var(--danger-color);
-}
-
-.alert-item.info {
-    border-left-color: var(--info-color);
-}
-
-.alert-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: var(--white);
-}
-
-.alert-item.warning .alert-icon {
-    background: var(--warning-color);
-}
-
-.alert-item.success .alert-icon {
-    background: var(--success-color);
-}
-
-.alert-item.danger .alert-icon {
-    background: var(--danger-color);
-}
-
-.alert-item.info .alert-icon {
-    background: var(--info-color);
-}
-
-.alert-content {
-    flex-grow: 1;
-}
-
-.alert-content h5 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.alert-content p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.btn-alert {
-    padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
-    background: var(--white);
-    color: var(--text-muted);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-alert:hover {
-    background: var(--light-bg);
-}
-
-/* Table de Performance des Projets */
-.project-performance-section {
-    margin: 3rem 0;
-}
-
-.performance-table-container {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
-    overflow: hidden;
-    padding: 1rem;
-}
-
-.performance-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.performance-table th,
-.performance-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.performance-table th {
-    color: var(--text-dark);
-    font-weight: 600;
-    background-color: rgba(3, 55, 101, 0.05);
-}
-
-.performance-table tr:hover {
-    background-color: rgba(3, 55, 101, 0.02);
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.8rem;
-    font-weight: 600;
+    border-bottom: 1px solid #eef1f4;
+    font-size: 0.72rem;
     text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
-.status-badge.active {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
+.dash-fintech .kpi-mini-table td {
+    border-color: #f1f3f5;
+    color: #334155;
+    vertical-align: middle;
 }
 
-.status-badge.completed {
-    background-color: rgba(10, 140, 255, 0.1);
-    color: var(--secondary-color);
-}
+@media (max-width: 991.98px) {
+    .dash-fintech {
+        margin: 0;
+        padding: 0.75rem 0 1.5rem;
+    }
 
-.status-badge.pending {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
-}
+    .dash-hero__value {
+        font-size: 1.75rem;
+    }
 
-.progress-bar-small {
-    height: 6px;
-    background-color: #e9ecef;
-    border-radius: 3px;
-    overflow: hidden;
-    position: relative;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: var(--gradient-primary);
-    border-radius: 3px;
-    position: relative;
-}
-
-.progress-bar-fill::after {
-    content: attr(data-value);
-    position: absolute;
-    right: 0;
-    top: -18px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-/* Résumé Financier */
-.financial-summary {
-    margin: 3rem 0;
-}
-
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-}
-
-.summary-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
-    padding: 1.5rem;
-    text-align: center;
-    transition: var(--transition);
-}
-
-.summary-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-medium);
-}
-
-.summary-title {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin-bottom: 1rem;
-}
-
-.summary-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-.summary-value.positive {
-    color: var(--success-color);
-}
-
-.summary-value.negative {
-    color: var(--danger-color);
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-    .chart-grid {
-        grid-template-columns: 1fr;
+    .dash-filter-select {
+        max-width: 100%;
+        min-width: 120px;
     }
-    
-    .alerts-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .alert-item {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .header-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .performance-table th, 
-    .performance-table td {
-        padding: 0.5rem;
-        font-size: 0.9rem;
-    }
-    
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.stat-card {
-    animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.stat-card:nth-child(1) { animation-delay: 0.1s; }
-.stat-card:nth-child(2) { animation-delay: 0.2s; }
-.stat-card:nth-child(3) { animation-delay: 0.3s; }
-.stat-card:nth-child(4) { animation-delay: 0.4s; }
-/* Responsive */
-@media (max-width: 1200px) {
-    .charts-section {
-        grid-template-columns: 1fr;
-    }
-    
-    .chart-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 1rem;
-    }
-    
-    .dashboard-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .charts-section {
-        grid-template-columns: 1fr;
-    }
-    
-    .chart-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .alerts-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .alert-item {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .header-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .performance-table th, 
-    .performance-table td {
-        padding: 0.5rem;
-        font-size: 0.9rem;
-    }
-    
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.stat-card {
-    animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.stat-card:nth-child(1) { animation-delay: 0.1s; }
-.stat-card:nth-child(2) { animation-delay: 0.2s; }
-.stat-card:nth-child(3) { animation-delay: 0.3s; }
-.stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
+@push('scripts')
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-    // Configuration des couleurs
-    const colors = {
-        primary: '#033d71',
-        secondary: '#0A8CFF',
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8'
-    };
-
-    // Données du graphique principal
-    const labels = {!! json_encode($evolutionFinanciere->pluck('mois')) !!};
-    const entrees = {!! json_encode($evolutionFinanciere->pluck('total_entrees')) !!};
-    const sorties = {!! json_encode($evolutionFinanciere->pluck('total_sorties')) !!};
-
-    // Graphique principal - Évolution financière
-    const ctx = document.getElementById('evolutionChart').getContext('2d');
-    const evolutionChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Entrées',
-                    data: entrees,
-                    borderColor: colors.success,
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: colors.success,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'Sorties',
-                    data: sorties,
-                    borderColor: colors.danger,
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: colors.danger,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        font: {
-                            size: 14,
-                            weight: '600'
-                        }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    displayColors: true,
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + 
-                                   new Intl.NumberFormat('fr-FR').format(context.parsed.y) + ' CFA';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 12,
-                            weight: '500'
-                        }
-                    }
-                },
-                y: {
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    },
-                    ticks: {
-                        font: {
-                            size: 12,
-                            weight: '500'
-                        },
-                        callback: function(value) {
-                            return new Intl.NumberFormat('fr-FR', {
-                                notation: 'compact',
-                                maximumFractionDigits: 1
-                            }).format(value) + ' CFA';
-                        }
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
-        }
-    });
-
-    // Données de répartition des dépenses (données réelles)
-    const depensesLabels = {!! json_encode(array_column($repartitionDepenses, 'categorie')) !!};
-    const depensesData = {!! json_encode(array_column($repartitionDepenses, 'montant')) !!};
-    
-    // Graphique des dépenses (Pie Chart) avec données réelles
-    const expensesCtx = document.getElementById('expensesChart').getContext('2d');
-    new Chart(expensesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: depensesLabels,
-            datasets: [{
-                data: depensesData,
-                backgroundColor: [
-                    colors.primary,
-                    colors.secondary,
-                    colors.warning,
-                    colors.info
-                ],
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = context.raw;
-                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return context.label + ': ' + 
-                                   new Intl.NumberFormat('fr-FR').format(value) + 
-                                   ' CFA (' + percentage + '%)';
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Récupérer les données des projets pour le graphique à barres
-    // Utiliser les 5 premiers projets de la performance pour le graphique
-    const projetsData = [];
-    @foreach($performanceProjets->take(5) as $projet)
-        projetsData.push({
-            nom: "{{ $projet->nom_projet }}",
-            montant: {{ $projet->montant_total ?? 0 }}
-        });
-    @endforeach
-
-    // Trier les projets par montant pour un affichage plus significatif
-    projetsData.sort((a, b) => b.montant - a.montant);
-    
-    // Préparer les données pour le graphique
-    const projetsLabels = projetsData.map(p => p.nom);
-    const projetsMontants = projetsData.map(p => p.montant);
-    
-    // Graphique des projets (Bar Chart)
-    const projectsCtx = document.getElementById('projectsChart').getContext('2d');
-    new Chart(projectsCtx, {
-        type: 'bar',
-        data: {
-            labels: projetsLabels,
-            datasets: [{
-                label: 'Montant (CFA)',
-                data: projetsMontants,
-                backgroundColor: [
-                    colors.success,
-                    colors.primary,
-                    colors.warning,
-                    colors.secondary,
-                    colors.info
-                ],
-                borderRadius: 6,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Montant: ' + 
-                                   new Intl.NumberFormat('fr-FR').format(context.raw) + 
-                                   ' CFA';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.NumberFormat('fr-FR', {
-                                notation: 'compact',
-                                maximumFractionDigits: 1
-                            }).format(value) + ' CFA';
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Sparklines pour les cartes
-    createSparkline('revenueSparkline', entrees, colors.success);
-    createSparkline('expensesSparkline', sorties, colors.danger);
-
-    // Gestion des filtres de période
-    const filterButtons = document.querySelectorAll('.btn-chart-filter');
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            const period = this.dataset.period;
-            updateChartByPeriod(period);
-        });
-    });
-
-    // Actualisation automatique toutes les 30 secondes
-    setInterval(updateRealtimeStats, 30000);
-});
-
-// ==================== FONCTIONS UTILITAIRES ====================
-
-function createSparkline(canvasId, data, color) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.map((_, i) => i),
-            datasets: [{
-                data: data,
-                borderColor: color,
-                backgroundColor: color + '20',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0
-            }]
-        },
-        options: {
-            responsive: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            },
-            elements: {
-                point: { radius: 0 }
-            }
-        }
-    });
-}
-
-// Mise à jour de la fonction updateRealtimeStats avec gestion d'erreur et fallback
-function updateRealtimeStats() {
-    // Afficher un indicateur de chargement
-    const cards = document.querySelectorAll('.stat-card');
-    cards.forEach(card => {
-        card.classList.add('loading');
-    });
-    
-    fetch('/dashboard/realtime-stats')
-        .then(response => {
-            if (!response.ok) {
-                // Si l'API n'est pas disponible, utiliser des données simulées
-                console.warn('L\'API de mise à jour n\'est pas disponible. Utilisation de données simulées.');
-                return simulateRealtimeStats();
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Supprimer l'indicateur de chargement
-            cards.forEach(card => {
-                card.classList.remove('loading');
-            });
-            
-            // Mettre à jour les statistiques en temps réel
-            updateStatCard('projects', data.projets_en_cours);
-            updateStatCard('revenue', data.revenus_totaux);
-            updateStatCard('expenses', data.depenses_totales);
-            updateStatCard('stock', data.articles_en_stock);
-            
-            // Mettre à jour l'heure de dernière mise à jour
-            const lastUpdate = document.querySelector('.last-update');
-            if (lastUpdate) {
-                lastUpdate.textContent = 'Dernière mise à jour: ' + data.derniere_mise_a_jour;
-            }
-            
-            // Stocker les données dans le cache
-            dashboardCache.set('realtimeStats', data);
-        })
-        .catch(error => {
-            console.error('Erreur lors de la mise à jour:', error);
-            
-            // Supprimer l'indicateur de chargement
-            cards.forEach(card => {
-                card.classList.remove('loading');
-            });
-            
-            // Utiliser les données en cache si disponibles
-            const cachedData = dashboardCache.get('realtimeStats');
-            if (cachedData) {
-                updateDisplayWithData(cachedData);
-                showNotification('Utilisation des données en cache', 'info');
-            } else {
-                showNotification('Erreur lors de l\'actualisation, API non disponible', 'error');
-            }
-        });
-}
-
-// Fonction pour simuler des données de mise à jour en cas d'API non disponible
-function simulateRealtimeStats() {
-    // Récupérer les valeurs actuelles
-    const projetsEnCours = parseInt(document.querySelector('.stat-card.projects .stat-number').textContent.replace(/\D/g, '')) || 0;
-    const revenusTotaux = parseInt(document.querySelector('.stat-card.revenue .stat-number').textContent.replace(/\D/g, '')) || 0;
-    const depensesTotales = parseInt(document.querySelector('.stat-card.expenses .stat-number').textContent.replace(/\D/g, '')) || 0;
-    const articlesEnStock = parseInt(document.querySelector('.stat-card.stock .stat-number').textContent.replace(/\D/g, '')) || 0;
-    
-    // Simuler de légères variations (±5%)
-    const randomVariation = () => (Math.random() * 0.1) - 0.05; // Entre -5% et +5%
-    
-    return Promise.resolve({
-        projets_en_cours: Math.max(1, Math.round(projetsEnCours * (1 + randomVariation()))),
-        revenus_totaux: Math.round(revenusTotaux * (1 + randomVariation())),
-        depenses_totales: Math.round(depensesTotales * (1 + randomVariation())),
-        articles_en_stock: Math.round(articlesEnStock * (1 + randomVariation())),
-        derniere_mise_a_jour: new Date().toLocaleTimeString(),
-        simulated: true
-    });
-}
-
-// Mise à jour de la fonction updateChartByPeriod avec gestion d'erreur
-function updateChartByPeriod(period) {
-    showNotification(`Période changée vers: ${period}`, 'info');
-    
-    // Vérifier si Chart.js est disponible
+document.addEventListener('DOMContentLoaded', function () {
     if (typeof Chart === 'undefined') {
-        showNotification('Chart.js n\'est pas disponible', 'error');
+        console.error('Chart.js non chargé');
         return;
     }
-    
-    // Ajouter un indicateur de chargement
-    const chartContainer = document.querySelector('.main-chart');
-    if (chartContainer) {
-        chartContainer.classList.add('loading');
-    }
-    
-    // Faire un appel AJAX pour récupérer les données filtrées par période
-    fetch(`/dashboard/evolution-data?period=${period}`)
-        .then(response => {
-            if (!response.ok) {
-                // Si l'API n'est pas disponible, utiliser des données simulées
-                console.warn('L\'API de données d\'évolution n\'est pas disponible. Utilisation de données simulées.');
-                return simulateEvolutionData(period);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Retirer l'indicateur de chargement
-            if (chartContainer) {
-                chartContainer.classList.remove('loading');
-            }
-            
-            // Mettre à jour le graphique principal avec les nouvelles données
-            try {
-                const chart = Chart.getChart('evolutionChart');
-                if (chart) {
-                    chart.data.labels = data.labels;
-                    chart.data.datasets[0].data = data.entrees;
-                    chart.data.datasets[1].data = data.sorties;
-                    chart.update();
-                }
-            } catch (error) {
-                console.error('Erreur lors de la mise à jour du graphique:', error);
-                showNotification('Erreur lors de la mise à jour du graphique', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors du changement de période:', error);
-            
-            // Retirer l'indicateur de chargement
-            if (chartContainer) {
-                chartContainer.classList.remove('loading');
-            }
-            
-            showNotification('Erreur lors du changement de période', 'error');
-        });
-}
 
-// Fonction pour simuler des données d'évolution en cas d'API non disponible
-function simulateEvolutionData(period) {
-    // Obtenir le graphique actuel
-    const chart = Chart.getChart('evolutionChart');
-    if (!chart) {
-        return Promise.reject(new Error('Graphique non disponible'));
-    }
-    
-    // Récupérer les données actuelles
-    const currentLabels = chart.data.labels;
-    const currentEntrees = chart.data.datasets[0].data;
-    const currentSorties = chart.data.datasets[1].data;
-    
-    // Adapter les données selon la période
-    let labels, entrees, sorties;
-    
-    switch (period) {
-        case 'month':
-            // Données mensuelles (12 mois)
-            labels = Array.from({length: 12}, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - 11 + i);
-                return date.toLocaleDateString('fr-FR', {year: 'numeric', month: '2-digit'});
-            });
-            break;
-        case 'quarter':
-            // Données trimestrielles (8 trimestres)
-            labels = Array.from({length: 8}, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - 21 + (i * 3));
-                const quarter = Math.floor(date.getMonth() / 3) + 1;
-                return `${date.getFullYear()}-T${quarter}`;
-            });
-            break;
-        case 'year':
-            // Données annuelles (5 ans)
-            labels = Array.from({length: 5}, (_, i) => {
-                const date = new Date();
-                date.setFullYear(date.getFullYear() - 4 + i);
-                return date.getFullYear().toString();
-            });
-            break;
-    }
-    
-    // Générer des données basées sur les valeurs actuelles
-    const baseEntree = currentEntrees.length > 0 ? 
-        currentEntrees.reduce((a, b) => a + b, 0) / currentEntrees.length : 1000000;
-    const baseSortie = currentSorties.length > 0 ? 
-        currentSorties.reduce((a, b) => a + b, 0) / currentSorties.length : 800000;
-    
-    entrees = labels.map(() => Math.round(baseEntree * (0.8 + Math.random() * 0.4))); // ±20%
-    sorties = labels.map(() => Math.round(baseSortie * (0.8 + Math.random() * 0.4))); // ±20%
-    
-    return Promise.resolve({
-        labels: labels,
-        entrees: entrees,
-        sorties: sorties,
-        simulated: true
-    });
-}
+    Chart.defaults.font.family = "'Segoe UI', 'DejaVu Sans', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#64748b';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.padding = 16;
 
-// Ajouter des styles pour l'indicateur de chargement
-document.addEventListener('DOMContentLoaded', function() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .loading {
-            position: relative;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-        
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 30px;
-            height: 30px;
-            margin: -15px 0 0 -15px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top-color: #033d71;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            z-index: 10;
-        }
-        
-        .chart-container.loading::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.7);
-            z-index: 5;
-        }
-    `;
-    document.head.appendChild(style);
-});
-
-
-
-
-
-function updateStatCard(type, value) {
-    const card = document.querySelector(`.stat-card.${type} .stat-number`);
-    if (card) {
-        const currentValue = parseInt(card.textContent.replace(/\D/g, '')) || 0;
-        animateCounter(card, currentValue, value, 1000);
-    }
-}
-
-
-
-
-function animateCounter(element, start, end, duration) {
-    if (!element) return;
-    
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const currentValue = Math.floor(progress * (end - start) + start);
-        element.textContent = new Intl.NumberFormat('fr-FR').format(currentValue);
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
+    const chartData = @json($charts);
+    const filterQuery = new URLSearchParams(new FormData(document.getElementById('dashboardFiltersForm'))).toString();
+    const urls = {
+        evolution: @json(route('statistiques.evolution-data')),
+        realtime: @json(route('statistiques.realtime-stats')) + '?' + filterQuery,
     };
-    window.requestAnimationFrame(step);
-}
 
-function showNotification(message, type = 'info') {
-    // Créer la notification
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" class="close-btn">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    // Ajouter les styles si ils n'existent pas
-    if (!document.getElementById('notification-styles')) {
-        const styles = document.createElement('style');
-        styles.id = 'notification-styles';
-        styles.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                z-index: 10000;
-                min-width: 300px;
-                animation: slideIn 0.3s ease-out;
-                font-family: inherit;
-            }
-            .notification.success { 
-                border-left: 4px solid #28a745; 
-                color: #155724;
-            }
-            .notification.error { 
-                border-left: 4px solid #dc3545; 
-                color: #721c24;
-            }
-            .notification.info { 
-                border-left: 4px solid #17a2b8; 
-                color: #0c5460;
-            }
-            .notification i {
-                flex-shrink: 0;
-            }
-            .notification .close-btn {
-                background: none;
-                border: none;
-                cursor: pointer;
-                color: #6c757d;
-                padding: 0.25rem;
-                margin-left: auto;
-                border-radius: 4px;
-                transition: background-color 0.2s;
-            }
-            .notification .close-btn:hover {
-                background-color: #f8f9fa;
-            }
-            @keyframes slideIn {
-                from { 
-                    transform: translateX(100%); 
-                    opacity: 0; 
-                }
-                to { 
-                    transform: translateX(0); 
-                    opacity: 1; 
-                }
-            }
-            @keyframes slideOut {
-                from { 
-                    transform: translateX(0); 
-                    opacity: 1; 
-                }
-                to { 
-                    transform: translateX(100%); 
-                    opacity: 0; 
-                }
-            }
-        `;
-        document.head.appendChild(styles);
+    const palette = ['#033d71', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#6366f1'];
+    const charts = {};
+
+    function fmtMoney(v) {
+        return new Intl.NumberFormat('fr-FR').format(Math.round(v || 0)) + ' FCFA';
     }
-    
-    // Ajouter au DOM
-    document.body.appendChild(notification);
-    
-    // Supprimer automatiquement après 5 secondes
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
-        }
-    }, 5000);
-}
 
-// ==================== INITIALISATION AU CHARGEMENT ====================
-window.addEventListener('load', () => {
-    // Animer les compteurs
-    const counters = document.querySelectorAll('.stat-number');
-    counters.forEach((counter, index) => {
-        const target = parseInt(counter.textContent.replace(/\D/g, '')) || 0;
-        if (target > 0) {
-            counter.textContent = '0';
-            setTimeout(() => {
-                animateCounter(counter, 0, target, 2000);
-            }, index * 200);
+    function pluck(rows, key) {
+        return (rows || []).map(r => (r && r[key] != null) ? String(r[key]) : '');
+    }
+
+    function pluckNum(rows, key) {
+        return (rows || []).map(r => Number(r[key] || 0));
+    }
+
+    function truncateLabel(label, max = 28) {
+        const s = String(label || '');
+        return s.length > max ? s.slice(0, max - 1) + '…' : s;
+    }
+
+    function hasData(values) {
+        return (values || []).some(v => Number(v) > 0);
+    }
+
+    function toggleEmpty(canvasId, show) {
+        const box = document.getElementById(canvasId)?.closest('.chart-box');
+        if (!box) return;
+        let msg = box.querySelector('.chart-empty-msg');
+        if (show && !msg) {
+            msg = document.createElement('div');
+            msg.className = 'chart-empty-msg';
+            msg.textContent = 'Aucune donnée sur cette période';
+            box.appendChild(msg);
+        } else if (!show && msg) {
+            msg.remove();
         }
-    });
-    
-    // Animer les barres de progression
-    setTimeout(() => {
-        const progressBars = document.querySelectorAll('.progress-bar, .progress-bar-fill');
-        progressBars.forEach((bar, index) => {
-            const width = bar.style.width;
-            if (width) {
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, index * 100);
-            }
+    }
+
+    function barChart(id, labels, data, label, horizontal) {
+        const ctx = document.getElementById(id);
+        if (!ctx) return null;
+        toggleEmpty(id, !hasData(data));
+        const bg = labels.map((_, i) => palette[i % palette.length] + (horizontal ? 'cc' : 'dd'));
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels.map(l => truncateLabel(l, horizontal ? 32 : 18)),
+                datasets: [{
+                    label,
+                    data,
+                    backgroundColor: bg,
+                    borderColor: labels.map((_, i) => palette[i % palette.length]),
+                    borderWidth: 0,
+                    borderRadius: 10,
+                    borderSkipped: false,
+                    maxBarThickness: horizontal ? 28 : 48,
+                }],
+            },
+            options: {
+                indexAxis: horizontal ? 'y' : 'x',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 700, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#033d71',
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            title: (items) => labels[items[0]?.dataIndex] || '',
+                            label: (ctx) => ctx.dataset.label + ' : ' + ctx.parsed[horizontal ? 'x' : 'y'],
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { display: !horizontal, color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                        ticks: { font: { size: 11 } },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                        ticks: { font: { size: 11 } },
+                    },
+                },
+            },
         });
-    }, 1000);
-    
-    // Message de bienvenue
-    setTimeout(() => {
-        showNotification('Dashboard chargé avec succès', 'success');
-    }, 2000);
-});
-
-// ==================== GESTION DES ÉVÉNEMENTS ====================
-
-// Gestion des erreurs globales
-window.addEventListener('error', function(e) {
-    console.error('Erreur Dashboard:', e.error);
-    showNotification('Une erreur est survenue', 'error');
-});
-
-// Vérification de la connectivité
-window.addEventListener('online', () => {
-    showNotification('Connexion rétablie', 'success');
-});
-
-window.addEventListener('offline', () => {
-    showNotification('Connexion perdue - Mode hors ligne', 'error');
-});
-
-
-
-// Gestion du redimensionnement de la fenêtre
-let resizeTimeout;
-window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        // Redimensionner les graphiques si nécessaire
-        for (let id of ['evolutionChart', 'expensesChart', 'projectsChart']) {
-            const chart = Chart.getChart(id);
-            if (chart) {
-                chart.resize();
-            }
-        }
-    }, 250);
-});
-
-// ==================== UTILITAIRES DE PERFORMANCE ====================
-
-// Optimisation des performances pour les animations
-function requestIdleCallback(callback) {
-    if (window.requestIdleCallback) {
-        return window.requestIdleCallback(callback);
-    } else {
-        return setTimeout(callback, 1);
     }
-}
 
-// Cache simple pour les données
-const dashboardCache = {
-    data: {},
-    timestamps: {},
-    
-    set(key, value, ttl = 30000) { // TTL par défaut: 30 secondes
-        this.data[key] = value;
-        this.timestamps[key] = Date.now() + ttl;
-    },
-    
-    get(key) {
-        if (this.timestamps[key] && Date.now() < this.timestamps[key]) {
-            return this.data[key];
-        }
-        delete this.data[key];
-        delete this.timestamps[key];
-        return null;
-    },
-    
-    clear() {
-        this.data = {};
-        this.timestamps = {};
+    function doughnutChart(id, labels, data) {
+        const ctx = document.getElementById(id);
+        if (!ctx) return null;
+        toggleEmpty(id, !hasData(data));
+        return new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.map(l => truncateLabel(l, 24)),
+                datasets: [{
+                    data,
+                    backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 12,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                animation: { animateRotate: true, duration: 800 },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, font: { size: 11 }, padding: 12 },
+                    },
+                    tooltip: {
+                        backgroundColor: '#033d71',
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            title: (items) => labels[items[0]?.dataIndex] || '',
+                        },
+                    },
+                },
+            },
+        });
     }
-};
 
-// Débounce pour optimiser les appels
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Version optimisée de updateRealtimeStats avec cache
-const debouncedUpdateStats = debounce(() => {
-    const cachedData = dashboardCache.get('realtimeStats');
-    if (cachedData) {
-        // Utiliser les données en cache
-        updateDisplayWithData(cachedData);
-    } else {
-        // Récupérer de nouvelles données
-        updateRealtimeStats();
+    function lineChart(id, labels, datasets, moneyFormat) {
+        const ctx = document.getElementById(id);
+        if (!ctx) return null;
+        const hasValues = datasets.some(ds => hasData(ds.data));
+        toggleEmpty(id, !hasValues);
+        return new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                animation: { duration: 800, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { position: 'top', align: 'end' },
+                    tooltip: {
+                        backgroundColor: '#033d71',
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: moneyFormat ? {
+                            label: (ctx) => ctx.dataset.label + ' : ' + fmtMoney(ctx.parsed.y),
+                        } : undefined,
+                    },
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                        ticks: moneyFormat ? {
+                            callback: (v) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v),
+                        } : undefined,
+                    },
+                },
+            },
+        });
     }
-}, 1000);
 
-function updateDisplayWithData(data) {
-    updateStatCard('projects', data.projets_en_cours);
-    updateStatCard('revenue', data.revenus_totaux);
-    updateStatCard('expenses', data.depenses_totales);
-    updateStatCard('stock', data.articles_en_stock);
-}
+    function initCharts(data) {
+        Object.values(charts).forEach(c => c?.destroy?.());
 
-// Nettoyage au déchargement de la page
-window.addEventListener('beforeunload', () => {
-    dashboardCache.clear();
+        const bcF = data.bonCommandesParFournisseur || [];
+        charts.bcFournisseur = barChart('chartBcFournisseur', pluck(bcF, 'label'), pluckNum(bcF, 'total'), 'Nbre BC', true);
+        charts.bcStatut = doughnutChart('chartBcStatut', pluck(data.bonCommandesParStatut, 'label'), pluckNum(data.bonCommandesParStatut, 'total'));
+        charts.projetsClient = barChart('chartProjetsClient', pluck(data.projetsParClient, 'label'), pluckNum(data.projetsParClient, 'total'), 'Projets', true);
+        charts.contratsClient = barChart('chartContratsClient', pluck(data.contratsParClient, 'label'), pluckNum(data.contratsParClient, 'total'), 'Contrats', true);
+        charts.artisansMetier = doughnutChart('chartArtisansMetier', pluck(data.artisansParCorpsMetier, 'label'), pluckNum(data.artisansParCorpsMetier, 'total'));
+        charts.sousCategories = barChart('chartSousCategories', pluck(data.sousCategoriesParCategorie, 'label'), pluckNum(data.sousCategoriesParCategorie, 'total'), 'Sous-catégories', false);
+        charts.articlesCategorie = barChart('chartArticlesCategorie', pluck(data.articlesParCategorie, 'label'), pluckNum(data.articlesParCategorie, 'total'), 'Articles', false);
+
+        const evoBc = data.evolutionBonCommandes || [];
+        charts.evolutionBc = lineChart('chartEvolutionBc', pluck(evoBc, 'label'), [{
+            label: 'Montant BC',
+            data: pluckNum(evoBc, 'montant'),
+            borderColor: '#033d71',
+            backgroundColor: 'rgba(3, 61, 113, 0.10)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#033d71',
+            pointBorderWidth: 2,
+        }], true);
+    }
+
+    function loadEvolutionFinanciere(granularite) {
+        const params = new URLSearchParams(new FormData(document.getElementById('dashboardFiltersForm')));
+        params.set('period', granularite === 'month' ? 'month' : granularite);
+        params.set('granularite', granularite);
+
+        fetch(urls.evolution + '?' + params.toString())
+            .then(r => r.json())
+            .then(json => {
+                charts.evolutionFin?.destroy?.();
+                charts.evolutionFin = lineChart('chartEvolutionFinanciere', json.labels || [], [
+                    {
+                        label: 'Entrées caisse',
+                        data: (json.entrees || []).map(Number),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBorderColor: '#10b981',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2,
+                    },
+                    {
+                        label: 'Sorties caisse',
+                        data: (json.sorties || []).map(Number),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBorderColor: '#ef4444',
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2,
+                    },
+                ], true);
+            })
+            .catch(() => toggleEmpty('chartEvolutionFinanciere', true));
+    }
+
+    initCharts(chartData);
+    loadEvolutionFinanciere('month');
+
+    document.querySelectorAll('.btn-granularite').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.btn-granularite').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            loadEvolutionFinanciere(this.dataset.granularite);
+        });
+    });
+
+    document.getElementById('periode')?.addEventListener('change', function () {
+        document.querySelectorAll('.custom-date-field').forEach(el => {
+            el.classList.toggle('d-none', this.value !== 'custom');
+        });
+    });
+
+    const projetSelect = document.getElementById('projet_id');
+    const contratSelect = document.getElementById('contrat_id');
+    if (projetSelect && contratSelect) {
+        const allContratOptions = Array.from(contratSelect.options).slice(1);
+        projetSelect.addEventListener('change', function () {
+            const projetId = this.value;
+            contratSelect.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+            allContratOptions.forEach(opt => {
+                if (!projetId || opt.dataset.projet === projetId) {
+                    contratSelect.appendChild(opt.cloneNode(true));
+                }
+            });
+            contratSelect.value = '';
+        });
+    }
+
+    setInterval(function () {
+        fetch(urls.realtime)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) return;
+                document.getElementById('kpiBcCount').textContent = new Intl.NumberFormat('fr-FR').format(data.total_bon_commandes || 0);
+                document.getElementById('kpiContratsCount').textContent = new Intl.NumberFormat('fr-FR').format(data.total_contrats || 0);
+                document.getElementById('kpiProjetsCount').textContent = new Intl.NumberFormat('fr-FR').format(data.total_projets || 0);
+                document.getElementById('lastUpdateBadge').textContent = 'MAJ ' + (data.derniere_mise_a_jour || '');
+            })
+            .catch(() => {});
+    }, 60000);
 });
-
-console.log('📊 Dashboard JavaScript initialisé avec succès!');
-    </script>
+</script>
+@endpush
 @endsection

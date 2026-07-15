@@ -30,7 +30,7 @@ class Contrat extends Model
     
     public function projet()
     {
-        return $this->belongsTo(Projet::class, 'nom_projet', 'nom_projet');
+        return $this->belongsTo(Projet::class, 'id_projet');
     }
 
 

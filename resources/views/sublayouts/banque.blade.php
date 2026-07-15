@@ -12,7 +12,9 @@
         </div>
     </div>
 
+   
     <div class="dashboard-grid">
+         @if(auth()->user()->hasPermission('banques.show'))
         <a href="{{ route('banques.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-landmark"></i>
@@ -22,7 +24,8 @@
                 <p>Créer et gérer les banques de la BU</p>
             </div>
         </a>
-
+        @endif
+         @if(auth()->user()->hasPermission('banques.show'))
         <a href="{{ route('banque.mouvements.create') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -32,7 +35,9 @@
                 <p>Entrée, sortie, chèque, espèce, virement</p>
             </div>
         </a>
+        @endif
 
+         @if(auth()->user()->hasPermission('banques.show'))
         <a href="{{ route('banque.mouvements.index') }}" class="dashboard-card warning">
             <div class="card-icon">
                 <i class="fas fa-list"></i>
@@ -42,7 +47,9 @@
                 <p>Consulter toutes les opérations de la BU</p>
             </div>
         </a>
+        @endif
 
+         @if(auth()->user()->hasPermission('banques.show'))
         <a href="{{ route('banque.soldes.index') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-balance-scale"></i>
@@ -52,13 +59,14 @@
                 <p>Prévisionnel vs réel, par banque</p>
             </div>
         </a>
+        @endif
     </div>
 </div>
 
 <style>
 :root {
     --primary-color: #033d71;
-    --secondary-color: #0A8CFF;
+    --secondary-color: #033d71;
     --success-color: #28a745;
     --warning-color: #ffc107;
     --info-color: #17a2b8;

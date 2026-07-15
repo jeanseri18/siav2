@@ -16,6 +16,7 @@
                 <i class="fas fa-file-invoice me-2"></i>Liste des Devis
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('devis.export.pdf')" />
                 <a href="{{ route('devis.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouveau Devis
                 </a>

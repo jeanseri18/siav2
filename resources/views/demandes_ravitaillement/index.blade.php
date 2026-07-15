@@ -8,9 +8,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">Demandes de Ravitaillement</h3>
+                    @if(auth()->user()->hasPermission('demandes-ravitaillement.create'))
                     <a href="{{ route('demandes-ravitaillement.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Nouvelle Demande
                     </a>
+                    @endif
                 </div>
                 <div class="card-body">
                     @if(session('success'))
@@ -111,11 +113,14 @@
                                                     </li>
                                                     
                                                     @if($demande->statut === 'en_attente')
+                                                        @if(auth()->user()->hasPermission('demandes-ravitaillement.edit'))
                                                         <li>
                                                             <a class="dropdown-item" href="{{ route('demandes-ravitaillement.edit', $demande) }}">
                                                                 <i class="fas fa-edit me-2"></i> Modifier
                                                             </a>
                                                         </li>
+                                                        @endif
+                                                        @if(auth()->user()->hasPermission('demandes-ravitaillement.approuver'))
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li>
                                                             <form action="{{ route('demandes-ravitaillement.approuver', $demande) }}" method="POST" class="d-inline">
@@ -126,6 +131,8 @@
                                                                 </button>
                                                             </form>
                                                         </li>
+                                                        @endif
+                                                         @if(auth()->user()->hasPermission('demandes-ravitaillement.rejeter'))
                                                         <li>
                                                             <form action="{{ route('demandes-ravitaillement.rejeter', $demande) }}" method="POST" class="d-inline">
                                                                 @csrf
@@ -135,6 +142,8 @@
                                                                 </button>
                                                             </form>
                                                         </li>
+                                                        @endif
+                                                        @if(auth()->user()->hasPermission('demandes-ravitaillement.destroy'))
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li>
                                                             <form action="{{ route('demandes-ravitaillement.destroy', $demande) }}" method="POST" class="d-inline">
@@ -146,7 +155,9 @@
                                                                 </button>
                                                             </form>
                                                         </li>
+                                                        @endif
                                                     @elseif($demande->statut === 'approuvee')
+                                                        @if(auth()->user()->hasPermission('demandes-ravitaillement.livrer'))
                                                         <li>
                                                             <form action="{{ route('demandes-ravitaillement.marquer-livree', $demande) }}" method="POST" class="d-inline">
                                                                 @csrf
@@ -156,6 +167,7 @@
                                                                 </button>
                                                             </form>
                                                         </li>
+                                                        @endif
                                                     @endif
                                                 </ul>
                                             </div>

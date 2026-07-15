@@ -12,6 +12,7 @@
 @section('content')
 
 <div class=" app-fade-in" id="printable-content">
+    <x-stock-flux-nav module="cotation" context="show" />
     <div class="row">
         <!-- Informations principales -->
         <div class="col-md-8">
@@ -29,6 +30,10 @@
                                 case 'en cours':
                                     $statutClass = 'warning';
                                     $statutIcon = 'spinner';
+                                    break;
+                                case 'validée':
+                                    $statutClass = 'info';
+                                    $statutIcon = 'check-double';
                                     break;
                                 case 'terminée':
                                     $statutClass = 'success';
@@ -221,6 +226,9 @@
                     </h3>
                 </div>
                 <div class="app-card-body app-table-responsive">
+                    @php
+                        $peutMettreAJourPieceJointe = in_array($demandeCotation->statut, ['en cours', 'validée', 'terminée'], true);
+                    @endphp
                     <table class="app-table">
                         <thead>
                             <tr>
@@ -229,7 +237,7 @@
                                 <th>Date réponse</th>
                                 <th class="text-end">Montant total</th>
                                 <th class="text-center">Retenu</th>
-                                <th class="no-print" style="width: 180px;">Actions</th>
+                                <th class="no-print" style="min-width: 260px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -275,22 +283,54 @@
                                     @endif
                                 </td>
                                 <td class="no-print">
-                                    @if($demandeCotation->statut == 'en cours')
-                                        @if(!$fournisseur->repondu)
-                                            <button type="button" class="app-btn app-btn-primary app-btn-sm" data-bs-toggle="modal" data-bs-target="#responseModal{{ $fournisseur->id }}">
-                                                <i class="fas fa-reply me-1"></i> Enregistrer réponse
-                                            </button>
-                                        @else
-                                            @if(!$fournisseur->retenu)
-                                                <form action="{{ route('demande-cotations.select-fournisseur', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" style="display:inline;">
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
+                                        @if($fournisseur->devis_fichier)
+                                            @if(auth()->user()->hasPermission('demande-cotations.show'))
+                                            <a href="{{ route('demande-cotations.fournisseur-devis', ['demandeCotation' => $demandeCotation, 'fournisseurDemandeCotation' => $fournisseur]) }}" class="app-btn app-btn-outline-primary app-btn-sm" target="_blank" rel="noopener noreferrer" title="{{ $fournisseur->devis_fichier_nom ?? 'Pièce jointe' }}">
+                                                <i class="fas fa-eye me-1"></i> Voir
+                                            </a>
+                                            @endif
+                                            @if(auth()->user()->hasPermission('demande-cotations.download'))
+                                            <a href="{{ route('demande-cotations.fournisseur-devis', ['demandeCotation' => $demandeCotation, 'fournisseurDemandeCotation' => $fournisseur, 'download' => 1]) }}" class="app-btn app-btn-outline-success app-btn-sm" title="Télécharger la pièce jointe">
+                                                <i class="fas fa-download me-1"></i> Télécharger
+                                            </a>
+                                            @endif
+                                            @if(auth()->user()->hasPermission('demande-cotations.destroy'))
+                                                @if($fournisseur->repondu && $peutMettreAJourPieceJointe)
+                                                <form action="{{ route('demande-cotations.delete-fournisseur-devis', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette pièce jointe ?');">
                                                     @csrf
-                                                    <button type="submit" class="app-btn app-btn-success app-btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir retenir ce fournisseur?')">
-                                                        <i class="fas fa-check me-1"></i> Retenir
+                                                    @method('DELETE')
+                                                    <button type="submit" class="app-btn app-btn-outline-danger app-btn-sm" title="Supprimer la pièce jointe">
+                                                        <i class="fas fa-trash-alt me-1"></i> Supprimer
                                                     </button>
                                                 </form>
+                                                @endif
                                             @endif
                                         @endif
-                                    @endif
+                                        @if($demandeCotation->statut == 'en cours')
+                                            @if(!$fournisseur->repondu)
+                                                @if(auth()->user()->hasPermission('demande-cotations.save-fournisseur-response'))
+                                                <button type="button" class="app-btn app-btn-primary app-btn-sm" data-bs-toggle="modal" data-bs-target="#responseModal{{ $fournisseur->id }}">
+                                                    <i class="fas fa-reply me-1"></i> Enregistrer réponse
+                                                </button>
+                                                @endif
+                                            @else
+                                                @if(!$fournisseur->retenu)
+                                                    <form action="{{ route('demande-cotations.select-fournisseur', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="app-btn app-btn-success app-btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir retenir ce fournisseur?')">
+                                                            <i class="fas fa-check me-1"></i> Retenir
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        @endif
+                                        @if($fournisseur->repondu && $peutMettreAJourPieceJointe)
+                                            <button type="button" class="app-btn app-btn-outline-secondary app-btn-sm" data-bs-toggle="modal" data-bs-target="#uploadDevisModal{{ $fournisseur->id }}" title="Envoyer ou remplacer la pièce jointe (devis)">
+                                                <i class="fas fa-upload me-1"></i> {{ $fournisseur->devis_fichier ? 'Remplacer' : 'Pièce jointe' }}
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -359,17 +399,23 @@
                     </button>
                     
                     @if($demandeCotation->statut == 'en cours')
+                    @if(auth()->user()->hasPermission('demande-cotations.edit'))
                     <a href="{{ route('demande-cotations.edit', $demandeCotation) }}" class="app-btn app-btn-warning w-100">
                         <i class="fas fa-edit me-2"></i>Modifier
                     </a>
-                    
+                    @endif
+                    @endif
+
+                    @if(in_array($demandeCotation->statut, ['en cours', 'validée'], true))
                     @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
+                    @if(auth()->user()->hasPermission('demande-cotations.terminate'))
                     <form action="{{ route('demande-cotations.terminate', $demandeCotation) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-success w-100" onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande de cotation?')">
                             <i class="fas fa-check me-2"></i>Terminer
                         </button>
                     </form>
+                    @endif
                     
                     <form action="{{ route('demande-cotations.cancel', $demandeCotation) }}" method="POST">
                         @csrf
@@ -378,16 +424,22 @@
                         </button>
                     </form>
                     @endif
-                    
+                    @endif
+
+                    @if($demandeCotation->statut == 'en cours')
+                    @if(auth()->user()->hasPermission('demande-cotations.destroy'))
                     <button type="button" class="app-btn app-btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="fas fa-trash me-2"></i>Supprimer
                     </button>
                     @endif
+                    @endif
                     
-                    @if($demandeCotation->statut == 'terminée' && $fournisseurRetenu)
-                    <a href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id]) }}" class="app-btn app-btn-primary w-100">
+                    @if($demandeCotation->estEligiblePourBonCommande() && $fournisseurRetenu && $demandeCotation->bon_commandes_count === 0)
+                    @if(auth()->user()->hasPermission('commande-bon.create'))
+                    <a href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id, 'demande_cotation_id' => $demandeCotation->id]) }}" class="app-btn app-btn-primary w-100">
                         <i class="fas fa-shopping-cart me-2"></i>Créer bon de commande
                     </a>
+                    @endif
                     @endif
                 </div>
             </div>
@@ -409,7 +461,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form action="{{ route('demande-cotations.save-fournisseur-response', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST">
+            <form action="{{ route('demande-cotations.save-fournisseur-response', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="app-modal-body">
                     <div class="app-form-group">
@@ -427,11 +479,18 @@
                         <div class="app-form-text">Montant total proposé par le fournisseur</div>
                     </div>
                     <div class="app-form-group">
-                        <label for="commentaire" class="app-form-label">
+                        <label for="commentaire_{{ $fournisseur->id }}" class="app-form-label">
                             <i class="fas fa-comment-alt me-2"></i>Commentaire
                         </label>
-                        <textarea name="commentaire" id="commentaire" class="app-form-control" rows="3" placeholder="Commentaire sur la réponse..."></textarea>
+                        <textarea name="commentaire" id="commentaire_{{ $fournisseur->id }}" class="app-form-control" rows="3" placeholder="Commentaire sur la réponse..."></textarea>
                         <div class="app-form-text">Commentaire ou observations</div>
+                    </div>
+                    <div class="app-form-group">
+                        <label for="devis_fichier_response_{{ $fournisseur->id }}" class="app-form-label">
+                            <i class="fas fa-paperclip me-2"></i>Devis du fournisseur
+                        </label>
+                        <input type="file" name="devis_fichier" id="devis_fichier_response_{{ $fournisseur->id }}" class="app-form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf">
+                        <div class="app-form-text">Facultatif — PDF ou image (JPEG, PNG), max. 10 Mo</div>
                     </div>
                 </div>
                 <div class="app-modal-footer">
@@ -446,6 +505,45 @@
         </div>
     </div>
 </div>
+@endforeach
+
+@foreach($demandeCotation->fournisseurs as $fournisseur)
+@if($fournisseur->repondu && $peutMettreAJourPieceJointe)
+<div class="modal fade" id="uploadDevisModal{{ $fournisseur->id }}" tabindex="-1" aria-labelledby="uploadDevisModalLabel{{ $fournisseur->id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content app-modal">
+            <div class="app-modal-header">
+                <h5 class="app-modal-title" id="uploadDevisModalLabel{{ $fournisseur->id }}">
+                    <i class="fas fa-file-upload me-2"></i>Pièce jointe — {{ $fournisseur->fournisseur->nom_raison_sociale }}
+                </h5>
+                <button type="button" class="app-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="{{ route('demande-cotations.upload-fournisseur-devis', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="app-modal-body">
+                    <div class="app-form-group mb-0">
+                        <label for="devis_fichier_upload_{{ $fournisseur->id }}" class="app-form-label">
+                            Fichier (PDF ou image) <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="devis_fichier" id="devis_fichier_upload_{{ $fournisseur->id }}" class="app-form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf" required>
+                        <div class="app-form-text">PDF ou image (JPEG, PNG), max. 10 Mo</div>
+                    </div>
+                </div>
+                <div class="app-modal-footer">
+                    <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="app-btn app-btn-primary">
+                        <i class="fas fa-save me-2"></i>Enregistrer la pièce jointe
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 @endforeach
 
 <!-- Modal de suppression -->

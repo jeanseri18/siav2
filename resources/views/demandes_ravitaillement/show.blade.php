@@ -12,11 +12,12 @@
                         <a href="{{ route('demandes-ravitaillement.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Retour
                         </a>
-                        
+                        @if(auth()->user()->hasPermission('demandes-ravitaillement.edit'))
                         @if($demandeRavitaillement->statut === 'en_attente')
                             <a href="{{ route('demandes-ravitaillement.edit', $demandeRavitaillement) }}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Modifier
                             </a>
+                        @endif
                         @endif
                     </div>
                 </div>
@@ -318,9 +319,11 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                             @if(auth()->user()->hasPermission('demandes-ravitaillement.store'))
                                             <button type="submit" class="btn btn-primary w-100">
                                                 <i class="fas fa-save me-2"></i>Enregistrer la livraison
                                             </button>
+                                            @endif
                                         </form>
                                     </div>
                                 </div>
@@ -444,9 +447,11 @@
                                                         <label for="commentaires_approbation" class="form-label">Commentaires d'approbation</label>
                                                         <textarea class="form-control" id="commentaires_approbation" name="commentaires" rows="3" placeholder="Commentaires optionnels..."></textarea>
                                                     </div>
+                                                    @if(auth()->user()->hasPermission('demandes-ravitaillement.approuver'))
                                                     <button type="submit" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir approuver cette demande ?')">
                                                         <i class="fas fa-check"></i> Approuver
                                                     </button>
+                                                    @endif
                                                 </form>
                                             </div>
                                             
@@ -457,9 +462,11 @@
                                                         <label for="motif_rejet" class="form-label">Motif de rejet <span class="text-danger">*</span></label>
                                                         <textarea class="form-control" id="motif_rejet" name="motif_rejet" rows="3" placeholder="Veuillez préciser le motif du rejet..." required></textarea>
                                                     </div>
+                                                     @if(auth()->user()->hasPermission('demandes-ravitaillement.rejeter'))
                                                     <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')">
                                                         <i class="fas fa-times"></i> Rejeter
                                                     </button>
+                                                    @endif
                                                 </form>
                                             </div>
                                         </div>

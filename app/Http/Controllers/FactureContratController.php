@@ -6,10 +6,13 @@ use App\Models\DQE;
 use App\Models\FactureContrat;
 use App\Models\FactureDecompte;
 use App\Models\FactureDecompteLigne;
+use App\Http\Controllers\Concerns\ExportsListPdf;
 use Illuminate\Http\Request;
 
 class FactureContratController extends Controller
 {
+    use ExportsListPdf;
+
     /**
      * Afficher la liste des factures contrat
      */
@@ -20,6 +23,34 @@ class FactureContratController extends Controller
             ->get();
         
         return view('facture-contrat.index', compact('facturesContrat'));
+    }
+
+    public function exportListePdf()
+    {
+        $facturesContrat = FactureContrat::with(['dqe.contrat'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $rows = [];
+        foreach ($facturesContrat as $facture) {
+            $reste = (float) ($facture->montant_a_payer ?? 0) - (float) ($facture->montant_verse ?? 0);
+            $rows[] = [
+                (string) $facture->id,
+                $facture->dqe?->reference ?? '—',
+                $facture->dqe?->contrat?->ref_contrat ?? '—',
+                number_format((float) ($facture->montant_a_payer ?? 0), 0, ',', ' ').' FCFA',
+                number_format((float) ($facture->montant_verse ?? 0), 0, ',', ' ').' FCFA',
+                number_format($reste, 0, ',', ' ').' FCFA',
+                $facture->created_at?->format('d/m/Y') ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des factures contrat',
+            ['ID', 'Réf. DQE', 'Contrat', 'Montant à payer', 'Montant versé', 'Reste à payer', 'Date création'],
+            $rows,
+            'liste-factures-contrat'
+        );
     }
 
     /**

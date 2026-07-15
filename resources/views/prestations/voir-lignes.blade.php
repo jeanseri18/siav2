@@ -217,7 +217,7 @@
                                 <th style="width: 15%;">Date</th>
                                 <th style="width: 15%;">Pourcentage</th>
                                 <th style="width: 20%;">Montant</th>
-                                <th style="width: 15%;" class="text-center">Action</th>
+                                <th style="width: 22%;" class="text-center">Documents PDF</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -235,10 +235,17 @@
                                         <strong>{{ number_format($decompte->montant, 2, ',', ' ') }} FCFA</strong>
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('prestations.voirDecompte', [$prestation->id, $decompte->id]) }}" 
-                                           class="btn btn-sm btn-primary" 
-                                           target="_blank">
-                                            <i class="fas fa-eye me-1"></i>Voir
+                                        <a href="{{ route('prestations.voirAttachement', [$prestation->id, $decompte->id]) }}"
+                                           class="btn btn-sm btn-success me-1"
+                                           target="_blank"
+                                           title="Attachement des travaux (exécution contrat)">
+                                            <i class="fas fa-table me-1"></i>Attachement
+                                        </a>
+                                        <a href="{{ route('prestations.voirDecompte', [$prestation->id, $decompte->id]) }}"
+                                           class="btn btn-sm btn-primary"
+                                           target="_blank"
+                                           title="Fiche de versement artisan">
+                                            <i class="fas fa-file-pdf me-1"></i>Versement
                                         </a>
                                     </td>
                                 </tr>

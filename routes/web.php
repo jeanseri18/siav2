@@ -35,6 +35,7 @@ use App\Http\Controllers\EmployeController;
 use App\Http\Controllers\FactureContratController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\FournisseurController;
+use App\Http\Controllers\GenericListExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\ModeDePaiementController;
@@ -116,8 +117,12 @@ Route::get('/quartiers/{quartier}/edit', [QuartierController::class, 'edit'])->n
 Route::put('/quartiers/{quartier}', [QuartierController::class, 'update'])->name('quartiers.update');
 Route::delete('/quartiers/{quartier}', [QuartierController::class, 'destroy'])->name('quartiers.destroy');
 
+// Export PDF générique pour les listes de référence
+Route::get('/export/liste/{key}/pdf', [GenericListExportController::class, 'export'])->name('liste.export.pdf');
+
 // Routes pour les Employés
 Route::get('/employes', [EmployeController::class, 'index'])->name('employes.index');
+Route::get('/employes/export/pdf', [EmployeController::class, 'exportPdf'])->name('employes.export.pdf');
 Route::get('/employes/create', [EmployeController::class, 'create'])->name('employes.create');
 Route::post('/employes', [EmployeController::class, 'store'])->name('employes.store');
 Route::get('/employes/{employe}', [EmployeController::class, 'show'])->name('employes.show');
@@ -186,24 +191,25 @@ Route::get('demandes-approvisionnement/{demandeApprovisionnement}/articles', fun
     $lignes = $demandeApprovisionnement->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-approvisionnement.articles');
 
 // Route pour récupérer les articles d'une demande d'achat
 Route::get('demandes-achat/{demandeAchat}/articles', function (DemandeAchat $demandeAchat) {
     $lignes = $demandeAchat->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-achat.articles');
 
 // Route pour récupérer les articles d'une demande de cotation
 Route::get('demandes-cotation/{demandeCotation}/articles', function (DemandeCotation $demandeCotation) {
     $lignes = $demandeCotation->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-cotation.articles');
 
 // Routes pour les demandes d'approvisionnement
 // Routes pour les demandes d'approvisionnement
+Route::get('demande-approvisionnements/export/pdf', [DemandeApprovisionnementController::class, 'exportListePdf'])->name('demande-approvisionnements.export.pdf');
 Route::resource('demande-approvisionnements', DemandeApprovisionnementController::class);
 Route::post('demande-approvisionnements/{demandeApprovisionnement}/approve',
     [DemandeApprovisionnementController::class, 'approve'])
@@ -217,7 +223,12 @@ Route::get('demande-approvisionnements/{demandeApprovisionnement}/pdf',
     [DemandeApprovisionnementController::class, 'exportPDF'])
     ->name('demande-approvisionnements.pdf');
 
-// Routes pour les bons de commande
+// Routes pour les bons de commande (route spécifique avant la ressource pour éviter les conflits avec bon-commandes/{id})
+Route::get('bon-commandes/demande-achat/{demandeCotationId}',
+    [BonCommandeController::class, 'getDemandeAchatFromCotation'])
+    ->name('bon-commandes.demande-achat');
+Route::get('bon-commandes/export/pdf', [BonCommandeController::class, 'exportListePdf'])->name('bon-commandes.export.pdf');
+
 Route::resource('bon-commandes', BonCommandeController::class);
 Route::post('bon-commandes/{bonCommande}/confirm',
     [BonCommandeController::class, 'confirm'])
@@ -234,22 +245,36 @@ Route::post('bon-commandes/{bonCommande}/livrer',
 Route::get('bon-commandes/{bonCommande}/pdf',
     [BonCommandeController::class, 'exportPDF'])
     ->name('bon-commandes.pdf');
-Route::get('bon-commandes/demande-achat/{demandeCotationId}',
-    [BonCommandeController::class, 'getDemandeAchatFromCotation'])
-    ->name('bon-commandes.demande-achat');
 
 // Routes pour les réceptions
-Route::resource('receptions', ReceptionController::class)->only(['index', 'show', 'create', 'store']);
+Route::get('receptions/export/pdf', [ReceptionController::class, 'exportListePdf'])->name('receptions.export.pdf');
+Route::get('receptions/{id}/bon-livraison/pdf', [ReceptionController::class, 'exportBonLivraisonPdf'])
+    ->name('receptions.bon-livraison.pdf');
+Route::get('receptions/{bonCommande}/history',
+    [ReceptionController::class, 'history'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
+    ->name('receptions.history');
+// Pas de create/store via la ressource : ils sont définis explicitement avec {bonCommande} (évite un POST /receptions sans paramètre).
+Route::resource('receptions', ReceptionController::class)->only(['index', 'show']);
 Route::get('receptions/create/{bonCommande}',
     [ReceptionController::class, 'create'])
     ->middleware('role:magasinier,chef_chantier,admin,dg')
     ->name('receptions.create');
+Route::get('receptions/non-conformite/{bonCommande}',
+    [ReceptionController::class, 'createNonConformite'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
+    ->name('receptions.non-conformite.create');
 Route::post('receptions/store/{bonCommande}',
     [ReceptionController::class, 'store'])
     ->middleware('role:magasinier,chef_chantier,admin,dg')
     ->name('receptions.store');
+Route::post('receptions/non-conformite/store/{bonCommande}',
+    [ReceptionController::class, 'storeNonConformite'])
+    ->middleware('role:magasinier,chef_chantier,admin,dg')
+    ->name('receptions.non-conformite.store');
 
 // Routes pour les demandes d'achat
+Route::get('demande-achats/export/pdf', [DemandeAchatController::class, 'exportListePdf'])->name('demande-achats.export.pdf');
 Route::resource('demande-achats', DemandeAchatController::class);
 Route::get('api/demandes-achat/{id}/articles', [DemandeAchatController::class, 'getArticles'])->name('api.demandes-achat.articles');
 Route::post('demande-achats/{demandeAchat}/approve',
@@ -265,6 +290,7 @@ Route::get('demande-achats/{demandeAchat}/pdf',
     ->name('demande-achats.pdf');
 
 // Routes pour les demandes de cotation
+Route::get('demande-cotations/export/pdf', [DemandeCotationController::class, 'exportListePdf'])->name('demande-cotations.export.pdf');
 Route::resource('demande-cotations', DemandeCotationController::class);
 Route::post('demande-cotations/{demandeCotation}/terminate',
     [DemandeCotationController::class, 'terminate'])
@@ -277,6 +303,15 @@ Route::post('demande-cotations/{demandeCotation}/cancel',
 Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/save-response',
     [DemandeCotationController::class, 'saveFournisseurResponse'])
     ->name('demande-cotations.save-fournisseur-response');
+Route::get('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/devis',
+    [DemandeCotationController::class, 'showFournisseurDevis'])
+    ->name('demande-cotations.fournisseur-devis');
+Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/devis',
+    [DemandeCotationController::class, 'uploadFournisseurDevis'])
+    ->name('demande-cotations.upload-fournisseur-devis');
+Route::delete('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/devis',
+    [DemandeCotationController::class, 'destroyFournisseurDevis'])
+    ->name('demande-cotations.delete-fournisseur-devis');
 Route::post('demande-cotations/{demandeCotation}/fournisseurs/{fournisseurDemandeCotation}/select',
     [DemandeCotationController::class, 'selectFournisseur'])
     ->name('demande-cotations.select-fournisseur');
@@ -296,6 +331,8 @@ Route::get('demande-cotations/{demandeCotation}/pdf',
 Route::get('/bpu', [BpuController::class, 'index'])->name('bpu.index');
 Route::get('/bpu/until', [BpuController::class, 'indexuntil'])->name('bpu.indexuntil');
 Route::get('/bpu/print', [BpuController::class, 'print'])->name('bpu.print');
+Route::get('/bpu/export/excel', [BpuController::class, 'exportExcel'])->name('bpu.export.excel');
+Route::get('/bpu/export/pdf', [BpuController::class, 'exportPdf'])->name('bpu.export.pdf');
 Route::get('/bpus/create', [BpuController::class, 'create'])->name('bpus.create');
 Route::post('/bpus', [BpuController::class, 'store'])->name('bpus.store');
 Route::get('/bpus/{bpu}/edit', [BpuController::class, 'edit'])->name('bpus.edit');
@@ -328,6 +365,7 @@ Route::resource('bpus', BpuController::class);
 // Route::get('/bup-print', [BpuController::class, 'print'])->name('bpu.print');
 // Route::get('/bupn-general', [BpuController::class, 'index'])->name('bpu.index');
 
+Route::get('prestations/export/pdf', [PrestationController::class, 'exportListePdf'])->name('prestations.export.pdf');
 Route::resource('prestations', PrestationController::class);
 
 // Routes supplémentaires pour les prestations
@@ -342,12 +380,15 @@ Route::post('/prestations/{prestation}/lignes', [PrestationController::class, 's
 Route::get('/prestations/{prestation}/voir-lignes', [PrestationController::class, 'voirLignes'])->name('prestations.voirLignes');
 Route::post('/prestations/{prestation}/valider-paiements', [PrestationController::class, 'validerPaiements'])->name('prestations.validerPaiements');
 Route::get('/prestations/{prestation}/decompte/{decompte}', [PrestationController::class, 'voirDecompte'])->name('prestations.voirDecompte');
+Route::get('/prestations/{prestation}/decompte/{decompte}/attachement', [PrestationController::class, 'voirAttachementTravaux'])->name('prestations.voirAttachement');
 Route::get('/prestations/{prestation}/document', [PrestationController::class, 'document'])->name('prestations.document');
+Route::get('factures/export/pdf', [FactureController::class, 'exportListePdf'])->name('factures.export.pdf');
 Route::resource('factures', FactureController::class);
 Route::post('facture-contrat/generate/{dqe}', [FactureContratController::class, 'generate'])
     ->name('facture-contrat.generate');
 
 // Routes pour les factures contrat
+Route::get('facture-contrat/export/pdf', [FactureContratController::class, 'exportListePdf'])->name('facture-contrat.export.pdf');
 Route::get('facture-contrat', [FactureContratController::class, 'index'])->name('facture-contrat.index');
 Route::get('facture-contrat/{id}', [FactureContratController::class, 'show'])->name('facture-contrat.show');
 Route::delete('facture-contrat/{id}', [FactureContratController::class, 'destroy'])->name('facture-contrat.destroy');
@@ -364,6 +405,7 @@ Route::get('/factures_pdf/{facture}/pdf', [FactureController::class, 'generatePD
 Route::put('/factures_change/{facture}/change-status', [FactureController::class, 'changeStatus'])->name('factures.changeStatus');
 Route::get('/factures/artisan/{artisan}/decomptes', [FactureController::class, 'getDecomptesArtisan'])->name('factures.decomptes.artisan');
 
+Route::get('documents/export/pdf', [DocumentController::class, 'exportListePdf'])->name('documents.export.pdf');
 Route::resource('documents', DocumentController::class)->except(['edit', 'update']);
 Route::get('/documents_contrat', [DocumentController::class, 'index_contrat'])->name('document_contrat.index');
 
@@ -418,7 +460,12 @@ Route::get('/type-travaux/{id}/edit', [TypeTravauxController::class, 'edit'])->n
 Route::put('/type-travaux/{id}', [TypeTravauxController::class, 'update'])->name('type-travaux.update');
 Route::delete('/type-travaux/{id}', [TypeTravauxController::class, 'destroy'])->name('type-travaux.destroy');
 
-Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
+Route::middleware('auth')->group(function () {
+    Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
+    Route::get('/statistiques/chart-data', [StatistiqueController::class, 'getChartData'])->name('statistiques.chart-data');
+    Route::get('/statistiques/realtime-stats', [StatistiqueController::class, 'getRealtimeStats'])->name('statistiques.realtime-stats');
+    Route::get('/statistiques/evolution-data', [StatistiqueController::class, 'getEvolutionData'])->name('statistiques.evolution-data');
+});
 
 Route::patch('/ventes/{vente}/status', [VenteController::class, 'updateStatus'])->name('ventes.updateStatus');
 Route::get('/ventes/report', [VenteController::class, 'showReportForm'])->name('ventes.report.form');
@@ -426,15 +473,19 @@ Route::post('/ventes/report', [VenteController::class, 'generateReport'])->name(
 // Dans routes/web.php
 Route::get('/ventes/report/pdf', [VenteController::class, 'generatePDF'])->name('ventes.report.pdf');
 
+Route::get('/ventes/export/pdf', [VenteController::class, 'exportListePdf'])->name('ventes.export.pdf');
 Route::get('/ventes', [VenteController::class, 'index'])->name('ventes.index'); // Liste des ventes
 Route::get('/ventes/create', [VenteController::class, 'create'])->name('ventes.create'); // Formulaire de création
 Route::post('/ventes', [VenteController::class, 'store'])->name('ventes.store'); // Enregistrer une vente
 Route::get('/ventes/{vente}', [VenteController::class, 'show'])->name('ventes.show'); // Voir une vente
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture'); // Facture d'une vente
+Route::get('/ventes/{vente}/bon-livraison-client/pdf', [VenteController::class, 'exportBonLivraisonClientPdf'])
+    ->name('ventes.bon-livraison-client.pdf');
 Route::delete('/ventes/{vente}', [VenteController::class, 'destroy'])->name('ventes.destroy'); // Supprimer une vente
 Route::get('/api/devis/client/{clientId}', [VenteController::class, 'getDevisForClient'])->name('api.devis.client');
 
 // Routes pour les devis
+Route::get('devis/export/pdf', [DevisController::class, 'exportListePdf'])->name('devis.export.pdf');
 Route::resource('devis', DevisController::class);
 Route::post('/devis/{devis}/approve', [DevisController::class, 'approve'])->name('devis.approve');
 Route::post('/devis/{devis}/reject', [DevisController::class, 'reject'])->name('devis.reject');
@@ -443,13 +494,22 @@ Route::get('/api/devis/client/{clientId}', [DevisController::class, 'getDevisFor
 
 Route::prefix('caisse/')->group(function () {
     Route::get('brouillard', [CaisseController::class, 'showBrouillardCaisse'])->name('caisse.brouillard');
+    Route::delete('brouillard/{brouillard}', [CaisseController::class, 'destroyBrouillard'])
+        ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg,controleur_caisse')
+        ->name('caisse.brouillard.destroy');
+    Route::put('brouillard/{brouillard}', [CaisseController::class, 'updateBrouillard'])
+        ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg,controleur_caisse')
+        ->name('caisse.brouillard.update');
+    Route::post('brouillard/remise-a-zero', [CaisseController::class, 'remiseAZeroSoldeCaisse'])
+        ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg,controleur_caisse')
+        ->name('caisse.brouillard.remiseAZero');
     Route::get('approvisionnement', [CaisseController::class, 'showApprovisionnementForm'])->name('caisse.approvisionnement');
     Route::post('saisir-depense', [CaisseController::class, 'saisirDepense'])->name('caisse.saisirDepense');
     Route::post('approvisionner', [CaisseController::class, 'approvisionnerCaisse'])->name('caisse.approvisionnerCaisse');
     Route::post('demander-depense', [CaisseController::class, 'demandeDepense'])->name('caisse.demandeDepense');
-    Route::post('valider-demande/{demandeId}', [CaisseController::class, 'validerDemandeDepense'])
-        ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg')
-        ->name('caisse.validerDemandeDepense');
+    Route::post('enregistrer-depenses-caisse', [CaisseController::class, 'enregistrerDepensesEnCaisse'])
+        ->middleware('role:admin,caissier,controleur_caisse')
+        ->name('caisse.enregistrerDepensesEnCaisse');
     Route::post('annuler-demande/{demandeId}', [CaisseController::class, 'annulerDemandeDepense'])
         ->middleware('role:caissier,chef_projet,conducteur_travaux,admin,dg')
         ->name('caisse.annulerDemandeDepense');
@@ -465,11 +525,17 @@ Route::prefix('caisse/')->group(function () {
 Route::get('/demande-depense', [CaisseController::class, 'listerDemandesDepenses'])->name('caisse.demande-liste');
 
 Route::get('transferts', [TransfertsStockController::class, 'index'])->name('transferts.index');
+Route::get('transferts/stock-projet/{projet}', [TransfertsStockController::class, 'lignesStockPourProjet'])->name('transferts.stock_projet');
 Route::get('transferts/create', [TransfertsStockController::class, 'create'])->name('transferts.create');
 Route::post('transferts', [TransfertsStockController::class, 'store'])->name('transferts.store');
+Route::get('transferts/{transfert}/edit', [TransfertsStockController::class, 'edit'])->name('transferts.edit');
+Route::put('transferts/{transfert}', [TransfertsStockController::class, 'update'])->name('transferts.update');
+Route::post('transferts/{transfert}/annuler', [TransfertsStockController::class, 'annuler'])->name('transferts.annuler');
+Route::post('transferts/{transfert}/refuser', [TransfertsStockController::class, 'refuser'])->name('transferts.refuser');
 Route::post('transferts/{transfert}/receptionner', [TransfertsStockController::class, 'receptionner'])->name('transferts.receptionner');
 
 Route::get('articles', [ArticleController::class, 'index'])->name('articles.index');
+Route::get('articles/export/pdf', [ArticleController::class, 'exportListePdf'])->name('articles.export.pdf');
 Route::get('articles/create', [ArticleController::class, 'create'])->name('articles.create');
 Route::post('articles', [ArticleController::class, 'store'])->name('articles.store');
 Route::get('articles_show/{article}/', [ArticleController::class, 'show'])->name('articles.show');
@@ -479,6 +545,7 @@ Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->name
 Route::get('articles/{article}/stock-details', [ArticleController::class, 'stockDetails'])->name('articles.stock-details');
 
 Route::prefix('stock')->group(function () {
+    Route::get('/export/pdf', [StockProjetController::class, 'exportListePdf'])->name('stock.export.pdf');
     Route::get('/', [StockProjetController::class, 'index'])->name('stock.index');
     Route::get('/create', [StockProjetController::class, 'create'])->name('stock.create');
     Route::post('/', [StockProjetController::class, 'store'])->name('stock.store');
@@ -488,6 +555,7 @@ Route::prefix('stock')->group(function () {
     Route::delete('/{id}', [StockProjetController::class, 'destroy'])->name('stock.destroy');
 });
 Route::prefix('stock_contrat')->group(function () {
+    Route::get('/export/pdf', [StockProjetController::class, 'exportContratListePdf'])->name('stock_contrat.export.pdf');
     Route::get('/', [StockProjetController::class, 'index_contrat'])->name('stock_contrat.index');
     Route::get('/create', [StockProjetController::class, 'create_contrat'])->name('stock_contrat.create');
     Route::get('/historique', [StockProjetController::class, 'historique_contrat'])->name('stock_contrat.historique');
@@ -504,10 +572,12 @@ Route::prefix('stock_contrat')->group(function () {
 
 Route::prefix('contrats')->group(function () {
     Route::get('/', [ContratController::class, 'index'])->name('contrats.index');
+    Route::get('/export/pdf', [ContratController::class, 'exportListePdf'])->name('contrats.export.pdf');
     Route::get('/all', [ContratController::class, 'allContracts'])->name('contrats.all');
     Route::get('/allcreate', [ContratController::class, 'allCreate'])->name('contrats.allcreate');
     Route::get('create', [ContratController::class, 'create'])->name('contrats.create');
     Route::post('store', [ContratController::class, 'store'])->name('contrats.store');
+    Route::post('{id}/statut', [ContratController::class, 'updateStatut'])->name('contrats.update-statut');
     Route::get('edit/{id}', [ContratController::class, 'edit'])->name('contrats.edit');
     Route::put('update/{id}', [ContratController::class, 'update'])->name('contrats.update');
     Route::delete('destroy/{id}', [ContratController::class, 'destroy'])->name('contrats.destroy');
@@ -555,13 +625,16 @@ Route::put('/corpsmetiers/{id}', [CorpsMetierController::class, 'update'])->name
 Route::delete('/corpsmetiers/{id}', [CorpsMetierController::class, 'destroy'])->name('corpsmetiers.destroy');
 
 Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index'); // 🏠 Voir tous les artisans
+Route::get('/artisans/export/pdf', [ArtisanController::class, 'exportPdf'])->name('artisans.export.pdf');
 Route::get('/artisans/create', [ArtisanController::class, 'create'])->name('artisans.create'); // ➕ Formulaire d'ajout
 Route::post('/artisans', [ArtisanController::class, 'store'])->name('artisans.store'); // ✅ Ajouter un artisan
+Route::get('/artisans/{artisan}', [ArtisanController::class, 'show'])->name('artisans.show'); // Fiche détail
 Route::get('/artisans/{id}/edit', [ArtisanController::class, 'edit'])->name('artisans.edit'); // ✏️ Modifier un artisan
 Route::put('/artisans/{id}', [ArtisanController::class, 'update'])->name('artisans.update'); // 🔄 Sauvegarder modification
 Route::delete('/artisans/{id}', [ArtisanController::class, 'destroy'])->name('artisans.destroy'); // ❌ Supprimer
 
 Route::get('fournisseurs', [FournisseurController::class, 'index'])->name('fournisseurs.index');
+Route::get('fournisseurs/export/pdf', [FournisseurController::class, 'exportPdf'])->name('fournisseurs.export.pdf');
 Route::get('fournisseurs/create', [FournisseurController::class, 'create'])->name('fournisseurs.create');
 Route::post('fournisseurs', [FournisseurController::class, 'store'])->name('fournisseurs.store');
 Route::get('fournisseurs/{id}', [FournisseurController::class, 'show'])->name('fournisseurs.show');
@@ -569,7 +642,8 @@ Route::get('fournisseurs/{fournisseur}/edit', [FournisseurController::class, 'ed
 Route::put('fournisseurs/{fournisseur}', [FournisseurController::class, 'update'])->name('fournisseurs.update');
 Route::delete('fournisseurs/{fournisseur}', [FournisseurController::class, 'destroy'])->name('fournisseurs.destroy');
 
-Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
+Route::get('clients', [ClientController::class, 'index'])->name('clients.index'); 
+Route::get('clients/export/pdf', [ClientController::class, 'exportPdf'])->name('clients.export.pdf');
 Route::get('clients/create', [ClientController::class, 'create'])->name('clients.create');
 Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
 Route::get('clients/{id}', [ClientController::class, 'show'])->name('clients.show');
@@ -579,6 +653,7 @@ Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('c
 
 // Afficher la liste des projets
 Route::get('/projets', [ProjetController::class, 'index'])->name('projets.index');
+Route::get('/projets/export/pdf', [ProjetController::class, 'exportPdf'])->name('projets.export.pdf');
 // Afficher le formulaire de création
 Route::get('/projets/create', [ProjetController::class, 'create'])->name('projets.create');
 // Enregistrer un nouveau projet
@@ -589,6 +664,7 @@ Route::get('/projets/{projet}', [ProjetController::class, 'show'])->name('projet
 Route::get('/projets/{projet}/edit', [ProjetController::class, 'edit'])->name('projets.edit');
 // Mettre à jour un projet
 Route::put('/projets/{projet}', [ProjetController::class, 'update'])->name('projets.update');
+Route::post('/projets/{projet}/statut', [ProjetController::class, 'updateStatut'])->name('projets.update-statut');
 // Supprimer un projet
 Route::delete('/projets/{projet}', [ProjetController::class, 'destroy'])->name('projets.destroy');
 // Changer le projet en session
@@ -677,9 +753,13 @@ Route::get('/sublayouts_banque', function () {
 })->name('sublayouts_banque')->middleware('auth');
 
 Route::middleware('auth')->prefix('banque')->name('banque.')->group(function () {
+    Route::get('mouvements/export/pdf', [MouvementBancaireController::class, 'exportListePdf'])->name('mouvements.export.pdf');
     Route::get('mouvements', [MouvementBancaireController::class, 'index'])->name('mouvements.index');
     Route::get('mouvements/create', [MouvementBancaireController::class, 'create'])->name('mouvements.create');
     Route::post('mouvements', [MouvementBancaireController::class, 'store'])->name('mouvements.store');
+    Route::get('mouvements/{mouvementBancaire}/edit', [MouvementBancaireController::class, 'edit'])->name('mouvements.edit');
+    Route::put('mouvements/{mouvementBancaire}', [MouvementBancaireController::class, 'update'])->name('mouvements.update');
+    Route::delete('mouvements/{mouvementBancaire}', [MouvementBancaireController::class, 'destroy'])->name('mouvements.destroy');
     Route::get('soldes', [MouvementBancaireController::class, 'soldes'])->name('soldes.index');
     Route::get('rapprochement', [MouvementBancaireController::class, 'rapprochement'])->name('rapprochement.index');
     Route::patch('rapprochement/{mouvementBancaire}', [MouvementBancaireController::class, 'toggleRapprochement'])->name('rapprochement.toggle');
@@ -703,7 +783,11 @@ Route::get('/sublayouts_caisse', function () {
     }
 
     $bus = BU::find($id_bu);
-    $brouillardCaisse = BrouillardCaisse::where('bus_id', $id_bu)->orderBy('created_at', 'desc')->get();
+    $brouillardCaisse = BrouillardCaisse::where('bus_id', $id_bu)
+        ->orderByRaw(BrouillardCaisse::sqlDateEffective().' desc')
+        ->orderBy('created_at', 'desc')
+        ->orderBy('id', 'desc')
+        ->get();
 
     return view('sublayouts.caisse', compact('bus', 'brouillardCaisse'));
 })->name('sublayouts_caisse')->middleware('auth');
@@ -795,6 +879,12 @@ Route::get('api/communes/{ville_id}', function ($ville_id) {
     return Commune::where('ville_id', $ville_id)->get(['id', 'nom']);
 });
 
+Route::get('api/secteurs-par-commune/{commune_id}', function ($commune_id) {
+    return Secteur::whereHas('quartier', function ($q) use ($commune_id) {
+        $q->where('commune_id', $commune_id);
+    })->orderBy('nom')->get(['id', 'nom', 'quartier_id']);
+});
+
 Route::get('api/quartiers/{commune_id}', function ($commune_id) {
     return Quartier::where('commune_id', $commune_id)->get(['id', 'nom']);
 });
@@ -844,7 +934,7 @@ Route::get('/articles/search', function (Request $request) {
         });
 
     return response()->json($articles);
-});
+})->name('articles.search');;
 
 // Route pour vérifier les mises à jour
 Route::get('/check-updates', function () {

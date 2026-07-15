@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="Codescandy" />
 
-    <!-- Favicon icon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon/favicon.ico') }}" />
+    <!-- Favicon XBTP -->
+    <link rel="icon" type="image/png" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('Logo_XBTP_Png/Icone_Noir.png') }}">
 
     <!-- Darkmode JS -->
     <script src="{{ asset('assets/js/vendors/darkMode.js') }}"></script>
@@ -21,14 +23,14 @@
     <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}" />
 
     <link rel="stylesheet" href="{{ asset('assets/libs/tiny-slider/dist/tiny-slider.css') }}" />
-    <title>@yield('title', 'Homepage | Geeks - Bootstrap 5 Template')</title>
+    <title>@yield('title', 'Connexion') | {{ config('app.name') }}</title>
 </head>
 <style>
 /* Variables CSS */
 :root {
     --primary-color: #033d71;
-    --primary-hover: #022954;
-    --secondary-color: #0A91EA;
+    --primary-hover: #033d71;
+    --secondary-color: #033d71;
     --success-color: #28a745;
     --danger-color: #dc3545;
     --warning-color: #ffc107;
@@ -195,7 +197,7 @@ body {
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-hover) 0%, #0779c4 100%);
+    background: linear-gradient(135deg, var(--primary-hover) 0%, #033d71 100%);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(3, 55, 101, 0.3);
 }

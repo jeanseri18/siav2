@@ -8,6 +8,7 @@
 @endsection
 
 @section('content')
+@include('partials.datatables-bs5-assets')
 
 <div class="app-fade-in">
     <div class="app-card">
@@ -16,9 +17,12 @@
                 <i class="fas fa-city me-2"></i>Liste des Villes
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'villes')" />
+                @if(auth()->user()->hasPermission('villes.create'))
                 <a href="{{ route('villes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une ville
                 </a>
+                @endif
             </div>
         </div>
 
@@ -37,7 +41,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="villesTable" class="app-table display">
+            <table id="villesTable" class="app-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -69,11 +73,14 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('villes.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('villes.edit', $ville->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('villes.destroy'))
                                     <li>
                                         <form action="{{ route('villes.destroy', $ville->id) }}" method="POST" class="delete-form">
                                             @csrf
@@ -83,6 +90,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>
@@ -101,6 +109,7 @@
         $('#villesTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            columnDefs: [{ orderable: false, searchable: false, targets: -1 }],
             buttons: [
                 {
                     extend: 'collection',

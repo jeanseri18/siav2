@@ -10,12 +10,14 @@
                 <div class="card-header">
                     <h3 class="card-title">Frais Généraux du Contrat - {{ $contrat->nom_contrat }}</h3>
                     <div class="card-tools">
+                        @if(auth()->user()->hasPermission('frais-chantier.create'))
                         <form action="{{ route('contrats.frais-generaux.store', $contrat) }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Créer document
                             </button>
                         </form>
+                        @endif
                         <a href="{{ route('contrats.show', $contrat) }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Retour au contrat
                         </a>
@@ -64,10 +66,17 @@
                                         </td>
                                     </tr>
                                     @endforeach
-                                    <!-- Total Général -->
-                                    <tr class="table-dark font-weight-bold">
-                                        <td colspan="3" class="text-right">Total Général des Frais Généraux :</td>
-                                        <td colspan="3">{{ number_format($fraisGenerauxParents->sum('montant_total'), 2, ',', ' ') }} F CFA</td>
+                                    @php
+                                        $totalFgPrev = $fraisGenerauxParents->where('type', \App\Models\FraisGenerauxParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                        $totalFgReal = $fraisGenerauxParents->where('type', '!=', \App\Models\FraisGenerauxParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                    @endphp
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="3" class="text-end">Total prévisionnel :</td>
+                                        <td colspan="3">{{ number_format($totalFgPrev, 2, ',', ' ') }} F CFA</td>
+                                    </tr>
+                                    <tr class="table-success fw-bold">
+                                        <td colspan="3" class="text-end">Total réalisé :</td>
+                                        <td colspan="3">{{ number_format($totalFgReal, 2, ',', ' ') }} F CFA</td>
                                     </tr>
                                 </tbody>
                             </table>

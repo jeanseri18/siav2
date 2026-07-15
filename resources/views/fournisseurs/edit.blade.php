@@ -6,6 +6,7 @@
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('fournisseurs.index') }}">Fournisseurs</a></li>
 <li class="breadcrumb-item active">Modifier</li>
+
 @endsection
 
 @section('content')

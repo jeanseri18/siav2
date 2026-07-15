@@ -12,6 +12,7 @@
 @section('content')
 
 <div class="container app-fade-in" id="printable-content">
+    <x-stock-flux-nav module="bon_commande" context="show" />
     <div class="row">
         <!-- Informations principales -->
         <div class="col-md-8">
@@ -190,15 +191,16 @@
                         <thead>
                             <tr>
                                 <th>Référence</th>
-                                <th>Désignation</th>
+                                <th style="min-width: 12rem;">Désignation</th>
                                 <th class="text-center">Quantité</th>
+                                <th class="text-center">Unité de mesure</th>
                                 <th class="text-end">Prix unitaire</th>
                                 <th class="text-center">% Remise</th>
                                 <th class="text-end">Montant HT</th>
                                 @if($bonCommande->statut == 'livrée')
                                     <th class="text-center">Quantité livrée</th>
                                 @endif
-                                <th>Commentaire</th>
+                                <th style="min-width: 10rem;">Commentaire</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -219,8 +221,11 @@
                                 </td>
                                 <td class="text-center app-fw-bold">
                                     <span class="app-badge app-badge-info">
-                                        {{ $ligne->quantite }} {{ $ligne->article->unite_mesure }}
+                                        {{ $ligne->quantite }}
                                     </span>
+                                </td>
+                                <td class="text-center">
+                                    {{ $ligne->article->uniteMesure?->ref ?? $ligne->article->uniteMesure?->nom ?? '' }}
                                 </td>
                                 <td class="text-end">
                                     {{ number_format($ligne->prix_unitaire, 0, ',', ' ') }} FCFA
@@ -241,17 +246,17 @@
                                 @if($bonCommande->statut == 'livrée')
                                 <td class="text-center">
                                     <span class="app-badge app-badge-success">
-                                        {{ $ligne->quantite_livree }} {{ $ligne->article->unite_mesure }}
+                                        {{ $ligne->quantite_livree }}
                                     </span>
                                 </td>
                                 @endif
-                                <td>{{ $ligne->commentaire ?: '-' }}</td>
+                                <td class="text-break">{{ $ligne->commentaire ?: '-' }}</td>
                             </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr class="table-active">
-                                <th colspan="{{ $bonCommande->statut == 'livrée' ? '7' : '6' }}" class="text-end">
+                                <th colspan="{{ $bonCommande->statut == 'livrée' ? '8' : '7' }}" class="text-end">
                                     <i class="fas fa-calculator me-2"></i>Total général :
                                 </th>
                                 <th class="text-end text-success h5">
@@ -425,6 +430,7 @@
                                     <th>Référence</th>
                                     <th>Désignation</th>
                                     <th class="text-center">Quantité commandée</th>
+                                    <th class="text-center">Unité de mesure</th>
                                     <th class="text-center">Quantité livrée</th>
                                 </tr>
                             </thead>
@@ -439,8 +445,11 @@
                                     <td>{{ $ligne->article->nom }}</td>
                                     <td class="text-center">
                                         <span class="app-badge app-badge-info">
-                                            {{ $ligne->quantite }} {{ $ligne->article->unite_mesure }}
+                                            {{ $ligne->quantite }}
                                         </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {{ $ligne->article->uniteMesure?->ref ?? $ligne->article->uniteMesure?->nom ?? '' }}
                                     </td>
                                     <td class="text-center">
                                         <input type="number" name="quantite_livree[{{ $index }}]" class="app-form-control text-center" 

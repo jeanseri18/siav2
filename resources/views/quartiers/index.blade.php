@@ -8,6 +8,7 @@
 @endsection
 
 @section('content')
+@include('partials.datatables-bs5-assets')
 
 <div class="app-fade-in">
     <div class="app-card">
@@ -16,9 +17,12 @@
                 <i class="fas fa-map-marker-alt me-2"></i>Liste des Quartiers
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'quartiers')" />
+                @if(auth()->user()->hasPermission('quartiers.create'))
                 <a href="{{ route('quartiers.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un quartier
                 </a>
+                @endif
             </div>
         </div>
 
@@ -37,7 +41,7 @@
         @endif
 
         <div class="app-card-body app-table-responsive">
-            <table id="quartiersTable" class="app-table display">
+            <table id="quartiersTable" class="app-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -72,17 +76,29 @@
                         </td>
                         <td>{{ $quartier->code ?? '-' }}</td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('quartiers.edit', $quartier->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('quartiers.destroy', $quartier->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    @if(auth()->user()->hasPermission('quartiers.edit'))
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('quartiers.edit', $quartier->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('quartiers.destroy'))
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('quartiers.destroy', $quartier->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                </ul>
                             </div>
                         </td>
                     </tr>
@@ -100,6 +116,7 @@
         $('#quartiersTable').DataTable({
             responsive: true,
             dom: '<"dt-header"Bf>rt<"dt-footer"ip>',
+            columnDefs: [{ orderable: false, searchable: false, targets: -1 }],
             buttons: [
                 {
                     extend: 'collection',

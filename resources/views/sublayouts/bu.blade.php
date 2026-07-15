@@ -11,6 +11,7 @@
     </div>
     
     <div class="dashboard-grid">
+         @if(auth()->user()->hasPermission('bu.show'))
         <a href="{{ route('bu.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-list-ul"></i>
@@ -19,9 +20,9 @@
                 <h3>Liste des BU</h3>
                 <p>Consulter toutes les Business Units</p>
             </div>
-
         </a>
-        
+        @endif
+         @if(auth()->user()->hasPermission('bu.create'))
         <a href="{{ route('bu.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -32,6 +33,7 @@
             </div>
        
         </a>
+        @endif
     </div>
 </div>
 
@@ -39,12 +41,12 @@
 :root {
     /* Variables harmonisées avec app.blade.php */
     --primary-color: var(--primary, #033d71);
-    --secondary-color: var(--primary-light, #0A8CFF);
+    --secondary-color: var(--primary-light, #033d71);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
     --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);
     --shadow-card: var(--shadow-md, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));

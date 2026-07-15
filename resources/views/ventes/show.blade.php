@@ -231,6 +231,7 @@
                 </div>
                 <div class="app-card-body app-d-grid app-gap-2">
                     @if($vente->statut !== 'Payée')
+                    @if(auth()->user()->hasPermission('ventes.valider'))
                     <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST">
                         @csrf
                         @method('PATCH')
@@ -238,15 +239,20 @@
                             <i class="fas fa-check me-2"></i>Valider la vente
                         </button>
                     </form>
+                    @endif
                     @else
                     <button class="app-btn app-btn-secondary w-100" disabled>
                         <i class="fas fa-check-circle me-2"></i>Vente déjà validée
                     </button>
                     @endif
                     
-                    <button class="app-btn app-btn-info w-100" onclick="window.open('{{ route('ventes.facture', $vente) }}', '_blank')">
-                        <i class="fas fa-print me-2"></i>Imprimer la facture
-                    </button>
+                    <a href="{{ route('ventes.facture', $vente) }}" class="app-btn app-btn-info w-100" target="_blank">
+                        <i class="fas fa-file-pdf me-2"></i>Facture proforma (PDF)
+                    </a>
+
+                    <a href="{{ route('ventes.bon-livraison-client.pdf', $vente) }}" class="app-btn app-btn-outline-danger w-100" target="_blank">
+                        <i class="fas fa-truck me-2"></i>Bon de livraison client (PDF)
+                    </a>
                     
                     <a href="{{ route('ventes.index') }}" class="app-btn app-btn-outline-secondary w-100">
                         <i class="fas fa-arrow-left me-2"></i>Retour à la liste

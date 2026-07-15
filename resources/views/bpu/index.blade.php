@@ -19,6 +19,26 @@
 
 <div class="container-fluid" style="font-size: 12px;">
     <h2 class="mb-4">Bordereaux de prix unitaires</h2>
+
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $message)
+                    <li>{{ $message }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     
     @if($contratId)
         <div class="alert alert-info mb-3">
@@ -28,20 +48,23 @@
         <!-- Navigation entre les sections -->
         <ul class="nav nav-tabs mb-3" id="bpuTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab">BPU Contrat</button>
+                <button class="nav-link active" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#bpu-pane-contrat" type="button" role="tab" aria-controls="bpu-pane-contrat" aria-selected="true">BPU Contrat</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="utilitaires-tab" data-bs-toggle="tab" data-bs-target="#utilitaires" type="button" role="tab">BPU Utilitaires</button>
+                <button class="nav-link" id="utilitaires-tab" data-bs-toggle="tab" data-bs-target="#bpu-pane-utilitaires" type="button" role="tab" aria-controls="bpu-pane-utilitaires" aria-selected="false">BPU Utilitaires</button>
             </li>
         </ul>
     @else
         <h3 class="text-primary mb-3">BPU Utilitaires (Modèles)</h3>
     @endif
     
+    @if(auth()->user()->hasPermission('bpus.create'))
     <button class="btn btn-secondary mb-2" onclick="toggleForm('formCategorie')">Ajouter Catégorie</button>
+    @endif
     <a href="{{ route('bpu.print') }}" class="btn btn-secondary mb-2" target="blank">Afficher le BPU complet</a>
     <a href="{{ route('import.index') }}" class="btn btn-secondary mb-2">Importer un fichier excel</a>
 
+    @if(auth()->user()->hasPermission('bpus.create'))
     <!-- Formulaire d'ajout de catégorie -->
     <form id="formCategorie" action="{{ route('categoriesbpu.store') }}" method="POST" style="display: none;">
         @csrf
@@ -56,38 +79,74 @@
             </div>
         </div>
     </form>
+    @endif
 
     @if($contratId)
         <div class="tab-content" id="bpuTabsContent">
             <!-- Section BPU Contrat -->
-            <div class="tab-pane fade show active" id="contrat" role="tabpanel">
+            <div class="tab-pane fade show active" id="bpu-pane-contrat" role="tabpanel" aria-labelledby="contrat-tab">
                 <h4 class="text-success mb-3">BPU Spécifiques au Contrat (Modifiables)</h4>
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                    <div class="flex-grow-1" style="min-width: 220px;">
+                        <label for="bpuSearchContrat" class="form-label small mb-1">Filtrer par désignation des lignes BPU</label>
+                        <input type="search" id="bpuSearchContrat" class="form-control form-control-sm bpu-search-input" data-bpu-search-root="bpu-pane-contrat" placeholder="Saisir un extrait de désignation…" autocomplete="off">
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Export BPU contrat">
+                        <a href="{{ route('bpu.export.excel', ['scope' => 'contrat']) }}" class="btn btn-outline-success">Exporter Excel</a>
+                        <a href="{{ route('bpu.export.pdf', ['scope' => 'contrat']) }}" class="btn btn-outline-danger" target="_blank" rel="noopener noreferrer">Voir PDF</a>
+                    </div>
+                </div>
                 @foreach ($categoriesContrat as $categorie)
                     @include('bpu.partials.categorie-table', ['categorie' => $categorie, 'type' => 'contrat'])
                 @endforeach
             </div>
             
             <!-- Section BPU Utilitaires -->
-            <div class="tab-pane fade" id="utilitaires" role="tabpanel">
+            <div class="tab-pane fade" id="bpu-pane-utilitaires" role="tabpanel" aria-labelledby="utilitaires-tab">
                 <h4 class="text-info mb-3">BPU Utilitaires (Lecture seule)</h4>
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                    <div class="flex-grow-1" style="min-width: 220px;">
+                        <label for="bpuSearchUtilitaires" class="form-label small mb-1">Filtrer par désignation des lignes BPU</label>
+                        <input type="search" id="bpuSearchUtilitaires" class="form-control form-control-sm bpu-search-input" data-bpu-search-root="bpu-pane-utilitaires" placeholder="Saisir un extrait de désignation…" autocomplete="off">
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Export BPU utilitaires">
+                        <a href="{{ route('bpu.export.excel', ['scope' => 'utilitaires']) }}" class="btn btn-outline-success">Exporter Excel</a>
+                        <a href="{{ route('bpu.export.pdf', ['scope' => 'utilitaires']) }}" class="btn btn-outline-danger" target="_blank" rel="noopener noreferrer">Voir PDF</a>
+                    </div>
+                </div>
                 @foreach ($categories as $categorie)
                     @include('bpu.partials.categorie-table', ['categorie' => $categorie, 'type' => 'utilitaires'])
                 @endforeach
             </div>
         </div>
     @else
+        <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+            <div class="flex-grow-1" style="min-width: 220px;">
+                <label for="bpuSearchSolo" class="form-label small mb-1">Filtrer par désignation des lignes BPU</label>
+                <input type="search" id="bpuSearchSolo" class="form-control form-control-sm bpu-search-input" data-bpu-search-root="bpuSoloRoot" placeholder="Saisir un extrait de désignation…" autocomplete="off">
+            </div>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Export BPU utilitaires">
+                <a href="{{ route('bpu.export.excel', ['scope' => 'utilitaires']) }}" class="btn btn-outline-success">Exporter Excel</a>
+                <a href="{{ route('bpu.export.pdf', ['scope' => 'utilitaires']) }}" class="btn btn-outline-danger" target="_blank" rel="noopener noreferrer">Voir PDF</a>
+            </div>
+        </div>
+        <div id="bpuSoloRoot">
         @foreach ($categories as $categorie)
-        <table width="100%" class="text-center mt-4" border="1" bordercolor="black">
-            <tr bgcolor="#5EB3F6" height="40px">
+        <div class="bpu-categorie-wrap">
+        <table width="100%" class="text-center mt-4 bpu-categorie-table" border="1" bordercolor="black">
+            <tr bgcolor="#033d71" height="40px">
                 <td colspan="16">
                     <div class="row">
                         <div class="col-md-8">
                             <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
                         </div>
+                         @if(auth()->user()->hasPermission('bpus.edit'))
                         <div class="col">
                             <!-- Boutons Modifier et Supprimer -->
                             <button class="btn btn-primary btn-sm form-control" onclick="editCategorie('{{ $categorie->id }}', '{{ $categorie->nom }}')">Modifier</button>
                         </div>
+                        @endif
+                        @if(auth()->user()->hasPermission('bpus.destroy'))
                         <div class="col">
                             <form action="{{ route('categoriesbpu.destroy', $categorie->id) }}" method="POST" style="display:inline;">
                                 @csrf
@@ -95,11 +154,13 @@
                                 <button type="submit" class="btn btn-danger btn-sm form-control">Supprimer</button>
                             </form>
                         </div>
+                        @endif
                     </div>
                 </td>
             </tr>
 
             <!-- Formulaire d'ajout de sous-catégorie -->
+             @if(auth()->user()->hasPermission('bpus.create'))
             <tr>
                 <td colspan="16">
                     <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
@@ -116,6 +177,7 @@
                     </form>
                 </td>
             </tr>
+            @endif
 
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
@@ -124,9 +186,12 @@
                             <div class="col-md-8">
                                 <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
                             </div>
+                            @if(auth()->user()->hasPermission('bpus.edit'))
                             <div class="col-md-2">
                                 <button class="btn btn-warning form-control btn-sm" onclick="editSousCategorie('{{ $sousCategorie->id }}', '{{ $sousCategorie->nom }}')">Modifier</button>
                             </div>
+                            @endif
+                            @if(auth()->user()->hasPermission('bpus.destroy'))
                             <div class="col-md-2">
                                 <form action="{{ route('souscategoriesbpu.destroy', $sousCategorie->id) }}" method="POST" style="display:inline;">
                                     @csrf
@@ -134,11 +199,13 @@
                                     <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </div>
+                            @endif
                         </div>
                     </td>
                 </tr>
 
                 <!-- Formulaire d'ajout de rubrique -->
+                 @if(auth()->user()->hasPermission('bpus.create'))
                 <tr>
                     <td colspan="16">
                         <form action="{{ route('rubriques.store') }}" method="POST">
@@ -155,17 +222,24 @@
                         </form>
                     </td>
                 </tr>
+                @endif
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
-                    <tr bgcolor="#3A6B8C" class="text-white" height="40px">
+                    @php
+                        $bpuGroupIdSolo = 'g-' . $categorie->id . '-' . $sousCategorie->id . '-' . $rubrique->id;
+                    @endphp
+                    <tr bgcolor="#3A6B8C" class="text-white" height="40px" data-bpu-group="{{ $bpuGroupIdSolo }}">
                         <td colspan="16">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
                                 </div>
+                                @if(auth()->user()->hasPermission('bpus.edit'))
                                 <div class="col-md-2">
                                     <button class="btn btn-warning form-control btn-sm" onclick="editRubrique('{{ $rubrique->id }}', '{{ $rubrique->nom }}')">Modifier</button>
                                 </div>
+                                @endif
+                                @if(auth()->user()->hasPermission('bpus.destroy'))
                                 <div class="col-md-2">
                                     <form action="{{ route('rubriques.destroy', $rubrique->id) }}" method="POST" style="display:inline;">
                                         @csrf
@@ -173,11 +247,12 @@
                                         <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                                     </form>
                                 </div>
+                                @endif
                             </div>
                         </td>
                     </tr>
 
-                    <tr>
+                    <tr data-bpu-group="{{ $bpuGroupIdSolo }}">
                         <td>Désignation</td>
                         <td>Unité</td>
                         <td>Matériaux</td>
@@ -197,7 +272,7 @@
                     </tr>
                     
                     @foreach ($rubrique->bpus as $bpu)
-                        <tr>
+                        <tr data-bpu-group="{{ $bpuGroupIdSolo }}" data-bpu-designation-haystack="{{ e(mb_strtolower(trim((string) ($bpu->designation ?? '')), 'UTF-8')) }}">
                             <td>{{ $bpu->designation }}</td>
                             <td>{{ $bpu->unite }}</td>
                             <td>{{ number_format($bpu->materiaux, 2) }}</td>
@@ -214,18 +289,22 @@
                             <td>{{ number_format($bpu->marge_nette, 2) }}</td>
                             <td>{{ number_format($bpu->pu_ht, 2) }}</td>
                             <td>
+                                @if(auth()->user()->hasPermission('bpus.edit'))
                                 <a href="{{ route('bpus.edit', $bpu->id) }}" class="btn btn-warning btn-sm">Modifier</a>
+                                @endif
+                                @if(auth()->user()->hasPermission('bpus.destroy'))
                                 <form action="{{ route('bpus.destroy', $bpu->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" name="redirect_to" value="bpu.index">
                                     <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
-
-                    <tr>
+                    @if(auth()->user()->hasPermission('bpus.store'))
+                    <tr data-bpu-group="{{ $bpuGroupIdSolo }}">
                         <td colspan="16">
                             @if(session('success'))
                                 <div class="alert alert-success">
@@ -238,7 +317,7 @@
                                     {{ session('error') }}
                                 </div>
                             @endif
-
+                            
                             <form action="{{ route('bpus.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="id_rubrique" value="{{ $rubrique->id }}">
@@ -275,18 +354,22 @@
                                         </select>
                                     </div>
                                 </div>
-
+                                @if(auth()->user()->hasPermission('bpus.create'))
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-primary">Ajouter une ligne</button>
                                 </div>
+                                @endif
                             </form>
                         </td>
+                        @endif
                     </tr>
                 @endforeach
             @endforeach
         </table>
         <br>
+        </div>
     @endforeach
+        </div>
     @endif
 </div>
 
@@ -404,6 +487,108 @@
             updateSelectedCount();
         }
     });
+
+    (function () {
+        function bpuNormalize(s) {
+            try {
+                return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            } catch (err) {
+                return (s || '').toString().toLowerCase().trim();
+            }
+        }
+
+        function setTrVisible(tr, visible) {
+            if (visible) {
+                tr.style.removeProperty('display');
+            } else {
+                tr.style.display = 'none';
+            }
+        }
+
+        window.bpuApplySearch = function (rootEl, rawQuery) {
+            if (!rootEl) return;
+            var q = bpuNormalize(rawQuery);
+            rootEl.querySelectorAll('.bpu-categorie-wrap').forEach(function (wrap) {
+                var table = wrap.querySelector('table.bpu-categorie-table') || wrap.querySelector('table');
+                if (!table) return;
+
+                if (!q) {
+                    wrap.style.removeProperty('display');
+                    table.querySelectorAll('tr').forEach(function (tr) { setTrVisible(tr, true); });
+                    return;
+                }
+
+                var seenGids = {};
+                var gids = [];
+                table.querySelectorAll('tr[data-bpu-group]').forEach(function (tr) {
+                    var gid = tr.getAttribute('data-bpu-group');
+                    if (gid && !seenGids[gid]) {
+                        seenGids[gid] = true;
+                        gids.push(gid);
+                    }
+                });
+
+                var tableHasMatch = false;
+                gids.forEach(function (gid) {
+                    var rows = table.querySelectorAll('tr[data-bpu-group="' + gid + '"]');
+                    var lineRows = Array.prototype.filter.call(rows, function (tr) {
+                        return tr.hasAttribute('data-bpu-designation-haystack');
+                    });
+                    var anyMatch = lineRows.some(function (tr) {
+                        var dh = bpuNormalize(tr.getAttribute('data-bpu-designation-haystack') || '');
+                        return dh.indexOf(q) !== -1;
+                    });
+                    if (anyMatch) tableHasMatch = true;
+
+                    Array.prototype.forEach.call(rows, function (tr) {
+                        if (tr.hasAttribute('data-bpu-designation-haystack')) {
+                            var dh = bpuNormalize(tr.getAttribute('data-bpu-designation-haystack') || '');
+                            setTrVisible(tr, dh.indexOf(q) !== -1);
+                        } else {
+                            setTrVisible(tr, anyMatch);
+                        }
+                    });
+                });
+
+                table.querySelectorAll('tr:not([data-bpu-group])').forEach(function (tr) {
+                    setTrVisible(tr, tableHasMatch);
+                });
+
+                if (!tableHasMatch) {
+                    wrap.style.display = 'none';
+                } else {
+                    wrap.style.removeProperty('display');
+                }
+            });
+        };
+
+        function bindBpuSearchInputs() {
+            document.querySelectorAll('.bpu-search-input').forEach(function (inp) {
+                if (inp.getAttribute('data-bpu-search-bound') === '1') return;
+                inp.setAttribute('data-bpu-search-bound', '1');
+
+                function runSearch() {
+                    var rootId = inp.getAttribute('data-bpu-search-root');
+                    var root = rootId ? document.getElementById(rootId) : null;
+                    if (!root) {
+                        var sel = inp.getAttribute('data-bpu-search-scope');
+                        root = sel ? document.querySelector(sel) : null;
+                    }
+                    if (root) window.bpuApplySearch(root, inp.value);
+                }
+
+                inp.addEventListener('input', runSearch);
+                inp.addEventListener('search', runSearch);
+                inp.addEventListener('keyup', runSearch);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindBpuSearchInputs);
+        } else {
+            bindBpuSearchInputs();
+        }
+    })();
 </script>
 
 <script src="{{ asset('js/bpu-calculator.js') }}"></script>

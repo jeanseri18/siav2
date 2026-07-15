@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Projet extends Model
 {
@@ -34,7 +35,95 @@ class Projet extends Model
 
     public function contrats()
     {
-        return $this->hasMany(Contrat::class, 'nom_projet', 'nom_projet');
+        return $this->hasMany(Contrat::class, 'id_projet');
+    }
+
+    /**
+     * Recalcule les dates du projet à partir de l'enveloppe des contrats (min début, max fin).
+     */
+    public function syncDatesFromContrats(): void
+    {
+        if (! $this->exists) {
+            return;
+        }
+
+        $count = Contrat::where('id_projet', $this->id)->count();
+        if ($count === 0) {
+            $this->forceFill([
+                'date_debut' => null,
+                'date_fin' => null,
+            ])->save();
+
+            return;
+        }
+
+        $minDebut = DB::table('contrats')->where('id_projet', $this->id)->min('date_debut');
+        $maxFin = DB::table('contrats')->where('id_projet', $this->id)->max('date_fin');
+
+        $this->forceFill([
+            'date_debut' => $minDebut,
+            'date_fin' => $maxFin,
+        ])->save();
+    }
+
+    /**
+     * Recalcule montant_global (enveloppe marché), chiffre d'affaires (factures) et dépenses (bons de commande).
+     */
+    public function syncFinancialAggregates(): void
+    {
+        if (! $this->exists) {
+            return;
+        }
+
+        $this->loadMissing(['contrats.dqes']);
+
+        $montantGlobal = (float) $this->contrats->sum(function (Contrat $contrat) {
+            $m = (float) ($contrat->montant ?? 0);
+            if ($m > 0) {
+                return $m;
+            }
+
+            $validated = $contrat->dqes
+                ->where('statut', 'validé')
+                ->sortByDesc(fn ($d) => $d->updated_at?->timestamp ?? $d->created_at?->timestamp ?? 0)
+                ->first();
+
+            if ($validated && (float) $validated->montant_total_ttc > 0) {
+                return (float) $validated->montant_total_ttc;
+            }
+
+            $latest = $contrat->dqes
+                ->sortByDesc(fn ($d) => $d->updated_at?->timestamp ?? $d->created_at?->timestamp ?? 0)
+                ->first();
+
+            if ($latest && (float) $latest->montant_total_ttc > 0) {
+                return (float) $latest->montant_total_ttc;
+            }
+
+            return 0.0;
+        });
+
+        $contratIds = $this->contrats->pluck('id');
+        $chiffreAffaire = $contratIds->isEmpty()
+            ? 0.0
+            : (float) Facture::whereIn('id_contrat', $contratIds)
+                ->where(function ($q) {
+                    $q->whereNull('statut')->orWhere('statut', '<>', 'annulée');
+                })
+                ->sum('montant_total');
+
+        $totalDepenses = (float) BonCommande::where('projet_id', $this->id)
+            ->where(function ($q) {
+                $q->whereNull('statut')->orWhere('statut', '<>', 'annulée');
+            })
+            ->sum('montant_total');
+
+        $this->forceFill([
+            'montant_global' => $montantGlobal,
+            'chiffre_affaire_global' => $chiffreAffaire,
+            'total_depenses' => $totalDepenses,
+            'updated_by' => auth()->id(),
+        ])->save();
     }
     
     public function conducteurTravaux()

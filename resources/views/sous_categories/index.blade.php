@@ -16,9 +16,12 @@
                 <i class="fas fa-sitemap me-2"></i>Liste des Sous-Catégories
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'sous_categories')" />
+                 @if(auth()->user()->hasPermission('sous_categories.create'))
                 <a href="{{ route('sous_categories.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une sous-catégorie
                 </a>
+                @endif
             </div>
         </div>
 
@@ -64,14 +67,21 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <form action="{{ route('sous_categories.destroy', $sousCategorie->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    @if(auth()->user()->hasPermission('sous_categories.destroy'))
+                                    <li>
+                                        <form action="{{ route('sous_categories.destroy', $sousCategorie->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                </ul>
                             </div>
                         </td>
                     </tr>

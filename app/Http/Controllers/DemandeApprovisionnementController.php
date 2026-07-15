@@ -9,14 +9,48 @@ use App\Models\DemandeApprovisionnement;
 use App\Models\LigneDemandeApprovisionnement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Support\PdfBranding;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeApprovisionnementController extends Controller
 {
     public function index()
     {
-        $demandes = DemandeApprovisionnement::with(['user', 'projet', 'lignes.article'])->get();
+        $demandes = DemandeApprovisionnement::with(['user', 'projet', 'lignes.article'])
+            ->withCount('demandeAchats')
+            ->get();
         return view('demande_approvisionnements.index', compact('demandes'));
+    }
+
+    public function exportListePdf()
+    {
+        $buId = session('selected_bu') ? (int) session('selected_bu') : null;
+        $demandes = $this->demandesApprovisionnementForListing($buId);
+        $pdfBranding = PdfBranding::forBu($buId);
+
+        $pdf = PDF::loadView('demande_approvisionnements.liste-export', [
+            'demandes' => $demandes,
+            'pdfBranding' => $pdfBranding,
+            'documentTitle' => 'Liste des demandes d\'approvisionnement',
+        ])
+            ->setPaper('a4', 'landscape')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
+        return $pdf->stream('liste-demandes-approvisionnement-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+    }
+
+    private function demandesApprovisionnementForListing(?int $buId = null)
+    {
+        $query = DemandeApprovisionnement::with(['user', 'projet', 'approbateur', 'lignes'])
+            ->withCount('lignes')
+            ->orderByDesc('date_demande')
+            ->orderByDesc('id');
+
+        if ($buId) {
+            $query->whereHas('projet', fn ($q) => $q->where('bu_id', $buId));
+        }
+
+        return $query->get();
     }
 
     public function create()
@@ -86,6 +120,7 @@ class DemandeApprovisionnementController extends Controller
     public function show(DemandeApprovisionnement $demandeApprovisionnement)
     {
         $demandeApprovisionnement->load(['user', 'projet', 'approbateur', 'lignes.article.uniteMesure']);
+        $demandeApprovisionnement->loadCount('demandeAchats');
         return view('demande_approvisionnements.show', compact('demandeApprovisionnement'));
     }
 
@@ -177,21 +212,41 @@ class DemandeApprovisionnementController extends Controller
                 ->with('error', 'Cette demande ne peut pas être approuvée');
         }
 
+        $lignesASupprimer = array_filter((array) $request->input('lignes_a_supprimer', []));
+        foreach ($lignesASupprimer as $ligneId) {
+            $demandeApprovisionnement->lignes()->whereKey($ligneId)->delete();
+        }
+
+        $demandeApprovisionnement->load('lignes');
+        if ($demandeApprovisionnement->lignes->isEmpty()) {
+            return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
+                ->with('error', 'Impossible d\'approuver : la demande ne contient plus aucune ligne d\'article.');
+        }
+
         $request->validate([
-            'ligne_ids' => 'required|array',
-            'ligne_ids.*' => 'exists:lignes_demande_approvisionnement,id',
             'quantite_approuvee' => 'required|array',
-            'quantite_approuvee.*' => 'integer|min:0'
+            'quantite_approuvee.*' => 'integer|min:0',
+            'lignes_a_supprimer' => 'nullable|array',
+            'lignes_a_supprimer.*' => 'integer|exists:lignes_demande_approvisionnement,id',
         ]);
 
-        // Mettre à jour les quantités approuvées
-        foreach ($request->ligne_ids as $index => $ligneId) {
-            $ligne = $demandeApprovisionnement->lignes()->find($ligneId);
-            if ($ligne) {
-                $ligne->update([
-                    'quantite_approuvee' => $request->quantite_approuvee[$index]
-                ]);
+        $clesQuantites = collect($request->quantite_approuvee ?? [])->keys()->map(fn ($k) => (int) $k);
+        foreach ($demandeApprovisionnement->lignes as $ligne) {
+            if (! $clesQuantites->contains((int) $ligne->id)) {
+                return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
+                    ->with('error', 'Chaque ligne restante doit avoir une quantité approuvée.');
             }
+        }
+
+        foreach ($request->quantite_approuvee as $ligneId => $quantite) {
+            $ligne = $demandeApprovisionnement->lignes()->whereKey($ligneId)->first();
+            if (! $ligne) {
+                return redirect()->route('demande-approvisionnements.show', $demandeApprovisionnement)
+                    ->with('error', 'Ligne d\'article invalide.');
+            }
+            $ligne->update([
+                'quantite_approuvee' => $quantite,
+            ]);
         }
 
         // Mettre à jour le statut de la demande
@@ -244,8 +299,11 @@ class DemandeApprovisionnementController extends Controller
             'approbateur', 
             'lignes.article.uniteMesure'
         ])->findOrFail($id);
+
+        $buId = $demandeApprovisionnement->projet?->bu_id ?? (session('selected_bu') ? (int) session('selected_bu') : null);
+        $pdfBranding = PdfBranding::forBu($buId);
         
-        $pdf = PDF::loadView('demande_approvisionnements.pdf', compact('demandeApprovisionnement'))
+        $pdf = PDF::loadView('demande_approvisionnements.pdf', compact('demandeApprovisionnement', 'pdfBranding'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->download('Demande_Approvisionnement_' . $demandeApprovisionnement->reference . '.pdf');

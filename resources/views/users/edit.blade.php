@@ -75,8 +75,13 @@
                                         <i class="fas fa-user-tag me-2"></i>Rôle
                                     </label>
                                     <select name="role" id="role" class="app-form-select">
-                                        <option value="employe" {{ $user->role == 'employe' ? 'selected' : '' }}>employe</option>
-                                        <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
+                                        @foreach($roles as $value => $label)
+                                            <option value="{{ $value }}" {{ old('role', $user->role) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                        @php $roleKeys = array_keys($roles); @endphp
+                                        @if($user->role && ! in_array($user->role, $roleKeys, true))
+                                            <option value="{{ $user->role }}" selected>{{ $user->role }} (actuel)</option>
+                                        @endif
                                     </select>
                                     <div class="app-form-text">Niveau d'accès de l'utilisateur</div>
                                 </div>

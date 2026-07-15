@@ -18,9 +18,12 @@
                 <i class="fas fa-file-invoice-dollar me-2"></i>Liste des Factures
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('factures.export.pdf')" />
+                @if(auth()->user()->hasPermission('facture.create'))
                 <a href="{{ route('factures.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une nouvelle facture
                 </a>
+                @endif
 
                    <a href="{{ route('factures.statistics') }}" class="app-btn app-btn-info app-btn-icon me-2">
         <i class="fas fa-chart-bar"></i> Statistiques
@@ -127,23 +130,37 @@
                             </td>
                             <td>{{ \Carbon\Carbon::parse($facture->date_emission)->format('d/m/Y') }}</td>
                             <td>
-                              <div class="app-d-flex app-gap-2">
-        <a href="{{ route('factures.show', $facture->id) }}" class="app-btn app-btn-primary app-btn-sm app-btn-icon">
-            <i class="fas fa-eye"></i>
-        </a>
-        
-        <a href="{{ route('factures.edit', $facture->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
-            <i class="fas fa-edit"></i>
-        </a>
-        
-        <form action="{{ route('factures.destroy', $facture->id) }}" method="POST" class="delete-form" style="display:inline;">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
-                <i class="fas fa-trash"></i>
-            </button>
-        </form>
-    </div>
+                                <div class="dropdown">
+                                    <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                         @if(auth()->user()->hasPermission('facture.show'))
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('factures.show', $facture->id) }}">
+                                                <i class="fas fa-eye me-2"></i>Voir les détails
+                                            </a>
+                                        </li>
+                                        @endif
+                                         @if(auth()->user()->hasPermission('facture.edit'))
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('factures.edit', $facture->id) }}">
+                                                <i class="fas fa-edit me-2"></i>Modifier
+                                            </a>
+                                        </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('facture.destroy'))
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('factures.destroy', $facture->id) }}" method="POST" class="delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                    <i class="fas fa-trash me-2"></i>Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                        @endif
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

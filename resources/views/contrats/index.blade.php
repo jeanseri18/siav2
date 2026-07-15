@@ -19,9 +19,14 @@
                 <i class="fas fa-file-contract me-2"></i>Liste des Contrats
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('contrats.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
+                @if(auth()->user()->hasPermission('contrats.create'))
                 <a href="{{ route('contrats.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un nouveau contrat
                 </a>
+                @endif
             </div>
         </div>
 
@@ -74,21 +79,29 @@
                                     <span class="text-muted">Non assigné</span>
                                 @endif
                             </td>
-                            <td>
-                                @if($contrat->statut == 'en cours')
-                                    <span class="app-badge app-badge-warning app-badge-pill">
-                                        <i class="fas fa-spinner me-1"></i> En cours
-                                    </span>
-                                @elseif($contrat->statut == 'terminé')
-                                    <span class="app-badge app-badge-success app-badge-pill">
-                                        <i class="fas fa-check-circle me-1"></i> Terminé
-                                    </span>
-                                @elseif($contrat->statut == 'annulé')
-                                    <span class="app-badge app-badge-danger app-badge-pill">
-                                        <i class="fas fa-ban me-1"></i> Annulé
-                                    </span>
-                                @endif
-                            </td>
+                            
+                        <td>
+                            
+                            @if($contrat->statut == 'en cours')
+                                <span class="app-badge app-badge-warning app-badge-pill">
+                                    <i class="fas fa-spinner me-1"></i> En cours
+                                </span>
+                            @elseif($contrat->statut == 'terminé')
+                                <span class="app-badge app-badge-success app-badge-pill">
+                                    <i class="fas fa-check-circle me-1"></i> Terminé
+                                </span>
+                            @elseif($contrat->statut == 'annulé')
+                                <span class="app-badge app-badge-danger app-badge-pill">
+                                    <i class="fas fa-ban me-1"></i> Annulé
+                                </span>
+                            @elseif($contrat->statut == 'non débuté')
+                                <span class="app-badge app-badge-secondary app-badge-pill">
+                                    <i class="fas fa-hourglass-start me-1"></i> Non débuté
+                                </span>
+                            @else
+                                <span class="app-badge app-badge-secondary app-badge-pill">{{ ucfirst($contrat->statut) }}</span>
+                            @endif
+                        </td>
                             <td>
                                 <div class="dropdown">
                                     <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -100,11 +113,30 @@
                                                 <i class="fas fa-eye me-2"></i>Voir les détails
                                             </a>
                                         </li>
+                                        @if(auth()->user()->hasPermission('contrats.edit'))
                                         <li>
                                             <a class="dropdown-item" href="{{ route('contrats.edit', $contrat->id) }}">
                                                 <i class="fas fa-edit me-2"></i>Modifier
                                             </a>
                                         </li>
+                                        @endif
+                                         @if(auth()->user()->hasPermission('contrats.update-statut'))
+                                        <li><h6 class="dropdown-header text-muted small mb-0">Changer le statut</h6></li>
+                                        @foreach (['non débuté' => 'Non débuté', 'en cours' => 'En cours', 'terminé' => 'Terminé', 'annulé' => 'Annulé'] as $valeurStatut => $libelleStatut)
+                                            @if ($contrat->statut !== $valeurStatut)
+                                                <li>
+                                                    <form action="{{ route('contrats.update-statut', $contrat->id) }}" method="POST" class="m-0">
+                                                        @csrf
+                                                        <input type="hidden" name="statut" value="{{ $valeurStatut }}">
+                                                        <button type="submit" class="dropdown-item py-2 text-start w-100 border-0 bg-transparent">
+                                                            <i class="fas fa-flag me-2 text-primary"></i>{{ $libelleStatut }}
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                        @endif
+                                         @if(auth()->user()->hasPermission('contrats.destroy'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('contrats.destroy', $contrat->id) }}" method="POST" class="delete-form">
@@ -115,8 +147,8 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     </ul>
-                                </div>
                                 </div>
                             </td>
                         </tr>

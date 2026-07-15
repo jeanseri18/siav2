@@ -115,7 +115,7 @@
                                     <i class="fas fa-calendar-plus me-2"></i>Membre depuis
                                 </label>
                                 <div class="app-form-control bg-light">
-                                    {{ $user->created_at->format('d/m/Y à H:i') }}
+                                    {{ $user->created_at?->format('d/m/Y à H:i') ?? '—' }}
                                 </div>
                             </div>
                         </div>
@@ -125,7 +125,7 @@
                                     <i class="fas fa-clock me-2"></i>Dernière modification
                                 </label>
                                 <div class="app-form-control bg-light">
-                                    {{ $user->updated_at->format('d/m/Y à H:i') }}
+                                    {{ $user->updated_at?->format('d/m/Y à H:i') ?? '—' }}
                                 </div>
                             </div>
                         </div>
@@ -152,7 +152,7 @@
                             <i class="fas fa-lock fa-2x text-success"></i>
                             <div>
                                 <h6 class="mb-1">Mot de passe</h6>
-                                <small class="text-muted">Dernière modification: {{ $user->updated_at->format('d/m/Y') }}</small>
+                                <small class="text-muted">Dernière modification: {{ $user->updated_at?->format('d/m/Y') ?? '—' }}</small>
                             </div>
                         </div>
                     </div>
@@ -206,7 +206,7 @@
                         <span class="text-muted">
                             <i class="fas fa-calendar-day me-2"></i>Compte créé depuis
                         </span>
-                        <span class="app-fw-bold">{{ $user->created_at->diffForHumans() }}</span>
+                        <span class="app-fw-bold">{{ $user->created_at?->diffForHumans() ?? '—' }}</span>
                     </div>
                     <div class="app-d-flex app-justify-content-between app-align-items-center mb-3 pb-3 border-bottom">
                         <span class="text-muted">
@@ -238,14 +238,14 @@
                         <i class="fas fa-bolt me-2"></i>Actions Rapides
                     </h3>
                 </div>
-                <div class="app-card-body app-d-grid app-gap-2">
+                <div class="app-card-body app-d-grid app-gap-3">
                     <a href="{{ route('profile.edit') }}" class="app-btn app-btn-warning w-100">
                         <i class="fas fa-edit me-2"></i>Modifier le profil
                     </a>
                     <a href="{{ route('profile.edit-password') }}" class="app-btn app-btn-primary w-100">
                         <i class="fas fa-key me-2"></i>Changer le mot de passe
                     </a>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-danger w-100" onclick="return confirm('Êtes-vous sûr de vouloir vous déconnecter ?')">
                             <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter

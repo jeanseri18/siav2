@@ -62,6 +62,7 @@
         <div class="app-card-header">
             <h2 class="app-card-title"><i class="fas fa-list me-2"></i>Liste des mouvements</h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('banque.mouvements.export.pdf', array_filter(['banque_id' => $banqueId ?? null]))" />
                 <span class="app-badge app-badge-info app-badge-pill">BU: {{ session('selected_bu') }}</span>
             </div>
         </div>
@@ -78,6 +79,7 @@
                         <th>Montant</th>
                         <th>Pièce</th>
                         <th>Bénéficiaire</th>
+                        <th>Actions</th>
                         <th>Passé (réel)</th>
                     </tr>
                 </thead>
@@ -101,6 +103,28 @@
                         <td>{{ $mvt->numero_piece ?: '-' }}</td>
                         <td>{{ $mvt->beneficiaire ?: '-' }}</td>
                         <td>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('banque.mouvements.edit', $mvt) }}">
+                                            <i class="fas fa-pen me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('banque.mouvements.destroy', $mvt) }}" class="delete-form-mvt">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn-mvt" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>
                             <form method="POST" action="{{ route('banque.rapprochement.toggle', $mvt) }}">
                                 @csrf
                                 @method('PATCH')
@@ -113,12 +137,36 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted">Aucun mouvement trouvé</td>
+                        <td colspan="10" class="text-center text-muted">Aucun mouvement trouvé</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($mouvements->hasPages())
+        <div class="app-card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 px-3 py-3 border-top">
+            <span class="text-muted small">
+                Affichage de {{ $mouvements->firstItem() }} à {{ $mouvements->lastItem() }} sur {{ $mouvements->total() }} mouvement(s)
+            </span>
+            <div class="app-pagination mb-0">
+                {{ $mouvements->links() }}
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('.delete-btn-mvt').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('Supprimer ce mouvement bancaire ?')) {
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+@endpush

@@ -16,11 +16,13 @@
             <h2 class="app-card-title">
                 <i class="fas fa-file-alt me-2"></i>Liste des Documents
             </h2>
+            @if(auth()->user()->hasPermission('documents.create'))
             <div class="app-card-actions">
                 <a href="{{ route('documents.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un document
                 </a>
             </div>
+            @endif
         </div>
 
         @if(session('success'))
@@ -62,6 +64,7 @@
                                 <i class="fas fa-eye me-1"></i> Voir
                             </a>
                         </td>
+                         @if(auth()->user()->hasPermission('documents.destroy'))
                         <td>
                             <div class="app-d-flex app-gap-2">
                                 <form action="{{ route('documents.destroy', $document->id) }}" method="POST" class="delete-form">
@@ -73,6 +76,7 @@
                                 </form>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>

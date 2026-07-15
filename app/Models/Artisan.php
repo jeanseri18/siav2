@@ -34,6 +34,11 @@ class Artisan extends Model {
         return $this->hasMany(Contrat::class, 'id_artisan');
     }
 
+    public function corpMetier()
+    {
+        return $this->belongsTo(CorpMetier::class, 'id_corpmetier');
+    }
+
     public function prestations() {
         return $this->hasMany(Prestation::class, 'id_artisan');
     }

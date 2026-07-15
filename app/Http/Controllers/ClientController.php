@@ -8,6 +8,8 @@ use App\Models\RegimeImposition;
 use App\Models\ModePaiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class ClientController extends Controller
 {
@@ -22,11 +24,40 @@ class ClientController extends Controller
         }
     
         // Récupérer les clients associés à l'ID du bus
-        $clients = ClientFournisseur::where('type', 'client')
-                                    ->where('id_bu', $id_bu)  // Filtrage selon l'ID du bus
-                                    ->get();
+        $clients = $this->clientsForListing((int) $id_bu);
     
         return view('clients.index', compact('clients'));
+    }
+
+    public function exportPdf()
+    {
+        $id_bu = session('selected_bu');
+        if (! $id_bu) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        $clients = $this->clientsForListing((int) $id_bu);
+        $pdfBranding = PdfBranding::forBu((int) $id_bu);
+
+        $pdf = Pdf::loadView('clients.liste-export', [
+            'clients' => $clients,
+            'pdfBranding' => $pdfBranding,
+            'documentTitle' => 'Liste des clients',
+        ])
+            ->setPaper('a4', 'landscape')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
+        return $pdf->stream('liste-clients-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+    }
+
+    private function clientsForListing(int $buId)
+    {
+        return ClientFournisseur::with('bus')
+            ->where('type', 'client')
+            ->where('id_bu', $buId)
+            ->orderBy('nom_raison_sociale')
+            ->orderBy('code')
+            ->get();
     }
     
 

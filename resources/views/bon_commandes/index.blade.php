@@ -11,7 +11,8 @@
 @section('content')
 
 <div class=" app-fade-in">
-    
+    <x-stock-flux-nav module="bon_commande" context="list" />
+
     <!-- Statistiques rapides -->
     <div class="row mt-4">
         <div class="col-md-3">
@@ -57,9 +58,17 @@
                 <i class="fas fa-file-invoice me-2"></i>Liste des Bons de Commande
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('bon-commandes.export.pdf')" />
+                @if(auth()->user()->hasPermission('demande-cotations.show'))
+                <a href="{{ route('demande-cotations.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
+                    <i class="fas fa-calculator"></i> Cotations
+                </a>
+                @endif
+                @if(auth()->user()->hasPermission('bon-commandes.create'))
                 <a href="{{ route('bon-commandes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouveau Bon
                 </a>
+                @endif
             </div>
         </div>
 
@@ -145,35 +154,46 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('bon-commandes.show', $bonCommande) }}" 
-                                   class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                @if($bonCommande->statut == 'en attente')
-                                <a href="{{ route('bon-commandes.edit', $bonCommande) }}" 
-                                   class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <form action="{{ route('bon-commandes.destroy', $bonCommande) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                                @endif
-                                
-                                @if($bonCommande->statut == 'en attente')
-                                <form action="{{ route('bon-commandes.confirm', $bonCommande) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Confirmer">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </form>
-                                @endif
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('bon-commandes.show', $bonCommande) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    @if($bonCommande->statut == 'en attente')
+                                    @if(auth()->user()->hasPermission('bon-commandes.edit'))
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('bon-commandes.edit', $bonCommande) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('bon-commandes.confirm'))
+                                    <li>
+                                        <form action="{{ route('bon-commandes.confirm', $bonCommande) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-success" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-check me-2"></i>Confirmer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('bon-commandes.destroy'))
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('bon-commandes.destroy', $bonCommande) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                    @endif
+                                </ul>
                             </div>
                         </td>
                     </tr>

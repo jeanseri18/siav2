@@ -17,6 +17,7 @@
                 <i class="fas fa-bookmark me-2"></i>Liste des Références
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'references')" />
                 <a href="{{ route('references.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une référence
                 </a>

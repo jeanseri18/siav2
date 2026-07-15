@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use App\Models\Projet;
 use App\Models\Article;
+use App\Http\Controllers\Concerns\ExportsListPdf;
 use Illuminate\Http\Request;
 
 class DocumentController extends Controller
 {
+    use ExportsListPdf;
+
     /**
      * Affiche la liste des documents.
      */
@@ -21,6 +24,31 @@ class DocumentController extends Controller
         $documents = Document::where('id_projet', $projet_id)->get();
     
         return view('documents.index', compact('documents','projets','articles'));
+    }
+
+    public function exportListePdf()
+    {
+        $projetId = session('projet_id');
+        $documents = Document::with('projet')
+            ->when($projetId, fn ($q) => $q->where('id_projet', $projetId))
+            ->orderBy('nom')
+            ->get();
+
+        $rows = [];
+        foreach ($documents as $document) {
+            $rows[] = [
+                $document->nom,
+                $document->projet?->nom ?? '—',
+                $document->created_at?->format('d/m/Y') ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des documents',
+            ['Nom', 'Projet', 'Date ajout'],
+            $rows,
+            'liste-documents'
+        );
     }
     public function index_contrat()
     {

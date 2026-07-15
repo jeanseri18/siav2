@@ -6,12 +6,43 @@ use App\Models\Prestation;
 use App\Models\Contrat;
 use App\Models\Artisan;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Concerns\ExportsListPdf;
+use App\Support\PdfBranding;
 
 class FactureController extends Controller
 {
+    use ExportsListPdf;
+
     public function index() {
         $factures = Facture::with(['prestation', 'contrat', 'artisan'])->get();
         return view('factures.index', compact('factures'));
+    }
+
+    public function exportListePdf()
+    {
+        $factures = Facture::with(['prestation', 'contrat', 'artisan'])
+            ->orderByDesc('date_emission')
+            ->get();
+
+        $rows = [];
+        foreach ($factures as $facture) {
+            $type = $facture->id_prestation ? 'Prestation' : ($facture->id_contrat ? 'Contrat' : ($facture->id_artisan ? 'Artisan' : '—'));
+            $rows[] = [
+                $facture->num,
+                $type,
+                $facture->prestation?->prestation_titre ?? $facture->contrat?->ref_contrat ?? $facture->artisan?->nom ?? '—',
+                $facture->date_emission ? (\Illuminate\Support\Carbon::parse($facture->date_emission)->format('d/m/Y')) : '—',
+                number_format((float) ($facture->montant_total ?? $facture->montant_ttc ?? 0), 0, ',', ' ').' FCFA',
+                $facture->statut ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des factures',
+            ['N°', 'Type', 'Référence', 'Date émission', 'Montant', 'Statut'],
+            $rows,
+            'liste-factures'
+        );
     }
 
     public function create() {
@@ -157,10 +188,13 @@ class FactureController extends Controller
      */
     public function generatePDF($id)
     {
-        $facture = Facture::with(['prestation', 'contrat', 'artisan'])->findOrFail($id);
+        $facture = Facture::with(['prestation', 'contrat.projet', 'artisan'])->findOrFail($id);
+        
+        $buId = $facture->contrat?->projet?->bu_id ?? (session('selected_bu') ? (int) session('selected_bu') : null);
+        $pdfBranding = PdfBranding::forBu($buId);
         
         // Génération du PDF (nécessite l'installation d'un package comme dompdf)
-        $pdf = \PDF::loadView('factures.pdf', compact('facture'));
+        $pdf = \PDF::loadView('factures.pdf', compact('facture', 'pdfBranding'));
         
         return $pdf->download('Facture_'.$facture->num.'.pdf');
     }

@@ -2,7 +2,7 @@
 {{-- Page de sélection BU améliorée --}}
 @extends('layouts.auth')
 
-@section('title', 'Sélection BU | SIA')
+@section('title', 'Sélection BU')
 
 @section('content')
 <div class="container">

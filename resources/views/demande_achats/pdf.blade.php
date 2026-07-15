@@ -19,10 +19,7 @@
             border-bottom: 2px solid #dc3545;
             padding-bottom: 20px;
         }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
         .company-info {
             text-align: right;
         }
@@ -132,15 +129,16 @@
     </style>
 </head>
 <body>
+@php
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+@endphp
     <div class="header">
         <div>
-            @if($demandeAchat->user && $demandeAchat->user->bus && $demandeAchat->user->bus->logo)
-                <img src="{{ public_path('storage/' . $demandeAchat->user->bus->logo) }}" alt="Logo" class="logo">
-            @endif
+            @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo'])
         </div>
         <div class="company-info">
             <div class="title">DEMANDE D'ACHAT</div>
-            <div class="subtitle">{{ $demandeAchat->user && $demandeAchat->user->bus ? $demandeAchat->user->bus->nom : 'Entreprise' }}</div>
+            <div class="subtitle">{{ $pdfBranding['nom_entreprise'] }}</div>
         </div>
     </div>
 
@@ -285,9 +283,7 @@
 
     <div class="footer">
         <p>Document généré le {{ date('d/m/Y H:i') }}</p>
-        @if($demandeAchat->user && $demandeAchat->user->bus)
-        <p>{{ $demandeAchat->user->bus->nom }}</p>
-        @endif
+        <p>{{ $pdfBranding['nom_entreprise'] }}</p>
     </div>
 </body>
 </html>

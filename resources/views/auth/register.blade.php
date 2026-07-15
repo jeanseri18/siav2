@@ -1,7 +1,7 @@
 {{-- Page d'inscription améliorée --}}
 @extends('layouts.auth')
 
-@section('title', 'Inscription | SIA')
+@section('title', 'Inscription')
 
 @section('content')
 <div class="container">

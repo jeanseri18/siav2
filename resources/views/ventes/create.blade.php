@@ -234,9 +234,10 @@
             
             // Vider les articles actuels
             clearArticles();
+            articleIndex = 0;
             
             // Ajouter les articles du devis
-            devisData.articles.forEach(function(article) {
+            (devisData.articles || []).forEach(function(article) {
                 addArticleFromDevis(article);
             });
             
@@ -245,6 +246,8 @@
         } else {
             // Réactiver l'ajout manuel d'articles
             document.getElementById('add-article-btn').disabled = false;
+            clearArticles();
+            articleIndex = 0;
         }
         
         updateTotal();
@@ -258,7 +261,11 @@
 
     function addArticleFromDevis(article) {
         noArticlesMessage.style.display = 'none';
-        
+
+        const pivot = article.pivot || {};
+        const puHt = parseFloat(pivot.prix_unitaire_ht ?? pivot.prix_unitaire ?? 0) || 0;
+        const montantLigne = parseFloat(pivot.montant_total ?? pivot.sous_total ?? 0) || 0;
+
         let div = document.createElement("div");
         div.classList.add("article-item", "mb-3");
 
@@ -280,20 +287,20 @@
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Quantité</label>
-                            <div class="app-form-control bg-light">${article.pivot.quantite}</div>
-                            <input type="hidden" name="articles[${articleIndex}][quantite]" value="${article.pivot.quantite}">
+                            <div class="app-form-control bg-light">${pivot.quantite}</div>
+                            <input type="hidden" name="articles[${articleIndex}][quantite]" value="${pivot.quantite}">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Prix Unitaire HT</label>
-                            <div class="app-form-control bg-light">${parseFloat(article.pivot.prix_unitaire).toLocaleString()} FCFA</div>
+                            <div class="app-form-control bg-light">${puHt.toLocaleString('fr-FR')} FCFA</div>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="app-form-group">
                             <label class="app-form-label">Montant Total</label>
-                            <div class="app-form-control bg-light article-price">${parseFloat(article.pivot.sous_total).toLocaleString()} FCFA</div>
+                            <div class="app-form-control bg-light article-price">${montantLigne.toLocaleString('fr-FR')} FCFA</div>
                         </div>
                     </div>
                 </div>

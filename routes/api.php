@@ -51,6 +51,19 @@ Route::get('/clients/{id}', function ($id) {
     if (!$client) {
         return response()->json(['error' => 'Client non trouvé'], 404);
     }
+
+    $secteurActiviteId = null;
+    if ($client->secteur_activite) {
+        $nom = trim((string) $client->secteur_activite);
+        $secteurActiviteId = \App\Models\SecteurActivite::query()
+            ->where('nom', $nom)
+            ->value('id');
+        if ($secteurActiviteId === null && $nom !== '') {
+            $secteurActiviteId = \App\Models\SecteurActivite::query()
+                ->whereRaw('LOWER(TRIM(nom)) = ?', [mb_strtolower($nom)])
+                ->value('id');
+        }
+    }
     
     return response()->json([
         'id' => $client->id,
@@ -59,6 +72,7 @@ Route::get('/clients/{id}', function ($id) {
         'type_client' => $client->type_client,
         'delai_paiement' => $client->delai_paiement,
         'secteur_activite' => $client->secteur_activite,
+        'secteur_activite_id' => $secteurActiviteId,
         'representants' => $client->contactPersons->map(function ($contact) {
             return [
                 'nom' => $contact->nom,

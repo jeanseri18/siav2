@@ -3,22 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devis {{ $devi->ref_devis ?? '#' . $devi->id }} - SIA</title>
+    <title>Devis {{ $devi->ref_devis ?? '#' . $devi->id }} - {{ $pdfBranding['nom_entreprise'] ?? 'Entreprise' }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
             margin: 40px;
             font-size: 12px;
             color: #000;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
+        /* DomPDF gère mal display:flex — mise en page en tableaux uniquement */
+        .currency-banner {
+            margin-bottom: 16px;
+            padding: 10px 12px;
+            border: 1px solid #333;
+            background-color: #f9f9f9;
+            font-size: 11px;
         }
         .logo {
-            width: 110px;
+            display: inline-block;
+            border: 0;
         }
         .title {
             text-align: right;
@@ -29,32 +32,6 @@
             text-align: right;
             font-size: 14px;
         }
-        .info {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-        }
-        .info-left, .info-right {
-            width: 48%;
-        }
-    
-        .info-left strong, .info-right strong {
-            font-size: 16px;
-        }
-        .info-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        .info-section .info-left {
-            width: 40%;
-        }
-        .info-section .info-right {
-            width: 100%;
-            text-align: right;
-        }
         .rccm-section {
             text-align: right;
             margin-bottom: 20px;
@@ -64,6 +41,12 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+        }
+        table.items thead {
+            display: table-header-group;
+        }
+        table.items tbody {
+            display: table-row-group;
         }
         table.items th {
             background-color: #e0e0e0;
@@ -100,67 +83,94 @@
     </style>
 </head>
 <body>
+@php
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+    $cg = $configGlobal ?? $pdfBranding['config'] ?? null;
+    $company = $pdfBranding['company'] ?? [];
+    $nomClient = $devi->client
+        ? ($devi->client->nom ?? $devi->client->nom_raison_sociale ?? '—')
+        : '—';
+    $tauxTvaDevis = (float) $devi->total_ht > 0
+        ? round(((float) $devi->tva / (float) $devi->total_ht) * 100, 2)
+        : 18;
+    $delaiValiditeJours = 30;
+    if ($devi->client && filled($devi->client->delai_paiement) && preg_match('/(\d+)/', (string) $devi->client->delai_paiement, $matchDelai)) {
+        $delaiValiditeJours = max(1, (int) $matchDelai[1]);
+    }
+    $dateValidite = $devi->created_at->copy()->addDays($delaiValiditeJours);
+    $logoSrc = $pdfBranding['logo_src'] ?? null;
+@endphp
 
-    <div class="header">
-        <div>
-            @if(isset($configGlobal) && $configGlobal->logo)
-                <img src="{{ asset('storage/' . $configGlobal->logo) }}" alt="Logo {{ $configGlobal->nom_entreprise ?? 'SIA' }}" class="logo">
-            @else
-                <img src="https://via.placeholder.com/140x140/003087/ffffff?text=SIA" alt="Logo SIA" class="logo">
-            @endif
-            <br><strong>{{ $configGlobal->nom_entreprise ?? 'SOCIÉTÉ D\'INGÉNIERIE EN AFRIQUE' }}</strong>
-        </div>
-        <div>
-            <div class="title">Devis - {{ $devi->ref_devis ?? '#' . $devi->id }}</div>
-            <div class="date">
-                Date : {{ $devi->created_at->format('d.m.Y') }}<br>
-                Date de validité : {{ $devi->created_at->addDays(30)->format('d.m.Y') }}
-            </div>
-        </div>
-    </div>
+    {{-- En-tête : tableau (évite flex / DomPDF) --}}
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+        <tr>
+            <td width="55%" valign="top">
+                @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo'])
+                <br><strong>{{ $pdfBranding['nom_entreprise'] }}</strong>
+            </td>
+            <td width="45%" valign="top" align="right">
+                <div class="title">Devis - {{ $devi->ref_devis ?? '#' . $devi->id }}</div>
+                <div class="date">
+                    Date : {{ $devi->created_at->format('d.m.Y') }}<br>
+                    Date de validité : {{ $dateValidite->format('d.m.Y') }}<br>
+                    <strong>Devise :</strong> FCFA (Franc CFA BCEAO)
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <div class="info-section">
-        <div class="info-left">
-            <strong>{{ $configGlobal->nom_entreprise ?? 'SOCIÉTÉ D\'INGÉNIERIE EN AFRIQUE' }}</strong><br>
-            {{ $configGlobal->localisation ?? 'Bingerville, cité colombe 1 Ilot 20, lot 134' }}<br>
-            {{ $configGlobal->adresse_postale ?? '18 BP 737 ABIDJAN 18 ABIDJAN' }}<br>
-            @if($configGlobal && $configGlobal->tel1)
-                {{ $configGlobal->tel1 }}<br>
-            @endif
-            @if($configGlobal && $configGlobal->email)
-                {{ $configGlobal->email }}<br>
-            @endif
-            @if($configGlobal && $configGlobal->rccm)
-                RCCM: {{ $configGlobal->rccm }}<br>
-            @endif
-            @if($configGlobal && $configGlobal->cc)
-                N° CC : {{ $configGlobal->cc }}<br>
-            @endif
-        </div>
-        <div class="info-right">
-            <strong>{{ $devi->client->prenoms ?? $devi->client->nom_raison_sociale }}</strong><br>
-            @if($devi->client->adresse)
-                {{ $devi->client->adresse }}<br>
-            @endif
-            @if($devi->client->ville)
-                {{ $devi->client->ville }}<br>
-            @endif
-            @if($devi->client->bp)
-                {{ $devi->client->bp }}<br>
-            @endif
-      
-        </div>
-    </div>
-    @if($configGlobal && ($configGlobal->rccm || $configGlobal->cc))
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+        <tr>
+            <td width="48%" valign="top">
+                <strong>{{ $pdfBranding['nom_entreprise'] }}</strong><br>
+                @if(filled($company['localisation'] ?? $cg?->localisation))
+                    {{ $company['localisation'] ?? $cg->localisation }}<br>
+                @endif
+                @if(filled($company['adresse_postale'] ?? $cg?->adresse_postale))
+                    {{ $company['adresse_postale'] ?? $cg->adresse_postale }}<br>
+                @endif
+                @if($cg && $cg->tel1)
+                    {{ $cg->tel1 }}<br>
+                @endif
+                @if($cg && $cg->email)
+                    {{ $cg->email }}<br>
+                @endif
+                @if($cg && $cg->rccm)
+                    RCCM: {{ $cg->rccm }}<br>
+                @endif
+                @if($cg && $cg->cc)
+                    N° CC : {{ $cg->cc }}<br>
+                @endif
+            </td>
+            <td width="4%"></td>
+            <td width="48%" valign="top" align="right">
+                <strong>{{ $nomClient }}</strong><br>
+                @if($devi->client)
+                    @if(filled($devi->client->adresse_localisation))
+                        {{ $devi->client->adresse_localisation }}<br>
+                    @endif
+                    @if(filled($devi->client->boite_postale))
+                        {{ $devi->client->boite_postale }}<br>
+                    @endif
+                @endif
+            </td>
+        </tr>
+    </table>
+
+    @if($cg && ($cg->rccm || $cg->cc))
         <div class="rccm-section">
-            @if($configGlobal && $configGlobal->rccm)
-                RCCM: {{ $configGlobal->rccm }}<br>
+            @if($cg->rccm)
+                RCCM: {{ $cg->rccm }}<br>
             @endif
-            @if($configGlobal && $configGlobal->cc)
-                N° CC : {{ $configGlobal->cc }}
+            @if($cg->cc)
+                N° CC : {{ $cg->cc }}
             @endif
         </div>
     @endif
+
+    <div class="currency-banner">
+        <strong>Montants exprimés en francs CFA (FCFA).</strong> Une unité correspond à un franc CFA. TVA au taux de {{ number_format($tauxTvaDevis, 2, ',', ' ') }}&nbsp;%.
+    </div>
 
     <table class="items">
         <thead>
@@ -169,57 +179,63 @@
                 <th>Date</th>
                 <th>Qté</th>
                 <th>Unité</th>
-                <th class="text-right">Prix unitaire</th>
+                <th class="text-right">Devise</th>
+                <th class="text-right">Prix unitaire HT</th>
                 <th class="text-right">TVA</th>
-                <th class="text-right">Montant</th>
+                <th class="text-right">Montant TTC</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $totalHT = 0;
-                $totalTVA = 0;
-                $totalTTC = 0;
-            @endphp
-            @foreach($devi->articles as $article)
+            @forelse($devi->articles as $article)
                 @php
-                    $montantHT = $article->prix_unitaire * $article->quantite;
-                    $montantTVA = $montantHT * ($article->taux_tva / 100);
-                    $montantTTC = $montantHT + $montantTVA;
-                    $totalHT += $montantHT;
-                    $totalTVA += $montantTVA;
-                    $totalTTC += $montantTTC;
+                    $quantite = (float) ($article->pivot->quantite ?? 0);
+                    $puHt = (float) ($article->pivot->prix_unitaire_ht ?? 0);
+                    $montantHtLigne = (float) ($article->pivot->montant_total ?? ($puHt * $quantite));
+                    $montantTvaLigne = $montantHtLigne * ($tauxTvaDevis / 100);
+                    $montantTtcLigne = $montantHtLigne + $montantTvaLigne;
+                    $uniteRef = $article->uniteMesure ? $article->uniteMesure->ref : 'pcs';
+                    $libelle = $article->nom ?? $article->reference ?? 'Article #' . $article->id;
                 @endphp
                 <tr>
-                    <td>{{ $article->article->nom ?? $article->description }}</td>
-                    <td>{{ $article->created_at->format('d.m.Y') }}</td>
-                    <td>{{ number_format($article->quantite, 2, ',', ' ') }}</td>
-                    <td>{{ $article->unite ?? 'pcs' }}</td>
-                    <td class="text-right">{{ number_format($article->prix_unitaire, 0, ',', ' ') }} FCFA</td>
-                    <td class="text-right">{{ number_format($article->taux_tva, 2, ',', ' ') }} %</td>
-                    <td class="text-right">{{ number_format($montantTTC, 0, ',', ' ') }} FCFA</td>
+                    <td>{{ $libelle }}</td>
+                    <td>{{ $devi->created_at->format('d.m.Y') }}</td>
+                    <td>{{ number_format($quantite, 2, ',', ' ') }}</td>
+                    <td>{{ $uniteRef }}</td>
+                    <td class="text-right">FCFA</td>
+                    <td class="text-right">{{ number_format($puHt, 0, ',', ' ') }} FCFA</td>
+                    <td class="text-right">{{ number_format($tauxTvaDevis, 2, ',', ' ') }} %</td>
+                    <td class="text-right">{{ number_format($montantTtcLigne, 0, ',', ' ') }} FCFA</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 16px;">Aucune ligne d’article sur ce devis.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 
     <table class="total-table">
         <tr>
-            <td>Total HT TVA {{ $devi->articles->first()->taux_tva ?? 18 }}%</td>
-            <td class="text-right">{{ number_format($totalHT, 0, ',', ' ') }} FCFA</td>
+            <td>Total HT <span style="font-weight:normal;">(FCFA)</span></td>
+            <td class="text-right">{{ number_format((float) $devi->total_ht, 0, ',', ' ') }} FCFA</td>
         </tr>
         <tr>
-            <td>TVA {{ $devi->articles->first()->taux_tva ?? 18 }}%</td>
-            <td class="text-right">{{ number_format($totalTVA, 0, ',', ' ') }} FCFA</td>
+            <td>TVA {{ number_format($tauxTvaDevis, 0, ',', ' ') }}% <span style="font-weight:normal;">(FCFA)</span></td>
+            <td class="text-right">{{ number_format((float) $devi->tva, 0, ',', ' ') }} FCFA</td>
         </tr>
         <tr class="total-line">
-            <td><strong>Total TTC</strong></td>
-            <td class="text-right"><strong>{{ number_format($totalTTC, 0, ',', ' ') }} FCFA</strong></td>
+            <td><strong>Total TTC</strong> <span style="font-weight:normal;">(FCFA)</span></td>
+            <td class="text-right"><strong>{{ number_format((float) $devi->total_ttc, 0, ',', ' ') }} FCFA</strong></td>
         </tr>
     </table>
 
     <div class="footer">
-        <strong>Conditions générales :</strong> Devis valable 30 jours à compter de la date d'émission.<br>
-        Paiement à réception de facture. Toute commande implique l'acceptation de nos conditions générales de vente.
+        <strong>Conditions générales :</strong> Devis valable {{ $delaiValiditeJours }} jours à compter de la date d'émission.<br>
+        @if($devi->client && filled($devi->client->mode_paiement))
+            Paiement : {{ $devi->client->mode_paiement }}. Toute commande implique l'acceptation de nos conditions générales de vente.
+        @else
+            Paiement à réception de facture. Toute commande implique l'acceptation de nos conditions générales de vente.
+        @endif
     </div>
 
 </body>

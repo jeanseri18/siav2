@@ -55,7 +55,7 @@
 }
 
 .planning-table .week-header {
-    background-color: #0d6efd;
+    background-color: #033d71;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -145,9 +145,11 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-calendar-alt"></i> Planning du Projet</h2>
                 <div>
+                    @if(auth()->user()->hasPermission('planning.create'))
                     <button class="btn btn-primary" onclick="toggleAddTaskRow()">
                         <i class="fas fa-plus"></i> Ajouter une tâche
                     </button>
+                    @endif
                     <button class="btn btn-info" onclick="exportPlanning()">
                         <i class="fas fa-file-export"></i> Exporter
                     </button>
@@ -236,9 +238,11 @@
                             <option value="retard">En retard</option>
                             <option value="termine">Terminé</option>
                         </select>
+                        @if(auth()->user()->hasPermission('planning.store'))
                         <button class="btn btn-success btn-sm mt-1" onclick="saveNewTask()">
                             <i class="fas fa-check"></i> Enregistrer
                         </button>
+                        @endif
                         <button class="btn btn-secondary btn-sm mt-1" onclick="toggleAddTaskRow()">
                             <i class="fas fa-times"></i> Annuler
                         </button>
@@ -261,10 +265,12 @@
                         <tr class="subcategory-row">
                             <td class="task-col">{{ $sousCategorie->nom }}</td>
                             <td colspan="{{ 2 + $totalJours }}">
+                                @if(auth()->user()->hasPermission('planning.categorie.create'))
                                 <button class="btn btn-sm btn-outline-primary btn-add-planning" 
                                         onclick="showAddTaskForCategory({{ $sousCategorie->id }}, '{{ $sousCategorie->nom }}')">
                                     <i class="fas fa-plus"></i> Ajouter
                                 </button>
+                                @endif
                             </td>
                         </tr>
                         

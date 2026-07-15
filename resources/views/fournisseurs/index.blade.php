@@ -16,9 +16,14 @@
                 <i class="fas fa-truck me-2"></i>Liste des Fournisseurs
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('fournisseurs.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
+                @if(auth()->user()->hasPermission('fournisseurs.create'))
                 <a href="{{ route('fournisseurs.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un fournisseur
                 </a>
+                @endif
             </div>
         </div>
 
@@ -104,11 +109,14 @@
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('clients.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('fournisseurs.edit', $fournisseur) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('clients.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('fournisseurs.destroy', $fournisseur) }}" method="POST" class="delete-form">
@@ -119,6 +127,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

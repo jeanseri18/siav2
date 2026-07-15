@@ -1,6 +1,8 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+{{-- Navigation « contrat » : nécessite contrat_id en session (absent sur BPU utilitaires / until). --}}
+@if(session('contrat_id'))
 <!-- Chrome Style Contract Navigation -->
 <div class="chrome-nav-section">
     <div class="chrome-tab-bar">
@@ -83,13 +85,9 @@
                 <a href="{{ route('prestations.index') }}"></a>
             </div>
         </div>
-        <div class="chrome-contract-info">
-            <span class="contract-name">{{ session('contrat_nom') }}</span>
-            <span class="contract-ref">{{ session('ref_contrat') }}</span>
-            <span class="status-indicator active"></span>
-        </div>
     </div>
 </div>
+@endif
 
 <style>
 /* Chrome Style Navigation */
@@ -187,47 +185,6 @@
     color: inherit;
 }
 
-.chrome-contract-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    margin-left: 1rem;
-    white-space: nowrap;
-}
-
-.chrome-contract-info .contract-name {
-    font-weight: 600;
-    color: #212529;
-}
-
-.chrome-contract-info .contract-ref {
-    color: #6c757d;
-    font-family: 'Courier New', monospace;
-    font-size: 0.75rem;
-    background: #f8f9fa;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-}
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #28a745;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
 @media (max-width: 768px) {
     .chrome-tab-bar {
         flex-direction: column;
@@ -245,11 +202,5 @@
         padding: 0.4rem 0.8rem;
     }
     
-    .chrome-contract-info {
-        margin-left: 0;
-        margin-top: 0.5rem;
-        width: 100%;
-        justify-content: space-between;
-    }
 }
 </style>

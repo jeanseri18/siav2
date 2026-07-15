@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Liste des Types de Travaux')
-@section('page-title', 'Liste des Types de Travaux')
+@section('title', 'Liste des types de travaux / activités')
+@section('page-title', 'Liste des types de travaux / activités')
 
 @section('breadcrumb')
-<li class="breadcrumb-item active">Types de Travaux</li>
+<li class="breadcrumb-item active">Types de travaux / activités</li>
 @endsection
 
 @section('content')
@@ -14,12 +14,15 @@
     <div class="app-card">
         <div class="app-card-header">
             <h2 class="app-card-title">
-                <i class="fas fa-hammer me-2"></i>Liste des Types de Travaux
+                <i class="fas fa-hammer me-2"></i>Liste des types de travaux / activités
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'type_travaux')" />
+                @if(auth()->user()->hasPermission('type-travaux.create'))
                 <a href="{{ route('type-travaux.create') }}" class="app-btn app-btn-primary app-btn-icon">
-                    <i class="fas fa-plus"></i> Ajouter un type de travaux
+                    <i class="fas fa-plus"></i> Ajouter un type / activité
                 </a>
+                @endif
             </div>
         </div>
 
@@ -64,11 +67,14 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('type-travaux.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('type-travaux.edit', $type->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('type-travaux.destroy'))
                                     <li>
                                         <form action="{{ route('type-travaux.destroy', $type->id) }}" method="POST" class="delete-form">
                                             @csrf
@@ -78,6 +84,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>
@@ -126,7 +133,7 @@
         $('.delete-btn').click(function(e) {
             e.preventDefault();
             
-            if (confirm('Voulez-vous supprimer ce type de travaux ?')) {
+            if (confirm('Voulez-vous supprimer ce type de travaux / activité ?')) {
                 $(this).closest('form').submit();
             }
         });

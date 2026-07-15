@@ -369,12 +369,21 @@
                                                                     @endif
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <button class="btn btn-sm btn-primary" onclick="editTache({{ $tache->id }})">
-                                                                        <i class="fas fa-edit"></i>
-                                                                    </button>
-                                                                    <button class="btn btn-sm btn-danger" onclick="deleteTache({{ $tache->id }})">
-                                                                        <i class="fas fa-trash"></i>
-                                                                    </button>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                                            <li>
+                                                                                <button type="button" class="dropdown-item" onclick="editTache({{ $tache->id }})">
+                                                                                    <i class="fas fa-edit me-2"></i>Modifier
+                                                                                </button>
+                                                                            </li>
+                                                                            <li>
+                                                                                <button type="button" class="dropdown-item text-danger" onclick="deleteTache({{ $tache->id }})">
+                                                                                    <i class="fas fa-trash me-2"></i>Supprimer
+                                                                                </button>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         @endforeach
@@ -558,8 +567,12 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Image</label>
-                            <input type="file" class="form-control" id="input-tache-image" name="image" accept="image/*">
+                            <x-photo-dropzone
+                                name="image"
+                                id="input-tache-image"
+                                label="Image"
+                                help="Glissez-déposez une image ou cliquez pour sélectionner."
+                            />
                         </div>
                     </div>
                 </div>

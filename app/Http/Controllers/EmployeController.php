@@ -7,9 +7,37 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class EmployeController extends Controller
 {
+    /**
+     * Rôles autorisés pour les employés (alignés sur l'enum `users.role` en base).
+     */
+    protected function roleOptionsForForms(): array
+    {
+        return User::roleOptionsForEmployeForms();
+    }
+
+    /**
+     * Rôles acceptés à la mise à jour (formulaire + admin + valeur actuelle hors liste).
+     */
+    protected function allowedRolesForEmployeUpdate(User $employe): array
+    {
+        $allowed = array_keys($this->roleOptionsForForms());
+
+        if ($employe->role === 'admin') {
+            $allowed[] = 'admin';
+        }
+
+        if ($employe->role && ! in_array($employe->role, $allowed, true)) {
+            $allowed[] = $employe->role;
+        }
+
+        return array_values(array_unique($allowed));
+    }
+
     public function index()
     {
         $employes = User::where('role', '!=', 'admin')
@@ -20,24 +48,41 @@ class EmployeController extends Controller
         return view('employes.index', compact('employes'));
     }
 
+    public function exportPdf()
+    {
+        $buId = session('selected_bu');
+        $employes = $this->employesForListing($buId ? (int) $buId : null);
+        $pdfBranding = PdfBranding::forBu($buId ? (int) $buId : null);
+
+        $pdf = Pdf::loadView('employes.liste-export', [
+            'employes' => $employes,
+            'pdfBranding' => $pdfBranding,
+            'printMode' => false,
+            'documentTitle' => 'Liste des employés',
+            'roleLabels' => User::roleOptionsForUserManagement(),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('liste-employes-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    private function employesForListing(?int $buId = null)
+    {
+        $query = User::query()
+            ->where('role', '!=', 'admin')
+            ->orderBy('nom')
+            ->orderBy('prenom');
+
+        if ($buId) {
+            $query->whereHas('bus', fn ($q) => $q->where('bus.id', $buId));
+        }
+
+        return $query->get();
+    }
+
     public function create()
     {
-        $roles = [
-            'dg' => 'DG',
-            'chef_projet' => 'Chef de Projet',
-            'conducteur_travaux' => 'Conducteur de Travaux',
-            'chef_chantier' => 'Chef de Chantier',
-            'comptable' => 'Comptable',
-            'magasinier' => 'Magasinier',
-            'acheteur' => 'Acheteur',
-            'controleur_gestion' => 'Contrôleur de Gestion',
-            'controleur_qualite' => 'Contrôleur Qualité',
-            'responsable_technique' => 'Responsable technique',
-            'responsable_financier' => 'Responsable financier',
-            'secretaire' => 'Secrétaire',
-            'chauffeur' => 'Chauffeur'
-        ];
-        
+        $roles = $this->roleOptionsForForms();
+
         return view('employes.create', compact('roles'));
     }
 
@@ -48,7 +93,7 @@ class EmployeController extends Controller
             'prenom' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:dg,chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,controleur_qualite,responsable_technique,responsable_financier,secretaire,chauffeur',
+            'role' => ['required', Rule::in(array_keys(User::roleOptionsForEmployeForms()))],
             'poste' => 'nullable|string|max:255',
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',
@@ -87,22 +132,8 @@ class EmployeController extends Controller
 
     public function edit(User $employe)
     {
-        $roles = [
-            'dg' => 'DG',
-            'chef_projet' => 'Chef de Projet',
-            'conducteur_travaux' => 'Conducteur de Travaux',
-            'chef_chantier' => 'Chef de Chantier',
-            'comptable' => 'Comptable',
-            'magasinier' => 'Magasinier',
-            'acheteur' => 'Acheteur',
-            'controleur_gestion' => 'Contrôleur de Gestion',
-            'controleur_qualite' => 'Contrôleur Qualité',
-            'responsable_technique' => 'Responsable technique',
-            'responsable_financier' => 'Responsable financier',
-            'secretaire' => 'Secrétaire',
-            'chauffeur' => 'Chauffeur'
-        ];
-        
+        $roles = $this->roleOptionsForForms();
+
         return view('employes.edit', compact('employe', 'roles'));
     }
 
@@ -113,7 +144,7 @@ class EmployeController extends Controller
             'prenom' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($employe->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:dg,chef_projet,conducteur_travaux,chef_chantier,comptable,magasinier,acheteur,controleur_gestion,controleur_qualite,responsable_technique,responsable_financier,secretaire,chauffeur',
+            'role' => ['required', Rule::in($this->allowedRolesForEmployeUpdate($employe))],
             'poste' => 'nullable|string|max:255',
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',

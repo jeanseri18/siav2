@@ -17,13 +17,10 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #033d71;
             padding-bottom: 20px;
         }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
         .company-info {
             text-align: right;
         }
@@ -123,21 +120,42 @@
     </style>
 </head>
 <body>
+@php
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+    $company = $pdfBranding['company'] ?? [];
+    $cg = $pdfBranding['config'] ?? null;
+    $buId = $facture->contrat?->projet?->bu_id ?? (session('selected_bu') ? (int) session('selected_bu') : null);
+    $banque = $buId ? \App\Models\Banque::query()->where('bu_id', $buId)->first() : null;
+    $tauxTva = (float) $facture->montant_ht > 0
+        ? round(((float) $facture->montant_total - (float) $facture->montant_ht) / (float) $facture->montant_ht * 100, 0)
+        : 18;
+    $adresseEntreprise = trim(collect([
+        $company['localisation'] ?? null,
+        $company['adresse_postale'] ?? null,
+        $pdfBranding['bu']?->adresse,
+    ])->filter()->implode(' — '));
+@endphp
     <div class="header">
         <div>
-            @if(isset($facture) && $facture->vente && $facture->vente->user && $facture->vente->user->bus && $facture->vente->user->bus->logo)
-                <img src="{{ public_path('storage/' . $facture->vente->user->bus->logo) }}" alt="Logo" class="logo">
-            @endif
+            @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo'])
         </div>
         <div class="company-info">
-            @if(isset($facture) && $facture->vente && $facture->vente->user && $facture->vente->user->bus)
-                <p><strong>{{ $facture->vente->user->bus->nom }}</strong><br>
-            @else
-                <p><strong>SIA</strong><br>
+            <p><strong>{{ $pdfBranding['nom_entreprise'] }}</strong><br>
+            @if(filled($adresseEntreprise))
+                {{ $adresseEntreprise }}<br>
             @endif
-            Adresse complète de l'entreprise<br>
-            Tel: +XX XX XX XX XX | Email: contact@entreprise.com<br>
-            RCCM: XXXXXXXXXXXX | IFU: XXXXXXXXXXXX</p>
+            @if(filled($company['tel1'] ?? $cg?->tel1) || filled($company['email'] ?? $cg?->email))
+                @if(filled($company['tel1'] ?? $cg?->tel1))Tel: {{ $company['tel1'] ?? $cg->tel1 }}@endif
+                @if(filled($company['tel1'] ?? $cg?->tel1) && filled($company['email'] ?? $cg?->email)) | @endif
+                @if(filled($company['email'] ?? $cg?->email))Email: {{ $company['email'] ?? $cg->email }}@endif
+                <br>
+            @endif
+            @if(filled($company['rccm'] ?? $cg?->rccm) || filled($company['cc'] ?? $cg?->cc))
+                @if(filled($company['rccm'] ?? $cg?->rccm))RCCM: {{ $company['rccm'] ?? $cg->rccm }}@endif
+                @if(filled($company['rccm'] ?? $cg?->rccm) && filled($company['cc'] ?? $cg?->cc)) | @endif
+                @if(filled($company['cc'] ?? $cg?->cc))N° CC: {{ $company['cc'] ?? $cg->cc }}@endif
+            @endif
+            </p>
         </div>
     </div>
 
@@ -147,14 +165,27 @@
         <div class="client-info">
             <h3>Client</h3>
             @if($facture->contrat && $facture->contrat->client)
-                <p><strong>{{ $facture->contrat->client->nom_raison_sociale }}</strong><br>
-                {{ $facture->contrat->client->adresse }}<br>
-                Tel: {{ $facture->contrat->client->telephone }}<br>
-                Email: {{ $facture->contrat->client->email }}</p>
-@elseif($facture->artisan)
-                <p><strong>{{ $facture->artisan->nom }}</strong><br>
-                {{ $facture->artisan->adresse }}<br>
-                Tel: {{ $facture->artisan->telephone }}</p>
+                @php $clientFacture = $facture->contrat->client; @endphp
+                <p><strong>{{ $clientFacture->nom_raison_sociale }}</strong><br>
+                @if(filled($clientFacture->adresse_localisation))
+                    {{ $clientFacture->adresse_localisation }}<br>
+                @endif
+                @if(filled($clientFacture->telephone))
+                    Tel: {{ $clientFacture->telephone }}<br>
+                @endif
+                @if(filled($clientFacture->email))
+                    Email: {{ $clientFacture->email }}
+                @endif
+                </p>
+            @elseif($facture->artisan)
+                <p><strong>{{ trim(($facture->artisan->nom ?? '') . ' ' . ($facture->artisan->prenoms ?? '')) }}</strong><br>
+                @if(filled($facture->artisan->localisation))
+                    {{ $facture->artisan->localisation }}<br>
+                @endif
+                @if(filled($facture->artisan->tel1))
+                    Tel: {{ $facture->artisan->tel1 }}
+                @endif
+                </p>
             @else
                 <p>Client non spécifié</p>
             @endif
@@ -239,7 +270,7 @@
                 <td>{{ number_format($facture->montant_ht, 0, ',', ' ') }} CFA</td>
             </tr>
             <tr>
-                <td><strong>TVA (18%)</strong></td>
+                <td><strong>TVA ({{ $tauxTva }}%)</strong></td>
                 <td>{{ number_format($facture->montant_total - $facture->montant_ht, 0, ',', ' ') }} CFA</td>
             </tr>
             <tr class="total-highlight">
@@ -262,10 +293,25 @@
     <div class="clear"></div>
 
     <div class="footer">
-        <p>Paiement par virement bancaire :<br>
-        Banque: XXXXX | N° de compte: XXXXXXXXXX | IBAN: XXXXXXXXXXXX | BIC: XXXXXXX</p>
-        <p>En cas de retard de paiement, une pénalité de X% sera appliquée.<br>
-        Pour toute question concernant cette facture, veuillez contacter notre service comptabilité.</p>
+        @if($banque)
+            <p>Paiement par virement bancaire :<br>
+            Banque: {{ $banque->nom }}
+            @if(filled($banque->numero_compte))
+                | N° de compte: {{ $banque->numero_compte }}
+            @endif
+            @if(filled($banque->iban))
+                | IBAN: {{ $banque->iban }}
+            @endif
+            @if(filled($banque->code_swift))
+                | BIC: {{ $banque->code_swift }}
+            @endif
+            </p>
+        @endif
+        @if(filled($company['email'] ?? $cg?->email))
+            <p>Pour toute question concernant cette facture, veuillez contacter notre service comptabilité : {{ $company['email'] ?? $cg->email }}</p>
+        @else
+            <p>Pour toute question concernant cette facture, veuillez contacter notre service comptabilité.</p>
+        @endif
         <p>Facture générée le {{ date('d/m/Y') }}</p>
     </div>
 </body>

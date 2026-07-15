@@ -12,20 +12,27 @@
 
 <div class="container app-fade-in">
     <div class="app-card">
-        <div class="app-card-header">
+        <div class="app-card-header"> 
             <h2 class="app-card-title">
                 <i class="fas fa-shopping-cart me-2"></i>Liste des Ventes
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('ventes.export.pdf')" />
+                @if(auth()->user()->hasPermission('ventes.devis.show'))
                 <a href="{{ route('devis.index') }}" class="app-btn app-btn-secondary app-btn-icon">
                     <i class="fas fa-file-alt"></i> Devis
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('ventes.create'))
                 <a href="{{ route('ventes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Vente
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('ventes.report.form'))
                 <a href="{{ route('ventes.report.form') }}" class="app-btn app-btn-info app-btn-icon">
                     <i class="fas fa-chart-bar"></i> Rapport
                 </a>
+                @endif
             </div>
         </div>
 
@@ -73,7 +80,7 @@
                         <td>
                             <div class="d-flex flex-wrap gap-1">
                                 @foreach($vente->articles as $article)
-                                    <span class="badge badge-light" title="{{ $article->nom }} - Qté: {{ $article->pivot->quantite }} - Prix HT: {{ number_format($article->pivot->prix_unitaire_ht, 0, ',', ' ') }} FCFA">
+                                    <span class="badge badge-light" title="{{ $article->nom }} - Qté: {{ $article->pivot->quantite }} - Prix HT: {{ number_format($article->pivot->prix_unitaire, 0, ',', ' ') }} FCFA">
                                         {{ $article->nom }} ({{ $article->pivot->quantite }})
                                     </span>
                                 @endforeach
@@ -122,7 +129,18 @@
                                             <i class="fas fa-eye me-2"></i>Détails
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ventes.facture', $vente) }}" target="_blank">
+                                            <i class="fas fa-file-pdf me-2"></i>Facture proforma (PDF)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ventes.bon-livraison-client.pdf', $vente) }}" target="_blank">
+                                            <i class="fas fa-truck me-2"></i>Bon de livraison client (PDF)
+                                        </a>
+                                    </li>
                                     @if($vente->statut !== 'Payée')
+                                        @if(auth()->user()->hasPermission('ventes.valider'))
                                         <li>
                                             <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST">
                                                 @csrf
@@ -132,7 +150,9 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     @endif
+                                    @if(auth()->user()->hasPermission('ventes.destroy'))
                                     <li>
                                         <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="delete-form">
                                             @csrf
@@ -142,6 +162,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>
