@@ -12,14 +12,21 @@
 @section('content')
 
 <div class="container app-fade-in">
+    <x-stock-flux-nav module="approvisionnement" context="show" />
     <div class="app-card" style="background: var(--primary); color: var(--white); margin-bottom: var(--spacing-lg);">
         <div class="app-card-body">
             <h2 class="app-fw-bold app-mb-3">Détails de la Demande d'Approvisionnement</h2>
-            <div class="app-d-flex app-gap-3">
+            <div class="app-d-flex app-gap-3 flex-wrap">
                 <a href="{{ route('demande-approvisionnements.index') }}" class="app-btn" 
                    style="background: var(--primary-light); color: var(--white); width: 200px;">
                     <i class="fas fa-arrow-left me-2"></i>Retour à la liste
                 </a>
+                @if($demandeApprovisionnement->statut === 'approuvée')
+                    <a href="{{ route('demande-achats.create', ['demande_approvisionnement_id' => $demandeApprovisionnement->id]) }}" class="app-btn"
+                       style="background: var(--primary-light); color: var(--white); width: 220px;">
+                        <i class="fas fa-shopping-cart me-2"></i>Demande d'achat
+                    </a>
+                @endif
                 <a href="javascript:window.print()" class="app-btn" 
                    style="background: var(--primary-light); color: var(--white); width: 200px;">
                     <i class="fas fa-print me-2"></i>Imprimer
@@ -197,29 +204,44 @@
                             </h3>
                         </div>
                         <div class="app-card-body">
-                            <form action="{{ route('demande-approvisionnements.approve', $demandeApprovisionnement) }}" method="POST" class="app-mb-4">
+                            <form id="form-approbation-da" action="{{ route('demande-approvisionnements.approve', $demandeApprovisionnement) }}" method="POST" class="app-mb-4">
                                 @csrf
                                 <h5 class="app-mb-3">Quantités à approuver :</h5>
+                                <p class="text-muted small app-mb-3">Unité de mesure dans une colonne dédiée. Vous pouvez retirer une ligne avant approbation si besoin.</p>
                                 <div class="app-table-responsive">
                                     <table class="app-table">
                                         <thead>
                                             <tr>
-                                                <th style="width: 15%;">Référence</th>
-                                                <th style="width: 30%;">Désignation</th>
-                                                <th style="width: 10%;">Quantité demandée</th>
-                                                <th style="width: 10%;">Quantité approuvée</th>
+                                                <th style="width: 12%;">Référence</th>
+                                                <th style="width: 24%;">Désignation</th>
+                                                <th style="width: 11%;" class="text-end">Qté demandée</th>
+                                                <th style="width: 9%;">Unité</th>
+                                                <th style="width: 13%;" class="text-end">Qté approuvée</th>
+                                                <th style="width: 9%;" class="text-center">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            @foreach($demandeApprovisionnement->lignes as $index => $ligne)
-                                                <tr>
+                                        <tbody id="tbody-lignes-approbation">
+                                            @foreach($demandeApprovisionnement->lignes as $ligne)
+                                                <tr data-ligne-id="{{ $ligne->id }}">
                                                     <td>{{ $ligne->article->reference }}</td>
                                                     <td>{{ $ligne->article->nom }}</td>
-                                                    <td>{{ trim($ligne->quantite_demandee) }} {{ $ligne->article->uniteMesure->ref ?? '' }}</td>
-                                                    <td>
-                                                        <input type="hidden" name="ligne_ids[{{ $index }}]" value="{{ $ligne->id }}">
-                                                        <input type="number" name="quantite_approuvee[{{ $index }}]" class="app-form-control" 
-                                                            min="0" value="{{ trim($ligne->quantite_demandee) }}" style="width: 120px;">
+                                                    <td class="text-end app-fw-bold">{{ number_format((int) $ligne->quantite_demandee, 0, ',', ' ') }}</td>
+                                                    <td><span class="app-badge app-badge-secondary">{{ $ligne->article->uniteMesure->ref ?? 'u' }}</span></td>
+                                                    <td class="text-end">
+                                                        <input type="number"
+                                                               name="quantite_approuvee[{{ $ligne->id }}]"
+                                                               class="app-form-control text-end"
+                                                               min="0"
+                                                               value="{{ (int) $ligne->quantite_demandee }}"
+                                                               style="width: 120px; max-width: 100%; display: inline-block;"
+                                                               required>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button type="button"
+                                                                class="app-btn app-btn-outline-danger app-btn-sm btn-retirer-ligne-approbation"
+                                                                title="Retirer cette ligne de la demande">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -333,6 +355,31 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quand le modal s'ouvre, supprimer aria-hidden
         deleteModal.addEventListener('shown.bs.modal', function() {
             this.removeAttribute('aria-hidden');
+        });
+    }
+
+    const formAppro = document.getElementById('form-approbation-da');
+    const tbodyAppro = document.getElementById('tbody-lignes-approbation');
+    if (formAppro && tbodyAppro) {
+        formAppro.querySelectorAll('.btn-retirer-ligne-approbation').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const tr = this.closest('tr');
+                if (!tr) return;
+                const ligneId = tr.getAttribute('data-ligne-id');
+                if (tbodyAppro.querySelectorAll('tr').length <= 1) {
+                    alert('Vous devez conserver au moins une ligne d\'article pour pouvoir approuver la demande.');
+                    return;
+                }
+                if (!confirm('Retirer cette ligne de la demande avant approbation ?')) {
+                    return;
+                }
+                const h = document.createElement('input');
+                h.type = 'hidden';
+                h.name = 'lignes_a_supprimer[]';
+                h.value = ligneId;
+                formAppro.appendChild(h);
+                tr.remove();
+            });
         });
     }
 });

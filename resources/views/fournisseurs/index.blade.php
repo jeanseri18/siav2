@@ -16,6 +16,9 @@
                 <i class="fas fa-truck me-2"></i>Liste des Fournisseurs
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('fournisseurs.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('fournisseurs.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un fournisseur
                 </a>

@@ -65,9 +65,16 @@
                     <tr>
                         <td><strong>{{ $budget->annee }}</strong></td>
                         <td>
-                            <a href="{{ route('bu-budget.show', $budget) }}" class="app-btn app-btn-outline-primary app-btn-sm">
-                                Ouvrir
-                            </a>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('bu-budget.show', $budget) }}">
+                                            <i class="fas fa-folder-open me-2"></i>Ouvrir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                     @empty

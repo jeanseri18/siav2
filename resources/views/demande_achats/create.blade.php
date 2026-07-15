@@ -11,6 +11,7 @@
 
 @section('content')
 <div class="container app-fade-in">
+    <x-stock-flux-nav module="achat" context="create" />
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="app-card app-hover-shadow">
@@ -102,7 +103,8 @@
                                                     ];
                                                 });
                                             @endphp
-                                            <option value="{{ $demande->id }}" 
+                                            <option value="{{ $demande->id }}"
+                                                @selected((int) old('demande_approvisionnement_id', $demandeApprovisionnementPreselectId ?? 0) === (int) $demande->id)
                                                 data-projet-id="{{ $demande->projet_id }}"
                                                 data-projet-nom="{{ $demande->projet ? $demande->projet->nom_projet : '' }}"
                                                 data-lignes='{{ json_encode($lignesData) }}'>

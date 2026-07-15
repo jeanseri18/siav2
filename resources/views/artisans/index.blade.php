@@ -16,6 +16,9 @@
                 <i class="fas fa-hard-hat me-2"></i>Liste des Artisans
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('artisans.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('artisans.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un artisan
                 </a>
@@ -72,20 +75,35 @@
                                 {{ $artisan->fonction }}
                         </td>
                         <td>{{ $artisan->localisation }}</td>
-                        <td>{{ $artisan->telephone }}</td>
+                        <td>{{ $artisan->tel1 ?? $artisan->telephone ?? '—' }}</td>
                         <td>{{ $artisan->mail }}</td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('artisans.edit', $artisan->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('artisans.destroy', $artisan->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('artisans.show', $artisan) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('artisans.edit', $artisan->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('artisans.destroy', $artisan->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

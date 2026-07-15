@@ -17,6 +17,9 @@
                 <i class="fas fa-project-diagram me-2"></i>Liste des Projets
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('projets.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('projets.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un projet
                 </a>
@@ -89,7 +92,16 @@
                             </span>
                         </td>
                         <td>
-                            <span class="app-badge app-badge-{{ $projet->statut == 'en cours' ? 'warning' : ($projet->statut == 'terminé' ? 'success' : 'danger') }} app-badge-pill">
+                            @php
+                                $badgeProjet = match ($projet->statut) {
+                                    'terminé' => 'success',
+                                    'en cours' => 'warning',
+                                    'non débuté' => 'secondary',
+                                    'annulé' => 'danger',
+                                    default => 'secondary',
+                                };
+                            @endphp
+                            <span class="app-badge app-badge-{{ $badgeProjet }} app-badge-pill">
                                 {{ ucfirst($projet->statut) }}
                             </span>
                         </td>
@@ -110,6 +122,20 @@
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    <li><h6 class="dropdown-header text-muted small mb-0">Changer le statut</h6></li>
+                                    @foreach (['non débuté' => 'Non débuté', 'en cours' => 'En cours', 'terminé' => 'Terminé', 'annulé' => 'Annulé'] as $valeurStatut => $libelleStatut)
+                                        @if ($projet->statut !== $valeurStatut)
+                                            <li>
+                                                <form action="{{ route('projets.update-statut', $projet) }}" method="POST" class="m-0">
+                                                    @csrf
+                                                    <input type="hidden" name="statut" value="{{ $valeurStatut }}">
+                                                    <button type="submit" class="dropdown-item py-2 text-start w-100 border-0 bg-transparent">
+                                                        <i class="fas fa-flag me-2 text-primary"></i>{{ $libelleStatut }}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        @endif
+                                    @endforeach
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('projets.destroy', $projet) }}" method="POST" class="delete-form">

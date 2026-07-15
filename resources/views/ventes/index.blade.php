@@ -17,6 +17,7 @@
                 <i class="fas fa-shopping-cart me-2"></i>Liste des Ventes
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('ventes.export.pdf')" />
                 <a href="{{ route('devis.index') }}" class="app-btn app-btn-secondary app-btn-icon">
                     <i class="fas fa-file-alt"></i> Devis
                 </a>
@@ -73,7 +74,7 @@
                         <td>
                             <div class="d-flex flex-wrap gap-1">
                                 @foreach($vente->articles as $article)
-                                    <span class="badge badge-light" title="{{ $article->nom }} - Qté: {{ $article->pivot->quantite }} - Prix HT: {{ number_format($article->pivot->prix_unitaire_ht, 0, ',', ' ') }} FCFA">
+                                    <span class="badge badge-light" title="{{ $article->nom }} - Qté: {{ $article->pivot->quantite }} - Prix HT: {{ number_format($article->pivot->prix_unitaire, 0, ',', ' ') }} FCFA">
                                         {{ $article->nom }} ({{ $article->pivot->quantite }})
                                     </span>
                                 @endforeach
@@ -120,6 +121,16 @@
                                     <li>
                                         <a class="dropdown-item" href="{{ route('ventes.show', $vente) }}">
                                             <i class="fas fa-eye me-2"></i>Détails
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ventes.facture', $vente) }}" target="_blank">
+                                            <i class="fas fa-file-pdf me-2"></i>Facture proforma (PDF)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ventes.bon-livraison-client.pdf', $vente) }}" target="_blank">
+                                            <i class="fas fa-truck me-2"></i>Bon de livraison client (PDF)
                                         </a>
                                     </li>
                                     @if($vente->statut !== 'Payée')

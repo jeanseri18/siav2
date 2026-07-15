@@ -40,12 +40,12 @@
 <style>
 :root {
     --primary-color: #033d71;
-    --secondary-color: #0A8CFF;
+    --secondary-color: #033d71;
     --success-color: #28a745;
     --info-color: #17a2b8;
     --warning-color: #ffc107;
     --accent-color: #ffffff;
-    --gradient-primary: linear-gradient(135deg, #033d71 0%, #0A8CFF 100%);
+    --gradient-primary: linear-gradient(135deg, #033d71 0%, #033d71 100%);
     --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     --gradient-info: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
     --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);

@@ -18,6 +18,7 @@
                 <i class="fas fa-tools me-2"></i>Liste des Prestations
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('prestations.export.pdf')" />
                 <a href="{{ route('prestations.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une prestation
                 </a>

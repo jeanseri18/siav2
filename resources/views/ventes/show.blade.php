@@ -244,9 +244,13 @@
                     </button>
                     @endif
                     
-                    <button class="app-btn app-btn-info w-100" onclick="window.open('{{ route('ventes.facture', $vente) }}', '_blank')">
-                        <i class="fas fa-print me-2"></i>Imprimer la facture
-                    </button>
+                    <a href="{{ route('ventes.facture', $vente) }}" class="app-btn app-btn-info w-100" target="_blank">
+                        <i class="fas fa-file-pdf me-2"></i>Facture proforma (PDF)
+                    </a>
+
+                    <a href="{{ route('ventes.bon-livraison-client.pdf', $vente) }}" class="app-btn app-btn-outline-danger w-100" target="_blank">
+                        <i class="fas fa-truck me-2"></i>Bon de livraison client (PDF)
+                    </a>
                     
                     <a href="{{ route('ventes.index') }}" class="app-btn app-btn-outline-secondary w-100">
                         <i class="fas fa-arrow-left me-2"></i>Retour à la liste

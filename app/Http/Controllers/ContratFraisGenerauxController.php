@@ -55,7 +55,7 @@ class ContratFraisGenerauxController extends Controller
         $parent->contrat_id = $contratId;
         $parent->ref = 'FG-' . $contrat->code . '-' . date('YmdHis');
         $parent->montant_total = 0;
-        $parent->type = 'réalisé';
+        $parent->type = FraisGenerauxParent::TYPE_REALISE;
         $parent->statut = FraisGenerauxParent::STATUT_BROUILLON;
         $parent->save();
         

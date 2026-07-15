@@ -8,34 +8,103 @@ use App\Models\ClientFournisseur;
 use App\Models\DemandeApprovisionnement;
 use App\Models\DemandeAchat;
 use App\Models\DemandeCotation;
+use App\Models\FournisseurDemandeCotation;
+use App\Models\Projet;
 use App\Models\Article;
 use App\Models\Reference;
-use App\Models\Projet;
 use App\Models\ModePaiement;
-use App\Models\ConfigGlobal;
+use App\Models\Monnaie;
+use App\Http\Controllers\Concerns\ExportsListPdf;
+use App\Support\PdfBranding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class BonCommandeController extends Controller
 {
+    use ExportsListPdf;
+
     public function index()
     {
         $bonCommandes = BonCommande::with(['fournisseur', 'user', 'demandeApprovisionnement', 'demandeAchat'])->get();
         return view('bon_commandes.index', compact('bonCommandes'));
     }
 
-    public function create()
+    public function exportListePdf()
     {
+        $bonCommandes = BonCommande::with('fournisseur')
+            ->orderByDesc('date_commande')
+            ->get();
+
+        $rows = [];
+        foreach ($bonCommandes as $bonCommande) {
+            $rows[] = [
+                $bonCommande->reference,
+                $bonCommande->date_commande?->format('d/m/Y') ?? '—',
+                $bonCommande->fournisseur?->nom_raison_sociale ?? '—',
+                number_format((float) ($bonCommande->montant_total ?? 0), 0, ',', ' ').' FCFA',
+                $bonCommande->statut ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des bons de commande',
+            ['Référence', 'Date', 'Fournisseur', 'Montant', 'Statut'],
+            $rows,
+            'liste-bons-commande'
+        );
+    }
+
+    public function create(Request $request)
+    {
+        if ($request->filled('demande_approvisionnement_id')) {
+            if (DemandeAchat::where('demande_approvisionnement_id', $request->demande_approvisionnement_id)->exists()) {
+                return redirect()->route('demande-approvisionnements.show', $request->demande_approvisionnement_id)
+                    ->with('error', 'Une demande d\'achat existe déjà pour cette demande d\'approvisionnement. Le bon de commande se fait après la cotation, à partir de la demande d\'achat ou de la demande de cotation.');
+            }
+        }
+
+        if ($request->filled('demande_achat_id')) {
+            $da = DemandeAchat::find($request->demande_achat_id);
+            if ($da && !$da->peutAssocierNouveauBonCommande()) {
+                return redirect()->route('demande-achats.show', $da)
+                    ->with('error', 'Un bon de commande actif existe déjà pour cette demande d\'achat (créé ou validé). Création d\'un second bon impossible tant qu\'il n\'est pas annulé.');
+            }
+        }
+
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
-        $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')->get();
-        $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
-        $demandesCotation = DemandeCotation::with('demandeAchat')->where('statut', 'terminée')->get();
+        $fournisseursPaiementMap = $fournisseurs->mapWithKeys(function (ClientFournisseur $f) {
+            return [
+                (string) $f->id => [
+                    'mode_paiement' => $f->mode_paiement,
+                    'delai_reglement' => $this->normalizeDelaiPourSelect($f->delai_paiement),
+                ],
+            ];
+        });
+        // Inclure les DAP sans DA, ou avec au moins une DA approuvée (sinon la DAP disparaît du <select>
+        // alors que le flux DC → DA la référence encore, et le préremplissage JS ne peut pas s’afficher).
+        $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')
+            ->where(function ($q) {
+                $q->whereDoesntHave('demandeAchats')
+                    ->orWhereHas('demandeAchats', function ($q2) {
+                        $q2->where('statut', 'approuvée');
+                    });
+            })
+            ->get();
+        $demandesAchat = DemandeAchat::where('statut', 'approuvée')
+            ->whereDoesntHave('bonCommandes', function ($q) {
+                $q->where('statut', '!=', 'annulée');
+            })
+            ->get();
+        $demandesCotation = DemandeCotation::with('demandeAchat')
+            ->eligiblePourBonCommande()
+            ->whereDoesntHave('bonCommandes')
+            ->get();
         $projets = Projet::all();
         $modesPaiement = ModePaiement::all();
         $articles = Article::with('uniteMesure')->get();
         
-        return view('bon_commandes.create', compact('fournisseurs', 'demandesAppro', 'demandesAchat', 'demandesCotation', 'projets', 'modesPaiement', 'articles'));
+        return view('bon_commandes.create', compact('fournisseurs', 'fournisseursPaiementMap', 'demandesAppro', 'demandesAchat', 'demandesCotation', 'projets', 'modesPaiement', 'articles'));
     }
 
     public function store(Request $request)
@@ -55,6 +124,31 @@ class BonCommandeController extends Controller
             'prix_unitaire' => 'required|array',
             'prix_unitaire.*' => 'numeric|min:0'
         ]);
+
+        if ($request->filled('demande_cotation_id')) {
+            if (BonCommande::where('demande_cotation_id', $request->demande_cotation_id)->exists()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Un bon de commande existe déjà pour cette demande de cotation.');
+            }
+        }
+
+        if ($request->filled('demande_achat_id')) {
+            $da = DemandeAchat::find($request->demande_achat_id);
+            if ($da && !$da->peutAssocierNouveauBonCommande()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Un bon de commande actif existe déjà pour cette demande d\'achat. Impossible d\'en créer un second tant que le précédent n\'est pas annulé.');
+            }
+        }
+
+        if ($request->filled('demande_approvisionnement_id')) {
+            if (DemandeAchat::where('demande_approvisionnement_id', $request->demande_approvisionnement_id)->exists()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Une demande d\'achat existe déjà pour cette demande d\'approvisionnement. Le bon de commande ne peut pas être créé directement depuis la demande d\'approvisionnement.');
+            }
+        }
 
         // Générer la référence
         $lastReference = Reference::where('nom', 'Code bon de commande')
@@ -123,7 +217,7 @@ class BonCommandeController extends Controller
 
     public function show(BonCommande $bonCommande)
     {
-        $bonCommande->load(['fournisseur', 'user', 'demandeApprovisionnement', 'demandeAchat', 'lignes.article']);
+        $bonCommande->load(['fournisseur', 'user', 'demandeApprovisionnement', 'demandeAchat', 'lignes.article.uniteMesure']);
         return view('bon_commandes.show', compact('bonCommande'));
     }
 
@@ -135,9 +229,29 @@ class BonCommandeController extends Controller
         }
 
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
-        $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')->get();
-        $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
-        $demandesCotation = DemandeCotation::with('demandeAchat')->where('statut', 'terminée')->get();
+        $demandesAppro = DemandeApprovisionnement::where('statut', 'approuvée')
+            ->where(function ($q) use ($bonCommande) {
+                $q->whereDoesntHave('demandeAchats');
+                if ($bonCommande->demande_approvisionnement_id) {
+                    $q->orWhere('id', $bonCommande->demande_approvisionnement_id);
+                }
+            })
+            ->get();
+        $demandesAchat = DemandeAchat::where('statut', 'approuvée')
+            ->whereDoesntHave('bonCommandes', function ($q2) use ($bonCommande) {
+                $q2->where('statut', '!=', 'annulée')
+                    ->where('bon_commandes.id', '!=', $bonCommande->id);
+            })
+            ->get();
+        $demandesCotation = DemandeCotation::with('demandeAchat')
+            ->eligiblePourBonCommande()
+            ->where(function ($q) use ($bonCommande) {
+                $q->whereDoesntHave('bonCommandes');
+                if ($bonCommande->demande_cotation_id) {
+                    $q->orWhere('id', $bonCommande->demande_cotation_id);
+                }
+            })
+            ->get();
         $projets = Projet::all();
         $modesPaiement = ModePaiement::all();
         $articles = Article::with('uniteMesure')->get();
@@ -169,6 +283,31 @@ class BonCommandeController extends Controller
             'prix_unitaire' => 'required|array',
             'prix_unitaire.*' => 'numeric|min:0'
         ]);
+
+        if ($request->filled('demande_approvisionnement_id')) {
+            $dapId = (int) $request->demande_approvisionnement_id;
+            if (DemandeAchat::where('demande_approvisionnement_id', $dapId)->exists()) {
+                $currentId = $bonCommande->demande_approvisionnement_id ? (int) $bonCommande->demande_approvisionnement_id : null;
+                if ($currentId !== $dapId) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'Cette demande d\'approvisionnement a déjà une demande d\'achat : le bon de commande doit suivre le circuit achat / cotation.');
+                }
+            }
+        }
+
+        if ($request->filled('demande_achat_id')) {
+            $daId = (int) $request->demande_achat_id;
+            $conflit = BonCommande::where('demande_achat_id', $daId)
+                ->where('statut', '!=', 'annulée')
+                ->where('id', '!=', $bonCommande->id)
+                ->exists();
+            if ($conflit) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Cette demande d\'achat a déjà un autre bon de commande actif.');
+            }
+        }
 
         // Calculer le montant total avec remises
         $montantTotal = 0;
@@ -330,49 +469,142 @@ class BonCommandeController extends Controller
     public function getDemandeAchatFromCotation($demandeCotationId)
     {
         $demandeCotation = DemandeCotation::with([
-            'demandeAchat.demandeApprovisionnement',
+            'demandeAchat.demandeApprovisionnement.projet',
             'demandeAchat.projet',
-            'fournisseurs.fournisseur'
-        ])->find($demandeCotationId);
-        
+            'lignes.article.uniteMesure',
+            'fournisseurs.fournisseur',
+        ])->eligiblePourBonCommande()->find($demandeCotationId);
+
         $response = ['success' => false];
-        
-        if ($demandeCotation && $demandeCotation->demandeAchat) {
-            $response = [
-                'success' => true,
-                'demande_achat_id' => $demandeCotation->demandeAchat->id,
-                'demande_achat_reference' => $demandeCotation->demandeAchat->reference
-            ];
-            
-            // Ajouter la demande d'approvisionnement si elle existe
-            if ($demandeCotation->demandeAchat->demandeApprovisionnement) {
-                $response['demande_approvisionnement_id'] = $demandeCotation->demandeAchat->demandeApprovisionnement->id;
-                $response['demande_approvisionnement_reference'] = $demandeCotation->demandeAchat->demandeApprovisionnement->reference;
+
+        if (! $demandeCotation) {
+            $response['message'] = 'Demande de cotation introuvable ou non éligible pour un bon de commande (statut validée / terminée, ou fournisseur retenu avec réponse enregistrée).';
+
+            return response()->json($response);
+        }
+
+        $response['success'] = true;
+        $response['demande_cotation_reference'] = $demandeCotation->reference;
+
+        if ($demandeCotation->demandeAchat) {
+            $da = $demandeCotation->demandeAchat;
+            $response['demande_achat_id'] = $da->id;
+            $response['demande_achat_reference'] = $da->reference;
+
+            if ($da->demandeApprovisionnement) {
+                $response['demande_approvisionnement_id'] = $da->demandeApprovisionnement->id;
+                $response['demande_approvisionnement_reference'] = $da->demandeApprovisionnement->reference;
             }
-            
-            // Ajouter le projet si il existe
-            if ($demandeCotation->demandeAchat->projet) {
-                $response['projet_id'] = $demandeCotation->demandeAchat->projet->id;
-                $response['projet_nom'] = $demandeCotation->demandeAchat->projet->nom_projet;
-            }
-            
-            // Chercher le fournisseur retenu
-            $fournisseurRetenu = $demandeCotation->fournisseurs->where('retenu', true)->first();
-            
-            if ($fournisseurRetenu && $fournisseurRetenu->fournisseur) {
-                $response['fournisseur'] = [
-                    'id' => $fournisseurRetenu->fournisseur->id,
-                    'nom' => $fournisseurRetenu->fournisseur->nom_raison_sociale,
-                    'prenoms' => $fournisseurRetenu->fournisseur->prenoms,
-                    'mode_paiement' => $fournisseurRetenu->fournisseur->mode_paiement,
-                    'delai_paiement' => $fournisseurRetenu->fournisseur->delai_paiement
-                ];
+
+            $projet = $da->projet ?? $da->demandeApprovisionnement?->projet;
+            if ($projet) {
+                $response['projet_id'] = $projet->id;
+                $response['projet_nom'] = $projet->nom_projet;
+                $response['lieu_livraison'] = $this->formatLieuLivraisonDepuisProjet($projet);
             }
         } else {
-            $response['message'] = 'Aucune demande d\'achat liée trouvée';
+            $response['message'] = 'Aucune demande d\'achat liée à cette cotation';
         }
-        
+
+        $fournisseurRetenu = $this->resolveFournisseurPourBonCommande($demandeCotation);
+
+        if ($fournisseurRetenu && $fournisseurRetenu->fournisseur) {
+            $frs = $fournisseurRetenu->fournisseur;
+            $response['fournisseur_id'] = $fournisseurRetenu->fournisseur_id;
+            $response['fournisseur'] = [
+                'id' => $frs->id,
+                'nom' => $frs->nom_raison_sociale,
+                'prenoms' => $frs->prenoms,
+                'mode_paiement' => $frs->mode_paiement,
+                'delai_paiement' => $frs->delai_paiement,
+                'delai_reglement' => $this->normalizeDelaiPourSelect($frs->delai_paiement),
+            ];
+        }
+
+        $response['lignes_articles'] = $demandeCotation->lignes->map(function ($ligne) {
+            $article = $ligne->article;
+            $pu = ($article && $article->prix_unitaire !== null) ? (float) $article->prix_unitaire : 0.0;
+
+            return [
+                'article_id' => $ligne->article_id,
+                'quantite' => (float) $ligne->quantite,
+                'prix_unitaire' => $pu,
+                'remise' => 0,
+                'commentaire' => trim((string) ($ligne->specifications ?: ($ligne->designation ?? ''))),
+            ];
+        })->values()->all();
+
         return response()->json($response);
+    }
+
+    /**
+     * Localisation textuelle du projet (secteur, quartier, commune, ville, pays).
+     */
+    protected function formatLieuLivraisonDepuisProjet(Projet $projet): ?string
+    {
+        $projet->loadMissing([
+            'pays',
+            'ville',
+            'commune',
+            'quartier',
+            'secteurLocalisation',
+        ]);
+
+        $parts = array_filter([
+            $projet->secteurLocalisation?->nom,
+            $projet->quartier?->nom,
+            $projet->commune?->nom,
+            $projet->ville?->nom,
+            $projet->pays?->nom,
+        ]);
+
+        return $parts !== [] ? implode(', ', $parts) : null;
+    }
+
+    /**
+     * Aligne la valeur fiche fournisseur sur les options du select (0, 15, 30…).
+     */
+    protected function normalizeDelaiPourSelect(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $v = trim((string) $value);
+        if (preg_match('/^(\d+)/', $v, $m)) {
+            $days = (int) $m[1];
+            if (in_array($days, [0, 15, 30, 45, 60, 90], true)) {
+                return (string) $days;
+            }
+        }
+        if (stripos($v, 'comptant') !== false) {
+            return '0';
+        }
+
+        return null;
+    }
+
+    /**
+     * Fournisseur marqué « retenu », sinon meilleure offre parmi les fournisseurs ayant répondu (cas « terminer » sans clic explicite).
+     */
+    protected function resolveFournisseurPourBonCommande(DemandeCotation $demandeCotation): ?FournisseurDemandeCotation
+    {
+        $lignes = $demandeCotation->fournisseurs;
+
+        $explicit = $lignes->first(fn (FournisseurDemandeCotation $f) => (bool) $f->retenu);
+        if ($explicit) {
+            return $explicit;
+        }
+
+        $repondu = $lignes->where('repondu', true);
+        if ($repondu->isEmpty()) {
+            return null;
+        }
+
+        return $repondu->sortBy(function (FournisseurDemandeCotation $f) {
+            $m = $f->montant_total;
+
+            return $m === null ? PHP_FLOAT_MAX : (float) $m;
+        })->first();
     }
 
     /**
@@ -381,19 +613,215 @@ class BonCommandeController extends Controller
     public function exportPDF($id)
     {
         $bonCommande = BonCommande::with([
-            'fournisseur', 
-            'user.bus', 
-            'lignes.article', 
-            'demandeApprovisionnement', 
-            'demandeAchat'
+            'fournisseur',
+            'user',
+            'lignes.article.uniteMesure',
+            'demandeApprovisionnement.projet',
+            'demandeAchat.projet',
+            'demandeCotation',
+            'projet.chefProjet',
+            'projet.contrats',
         ])->findOrFail($id);
-        
-        // Récupérer les configurations globales
-        $configGlobal = ConfigGlobal::first();
-        
-        $pdf = PDF::loadView('bon_commandes.bon_commande_pdf', compact('bonCommande', 'configGlobal'))
-            ->setPaper('a4', 'portrait');
-        
-        return $pdf->download('Bon_Commande_' . $bonCommande->reference . '.pdf');
+
+        $buId = PdfBranding::resolveBuIdForBonCommande($bonCommande);
+        $pdfBranding = PdfBranding::forBu($buId);
+        $configGlobal = $pdfBranding['config'];
+        $bc = $this->buildBonCommandePdfData($bonCommande, $pdfBranding);
+
+        $pdf = PDF::loadView('bon_commandes.bon_commande_pdf', compact(
+            'bonCommande',
+            'configGlobal',
+            'pdfBranding',
+            'bc'
+        ))
+            ->setPaper('a4', 'portrait')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
+        return $pdf->stream('Bon_Commande_' . $bc['numero_po'] . '.pdf');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildBonCommandePdfData(BonCommande $bonCommande, array $pdfBranding): array
+    {
+        $lignes = [];
+        $totalHtBrut = 0.0;
+        $totalRemise = 0.0;
+        $totalHtNet = 0.0;
+        $index = 1;
+
+        foreach ($bonCommande->lignes as $ligne) {
+            $montantBrut = (float) $ligne->quantite * (float) $ligne->prix_unitaire;
+            $montantRemise = $montantBrut * (float) ($ligne->remise ?? 0) / 100;
+            $montantHt = $montantBrut - $montantRemise;
+
+            $lignes[] = [
+                'numero_ligne' => str_pad((string) $index++, 3, '0', STR_PAD_LEFT),
+                'ref_article' => $ligne->article?->reference ?? '—',
+                'designation' => $ligne->article?->nom ?? ('Article #' . $ligne->article_id),
+                'unite' => $ligne->article?->uniteMesure?->ref
+                    ?? $ligne->article?->uniteMesure?->nom
+                    ?? '—',
+                'quantite' => (float) $ligne->quantite,
+                'prix_unitaire' => (float) $ligne->prix_unitaire,
+                'remise' => (float) ($ligne->remise ?? 0),
+                'montant_ht' => $montantHt,
+            ];
+
+            $totalHtBrut += $montantBrut;
+            $totalRemise += $montantRemise;
+            $totalHtNet += $montantHt;
+        }
+
+        if ($totalHtNet <= 0) {
+            $totalHtNet = (float) ($bonCommande->montant_total ?? 0);
+            $totalHtBrut = $totalHtNet;
+        }
+
+        $projet = $bonCommande->projet;
+        $tauxTva = ($projet && $projet->tva_achat) ? 18 : 0;
+        if ($tauxTva === 0 && $projet?->contrats?->isNotEmpty()) {
+            $contrat = $projet->contrats->first();
+            $tauxTva = ($contrat->tva_18 ?? false) ? 18 : 0;
+        }
+
+        $tva = $totalHtNet * $tauxTva / 100;
+        $totalTtc = $totalHtNet + $tva;
+
+        $ref = strtoupper((string) ($bonCommande->reference ?? ''));
+        $numeroPo = str_starts_with($ref, 'PO')
+            ? $bonCommande->reference
+            : 'PO' . str_pad((string) $bonCommande->id, 7, '0', STR_PAD_LEFT);
+
+        $fournisseur = $bonCommande->fournisseur;
+        $company = $pdfBranding['company'] ?? [];
+        $adresseSia = trim(collect([
+            $company['localisation'] ?? null,
+            $company['adresse_postale'] ?? null,
+        ])->filter()->implode(' - '));
+
+        $docExterne = $bonCommande->demandeCotation?->reference
+            ?? $bonCommande->notes
+            ?? '';
+
+        $conditionsPaiement = $bonCommande->mode_reglement
+            ?: ($bonCommande->conditions_paiement
+            ?: ($fournisseur?->mode_paiement ?? '—'));
+
+        if (filled($bonCommande->delai_reglement)) {
+            $conditionsPaiement = trim($conditionsPaiement . ' — ' . $bonCommande->delai_reglement);
+        }
+
+        $monnaie = Monnaie::query()->whereIn('sigle', ['XOF', 'FCFA'])->first()
+            ?? Monnaie::query()->first();
+        $devise = $monnaie?->sigle ?? '—';
+        $deviseLibelle = $monnaie?->nom ?? '';
+
+        $contratRef = $projet?->contrats?->first()?->ref_contrat
+            ?? $projet?->ref_projet
+            ?? '';
+
+        $responsableContrat = $bonCommande->user?->nom_complet
+            ?: trim(($projet?->chefProjet?->prenom ?? '') . ' ' . ($projet?->chefProjet?->nom ?? ''))
+            ?: '—';
+
+        $horairesOuverture = filled($pdfBranding['config']?->horaires_ouverture)
+            ? $pdfBranding['config']->horaires_ouverture
+            : (filled($company['horaires_ouverture'] ?? null)
+                ? $company['horaires_ouverture']
+                : '8 :00 – 17 :00, tous les jours du lundi au vendredi');
+
+        return [
+            'numero_po' => $numeroPo,
+            'date_document' => $bonCommande->date_commande?->format('d/m/Y') ?? now()->format('d/m/Y'),
+            'nom_projet' => $projet?->nom_projet ?? '—',
+            'doc_externe' => $docExterne,
+            'conditions_paiement' => $conditionsPaiement,
+            'devise' => $devise,
+            'devise_libelle' => $deviseLibelle,
+            'contrat_ref' => $contratRef,
+            'responsable_contrat' => $responsableContrat,
+            'lieu_livraison' => $bonCommande->lieu_livraison ?? '—',
+            'adresse_sia' => $adresseSia ?: '—',
+            'horaires_ouverture' => $horairesOuverture,
+            'nom_entreprise' => $pdfBranding['nom_entreprise'],
+            'email_entreprise' => $company['email'] ?? '',
+            'company' => $company,
+            'fournisseur_nom' => $fournisseur?->nom_raison_sociale ?? '—',
+            'fournisseur_adresse' => trim(($fournisseur?->adresse_localisation ?? '')
+                . ($fournisseur?->boite_postale ? "\n" . $fournisseur->boite_postale : '')),
+            'fournisseur_tel' => $fournisseur?->telephone ?? '',
+            'fournisseur_email' => $fournisseur?->email ?? '',
+            'lignes' => $lignes,
+            'total_ht_brut' => $totalHtBrut,
+            'total_remise' => $totalRemise,
+            'total_ht_net' => $totalHtNet,
+            'taux_tva' => $tauxTva,
+            'tva' => $tva,
+            'total_ttc' => $totalTtc,
+            'montant_lettres' => trim($this->montantEnLettres($totalHtNet)
+                . ($deviseLibelle !== '' ? ' ' . $deviseLibelle : '')),
+            'date_visa' => $bonCommande->date_commande?->format('d/m/Y') ?? now()->format('d/m/Y'),
+            'visa_financier' => $bonCommande->user?->nom_complet ?? '',
+            'visa_dg' => $projet?->chefProjet
+                ? trim(($projet->chefProjet->prenom ?? '') . ' ' . ($projet->chefProjet->nom ?? ''))
+                : '',
+        ];
+    }
+
+    private function montantEnLettres(float $montant): string
+    {
+        $n = (int) round($montant);
+        if ($n === 0) {
+            return 'Zéro';
+        }
+
+        $ones = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf'];
+        $tens = ['', 'Dix', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante-dix', 'Quatre-vingt', 'Quatre-vingt-dix'];
+
+        $convert = function (int $number) use (&$convert, $ones, $tens): string {
+            if ($number === 0) {
+                return '';
+            }
+            if ($number >= 1000000) {
+                $m = intdiv($number, 1000000);
+                $rest = $number % 1000000;
+                $word = ($m === 1 ? 'Un Million' : $convert($m) . ' Millions');
+
+                return trim($word . ($rest ? ' ' . $convert($rest) : ''));
+            }
+            if ($number >= 1000) {
+                $t = intdiv($number, 1000);
+                $rest = $number % 1000;
+                $word = ($t === 1 ? 'Mille' : $convert($t) . ' Mille');
+
+                return trim($word . ($rest ? ' ' . $convert($rest) : ''));
+            }
+            if ($number >= 100) {
+                $h = intdiv($number, 100);
+                $rest = $number % 100;
+                $word = ($h === 1 ? 'Cent' : $ones[$h] . ' Cent');
+
+                return trim($word . ($rest ? ' ' . $convert($rest) : ''));
+            }
+            if ($number >= 20) {
+                $ten = intdiv($number, 10);
+                $one = $number % 10;
+
+                return $one > 0 ? $tens[$ten] . '-' . $ones[$one] : $tens[$ten];
+            }
+            if ($number >= 10) {
+                return match ($number) {
+                    10 => 'Dix', 11 => 'Onze', 12 => 'Douze', 13 => 'Treize',
+                    14 => 'Quatorze', 15 => 'Quinze', 16 => 'Seize',
+                    default => 'Dix-' . $ones[$number - 10],
+                };
+            }
+
+            return $ones[$number];
+        };
+
+        return $convert($n);
     }
 }

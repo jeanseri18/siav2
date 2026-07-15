@@ -46,4 +46,41 @@ class DemandeCotation extends Model
     {
         return $this->hasMany(LigneDemandeCotation::class, 'demande_cotation_id');
     }
+
+    public function bonCommandes()
+    {
+        return $this->hasMany(BonCommande::class, 'demande_cotation_id');
+    }
+
+    /**
+     * DC terminée, ou statut « validée », ou encore « en cours » avec fournisseur retenu ayant répondu (cotation prête pour BC).
+     */
+    public function scopeEligiblePourBonCommande($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('statut', ['validée', 'terminée'])
+                ->orWhere(function ($q2) {
+                    $q2->where('statut', 'en cours')
+                        ->whereHas('fournisseurs', function ($fq) {
+                            $fq->where('retenu', true)->where('repondu', true);
+                        });
+                });
+        });
+    }
+
+    public function estEligiblePourBonCommande(): bool
+    {
+        if (in_array($this->statut, ['validée', 'terminée'], true)) {
+            return true;
+        }
+
+        if ($this->statut === 'en cours') {
+            return $this->fournisseurs()
+                ->where('retenu', true)
+                ->where('repondu', true)
+                ->exists();
+        }
+
+        return false;
+    }
 }

@@ -67,7 +67,7 @@
                                             </a>
                                             
                                             <!-- Boutons d'approbation pour responsable -->
-                                            @if($demande->statut == 'en_attente_responsable' && $demande->responsable_hierarchique_id == Auth::id())
+                                            @if($demande->statut == 'en_attente_responsable' && ($demande->responsable_hierarchique_id == Auth::id() || in_array(Auth::user()->role, ['admin', 'dg'])))
                                                 <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="approuverDemande({{ $demande->id }}, 'responsable', 'approuver')" title="Approuver">
                                                     <i class="fas fa-check"></i> Approuver
                                                 </button>

@@ -124,18 +124,13 @@
                         
 
                         
-                        <div class="app-form-group">
-                            <label for="logo" class="app-form-label">
-                                <i class="fas fa-image me-2"></i>Logo
-                            </label>
-                            @if($configGlobal->logo)
-                                <div class="app-mt-2 app-mb-3">
-                                    <img src="{{ asset('storage/' . $configGlobal->logo) }}" alt="Logo actuel" class="img-fluid" style="max-width: 150px; border-radius: var(--border-radius-md); border: 1px solid var(--gray-200);">
-                                </div>
-                            @endif
-                            <input type="file" class="app-form-control" name="logo">
-                            <div class="app-form-text">Logo qui apparaîtra sur les documents (format recommandé: PNG ou JPG)</div>
-                        </div>
+                        <x-photo-dropzone
+                            name="logo"
+                            id="logo"
+                            label="Logo"
+                            :current-url="$configGlobal->logo ? asset('storage/' . $configGlobal->logo) : null"
+                            help="Logo qui apparaîtra sur les documents (PNG ou JPG recommandé). Glissez-déposez ou cliquez."
+                        />
                         
                         <div class="app-card-footer">
                             <a href="{{ route('config-global.index') }}" class="app-btn app-btn-secondary">

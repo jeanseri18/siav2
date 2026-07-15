@@ -17,6 +17,9 @@
                 <i class="fas fa-users me-2"></i>Liste des Clients
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('clients.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('clients.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-user-plus"></i> Ajouter un Client
                 </a>

@@ -31,7 +31,7 @@ class BUController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'numero_rccm' => 'required|string|max:255',
             'numero_cc' => 'required|string|max:255',
-            'soldecaisse'=> 'required|string|max:255',
+            'soldecaisse'=> ['required', 'numeric', 'min:0'],
             'statut' => 'required|in:actif,inactif',
         ]);
 
@@ -68,6 +68,7 @@ class BUController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'numero_rccm' => 'required|string|max:255',
             'numero_cc' => 'required|string|max:255',
+            'soldecaisse' => 'required|numeric',
             'statut' => 'required|in:actif,inactif',
         ]);
 

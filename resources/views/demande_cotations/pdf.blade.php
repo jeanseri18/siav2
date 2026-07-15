@@ -19,10 +19,7 @@
             border-bottom: 2px solid #28a745;
             padding-bottom: 20px;
         }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
         .company-info {
             text-align: right;
         }
@@ -136,15 +133,16 @@
     </style>
 </head>
 <body>
+@php
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+@endphp
     <div class="header">
         <div>
-            @if($demandeCotation->user && $demandeCotation->user->bus && $demandeCotation->user->bus->logo)
-                <img src="{{ public_path('storage/' . $demandeCotation->user->bus->logo) }}" alt="Logo" class="logo">
-            @endif
+            @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo'])
         </div>
         <div class="company-info">
             <div class="title">DEMANDE DE COTATION</div>
-            <div class="subtitle">{{ $demandeCotation->user && $demandeCotation->user->bus ? $demandeCotation->user->bus->nom : 'Entreprise' }}</div>
+            <div class="subtitle">{{ $pdfBranding['nom_entreprise'] }}</div>
         </div>
     </div>
 
@@ -168,6 +166,8 @@
                 <div class="info-value">
                     @if($demandeCotation->statut == 'en cours')
                         <span class="status status-ongoing">En cours</span>
+                    @elseif($demandeCotation->statut == 'validée')
+                        <span class="status status-completed">Validée</span>
                     @elseif($demandeCotation->statut == 'terminée')
                         <span class="status status-completed">Terminée</span>
                     @elseif($demandeCotation->statut == 'annulée')
@@ -269,9 +269,7 @@
 
     <div class="footer">
         <p>Document généré le {{ date('d/m/Y H:i') }}</p>
-        @if($demandeCotation->user && $demandeCotation->user->bus)
-        <p>{{ $demandeCotation->user->bus->nom }}</p>
-        @endif
+        <p>{{ $pdfBranding['nom_entreprise'] }}</p>
     </div>
 </body>
 </html>

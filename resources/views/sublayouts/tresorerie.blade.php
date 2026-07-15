@@ -45,7 +45,7 @@
 <style>
 :root {
     --primary-color: #033d71;
-    --secondary-color: #0A8CFF;
+    --secondary-color: #033d71;
     --success-color: #28a745;
     --info-color: #17a2b8;
     --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);

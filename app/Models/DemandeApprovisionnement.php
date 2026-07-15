@@ -52,4 +52,9 @@ class DemandeApprovisionnement extends Model
     {
         return $this->hasMany(BonCommande::class, 'demande_approvisionnement_id');
     }
+
+    public function demandeAchats()
+    {
+        return $this->hasMany(DemandeAchat::class, 'demande_approvisionnement_id');
+    }
 }

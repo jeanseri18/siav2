@@ -11,22 +11,64 @@ use App\Models\Article;
 use App\Models\Reference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Concerns\ExportsListPdf;
+use App\Support\PdfBranding;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class DemandeCotationController extends Controller
 {
+    use ExportsListPdf;
+
     public function index()
     {
-        $demandes = DemandeCotation::with(['user', 'demandeAchat', 'fournisseurs.fournisseur'])->get();
+        $demandes = DemandeCotation::with(['user', 'demandeAchat', 'fournisseurs.fournisseur'])
+            ->withCount('bonCommandes')
+            ->get();
         return view('demande_cotations.index', compact('demandes'));
     }
 
-    public function create()
+    public function exportListePdf()
     {
-        $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
+        $demandes = DemandeCotation::with(['demandeAchat', 'fournisseurs'])
+            ->orderByDesc('date_demande')
+            ->get();
+
+        $rows = [];
+        foreach ($demandes as $demande) {
+            $rows[] = [
+                $demande->reference,
+                $demande->date_demande?->format('d/m/Y') ?? '—',
+                $demande->date_expiration?->format('d/m/Y') ?? '—',
+                (string) $demande->fournisseurs->count(),
+                $demande->demandeAchat?->reference ?? '—',
+                $demande->statut ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des demandes de cotation',
+            ['Référence', 'Date', 'Expiration', 'Nb fournisseurs', 'Demande achat', 'Statut'],
+            $rows,
+            'liste-demandes-cotation'
+        );
+    }
+
+    public function create(Request $request)
+    {
+        if ($request->filled('demande_achat_id')) {
+            if (DemandeCotation::where('demande_achat_id', $request->demande_achat_id)->exists()) {
+                return redirect()->route('demande-achats.show', $request->demande_achat_id)
+                    ->with('error', 'Une demande de cotation existe déjà pour cette demande d\'achat.');
+            }
+        }
+
+        $demandesAchat = DemandeAchat::where('statut', 'approuvée')
+            ->whereDoesntHave('demandeCotations')
+            ->get();
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
         $articles = Article::all();
-        
+
         return view('demande_cotations.create', compact('demandesAchat', 'fournisseurs', 'articles'));
     }
 
@@ -51,6 +93,14 @@ class DemandeCotationController extends Controller
             'specifications' => 'nullable|array',
             'specifications.*' => 'nullable|string'
         ]);
+
+        if ($request->filled('demande_achat_id')) {
+            if (DemandeCotation::where('demande_achat_id', $request->demande_achat_id)->exists()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Une demande de cotation existe déjà pour cette demande d\'achat.');
+            }
+        }
 
         // Générer la référence
         $lastReference = Reference::where('nom', 'Code Demande Cotation')
@@ -108,6 +158,7 @@ class DemandeCotationController extends Controller
     public function show(DemandeCotation $demandeCotation)
     {
         $demandeCotation->load(['user', 'demandeAchat', 'fournisseurs.fournisseur', 'lignes.article']);
+        $demandeCotation->loadCount('bonCommandes');
         return view('demande_cotations.show', compact('demandeCotation'));
     }
 
@@ -118,12 +169,19 @@ class DemandeCotationController extends Controller
                 ->with('error', 'Impossible de modifier une demande qui n\'est pas en cours');
         }
 
-        $demandesAchat = DemandeAchat::where('statut', 'approuvée')->get();
+        $demandesAchat = DemandeAchat::where('statut', 'approuvée')
+            ->where(function ($q) use ($demandeCotation) {
+                $q->whereDoesntHave('demandeCotations');
+                if ($demandeCotation->demande_achat_id) {
+                    $q->orWhere('id', $demandeCotation->demande_achat_id);
+                }
+            })
+            ->get();
         $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')->where('statut', 'Actif')->get();
         $articles = Article::all();
-        
+
         $demandeCotation->load(['fournisseurs.fournisseur', 'lignes.article']);
-        
+
         return view('demande_cotations.edit', compact('demandeCotation', 'demandesAchat', 'fournisseurs', 'articles'));
     }
 
@@ -153,6 +211,17 @@ class DemandeCotationController extends Controller
             'specifications' => 'nullable|array',
             'specifications.*' => 'nullable|string'
         ]);
+
+        if ($request->filled('demande_achat_id')) {
+            $conflit = DemandeCotation::where('demande_achat_id', $request->demande_achat_id)
+                ->where('id', '!=', $demandeCotation->id)
+                ->exists();
+            if ($conflit) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Une autre demande de cotation est déjà liée à cette demande d\'achat.');
+            }
+        }
 
        // Mettre à jour la demande
         $demandeCotation->update([
@@ -224,7 +293,7 @@ class DemandeCotationController extends Controller
                 ->with('error', 'Vous n\'avez pas les permissions nécessaires pour terminer cette demande.');
         }
 
-        if ($demandeCotation->statut !== 'en cours') {
+        if (! in_array($demandeCotation->statut, ['en cours', 'validée'], true)) {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Cette demande ne peut pas être terminée');
         }
@@ -247,7 +316,7 @@ class DemandeCotationController extends Controller
                 ->with('error', 'Vous n\'avez pas les permissions nécessaires pour annuler cette demande.');
         }
 
-        if ($demandeCotation->statut !== 'en cours') {
+        if (! in_array($demandeCotation->statut, ['en cours', 'validée'], true)) {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Cette demande ne peut pas être annulée');
         }
@@ -263,6 +332,8 @@ class DemandeCotationController extends Controller
 
     public function saveFournisseurResponse(Request $request, DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation)
     {
+        $this->assertFournisseurLigneBelongs($demandeCotation, $fournisseurDemandeCotation);
+
         if ($demandeCotation->statut !== 'en cours') {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Impossible d\'enregistrer la réponse d\'un fournisseur pour une demande qui n\'est pas en cours');
@@ -271,23 +342,126 @@ class DemandeCotationController extends Controller
         $request->validate([
             'date_reponse' => 'required|date',
             'montant_total' => 'required|numeric|min:0',
-            'commentaire' => 'nullable|string'
+            'commentaire' => 'nullable|string',
+            'devis_fichier' => 'nullable|file|mimes:pdf,jpeg,jpg,png|max:10240',
         ]);
 
-        // Mettre à jour la réponse du fournisseur
-        $fournisseurDemandeCotation->update([
+        $data = [
             'repondu' => true,
             'date_reponse' => $request->date_reponse,
             'montant_total' => $request->montant_total,
-            'commentaire' => $request->commentaire
-        ]);
+            'commentaire' => $request->commentaire,
+        ];
+
+        if ($request->hasFile('devis_fichier')) {
+            if ($fournisseurDemandeCotation->devis_fichier) {
+                Storage::disk('public')->delete($fournisseurDemandeCotation->devis_fichier);
+            }
+            $file = $request->file('devis_fichier');
+            $data['devis_fichier'] = $file->store('cotations_devis', 'public');
+            $data['devis_fichier_nom'] = $file->getClientOriginalName();
+        }
+
+        $fournisseurDemandeCotation->update($data);
 
         return redirect()->route('demande-cotations.show', $demandeCotation)
             ->with('success', 'Réponse du fournisseur enregistrée avec succès');
     }
 
+    /**
+     * Afficher ou télécharger le devis / pièce jointe fournisseur (PDF / image).
+     * Utiliser ?download=1 pour forcer le téléchargement (en-tête Content-Disposition: attachment).
+     */
+    public function showFournisseurDevis(Request $request, DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation)
+    {
+        $this->assertFournisseurLigneBelongs($demandeCotation, $fournisseurDemandeCotation);
+
+        if (! $fournisseurDemandeCotation->devis_fichier) {
+            abort(404);
+        }
+
+        if (! Storage::disk('public')->exists($fournisseurDemandeCotation->devis_fichier)) {
+            abort(404);
+        }
+
+        $nom = $fournisseurDemandeCotation->devis_fichier_nom ?: basename($fournisseurDemandeCotation->devis_fichier);
+
+        if ($request->boolean('download')) {
+            return Storage::disk('public')->download($fournisseurDemandeCotation->devis_fichier, $nom);
+        }
+
+        return Storage::disk('public')->response($fournisseurDemandeCotation->devis_fichier, $nom, [], 'inline');
+    }
+
+    /**
+     * Ajouter ou remplacer le devis d’une réponse déjà enregistrée.
+     */
+    public function uploadFournisseurDevis(Request $request, DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation)
+    {
+        $this->assertFournisseurLigneBelongs($demandeCotation, $fournisseurDemandeCotation);
+
+        if (! $this->statutPermetMiseAJourPieceJointeFournisseur($demandeCotation)) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Impossible de modifier la pièce jointe : la demande est annulée ou n\'est plus modifiable.');
+        }
+
+        if (! $fournisseurDemandeCotation->repondu) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Enregistrez d\'abord la réponse du fournisseur (montant, date).');
+        }
+
+        $request->validate([
+            'devis_fichier' => 'required|file|mimes:pdf,jpeg,jpg,png|max:10240',
+        ]);
+
+        if ($fournisseurDemandeCotation->devis_fichier) {
+            Storage::disk('public')->delete($fournisseurDemandeCotation->devis_fichier);
+        }
+
+        $file = $request->file('devis_fichier');
+        $fournisseurDemandeCotation->update([
+            'devis_fichier' => $file->store('cotations_devis', 'public'),
+            'devis_fichier_nom' => $file->getClientOriginalName(),
+        ]);
+
+        return redirect()->route('demande-cotations.show', $demandeCotation)
+            ->with('success', 'Pièce jointe du fournisseur enregistrée avec succès.');
+    }
+
+    /**
+     * Supprimer la pièce jointe (fichier sur disque + champs en base).
+     */
+    public function destroyFournisseurDevis(DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation)
+    {
+        $this->assertFournisseurLigneBelongs($demandeCotation, $fournisseurDemandeCotation);
+
+        if (! $this->statutPermetMiseAJourPieceJointeFournisseur($demandeCotation)) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Impossible de supprimer la pièce jointe : la demande est annulée ou n\'est plus modifiable.');
+        }
+
+        if (! $fournisseurDemandeCotation->repondu) {
+            return redirect()->route('demande-cotations.show', $demandeCotation)
+                ->with('error', 'Aucune réponse fournisseur enregistrée pour cette ligne.');
+        }
+
+        if ($fournisseurDemandeCotation->devis_fichier) {
+            Storage::disk('public')->delete($fournisseurDemandeCotation->devis_fichier);
+        }
+
+        $fournisseurDemandeCotation->update([
+            'devis_fichier' => null,
+            'devis_fichier_nom' => null,
+        ]);
+
+        return redirect()->route('demande-cotations.show', $demandeCotation)
+            ->with('success', 'Pièce jointe supprimée.');
+    }
+
     public function selectFournisseur(Request $request, DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation)
     {
+        $this->assertFournisseurLigneBelongs($demandeCotation, $fournisseurDemandeCotation);
+
         if ($demandeCotation->statut !== 'en cours') {
             return redirect()->route('demande-cotations.show', $demandeCotation)
                 ->with('error', 'Impossible de sélectionner un fournisseur pour une demande qui n\'est pas en cours');
@@ -323,10 +497,29 @@ class DemandeCotationController extends Controller
             'lignes.article', 
             'fournisseurs.fournisseur'
         ])->findOrFail($id);
+
+        $buId = $demandeCotation->demandeAchat?->projet?->bu_id ?? (session('selected_bu') ? (int) session('selected_bu') : null);
+        $pdfBranding = PdfBranding::forBu($buId);
         
-        $pdf = PDF::loadView('demande_cotations.pdf', compact('demandeCotation'))
+        $pdf = PDF::loadView('demande_cotations.pdf', compact('demandeCotation', 'pdfBranding'))
             ->setPaper('a4', 'portrait');
         
         return $pdf->download('Demande_Cotation_' . $demandeCotation->reference . '.pdf');
+    }
+
+    protected function assertFournisseurLigneBelongs(DemandeCotation $demandeCotation, FournisseurDemandeCotation $fournisseurDemandeCotation): void
+    {
+        abort_unless(
+            (int) $fournisseurDemandeCotation->demande_cotation_id === (int) $demandeCotation->id,
+            404
+        );
+    }
+
+    /**
+     * Statuts où l’on peut ajouter ou remplacer le fichier devis d’un fournisseur (réponse déjà enregistrée).
+     */
+    protected function statutPermetMiseAJourPieceJointeFournisseur(DemandeCotation $demandeCotation): bool
+    {
+        return in_array($demandeCotation->statut, ['en cours', 'validée', 'terminée'], true);
     }
 }

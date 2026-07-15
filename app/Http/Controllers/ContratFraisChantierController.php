@@ -54,7 +54,7 @@ class ContratFraisChantierController extends Controller
         $parent->contrat_id = $contratId;
         $parent->ref = 'FC-' . $contrat->code . '-' . date('YmdHis');
         $parent->montant_total = 0;
-        $parent->type = 'réalisé';
+        $parent->type = FraisChantierParent::TYPE_REALISE;
         $parent->statut = FraisChantierParent::STATUT_BROUILLON;
         $parent->save();
         

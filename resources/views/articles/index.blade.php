@@ -18,6 +18,9 @@
                 <i class="fas fa-boxes me-2"></i>Liste des Articles
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('articles.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('articles.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un article
                 </a>
@@ -103,10 +106,27 @@
                         </td>
                         <td>{{ $article->uniteMesure ? $article->uniteMesure->ref : '-' }}</td>
 
-                        <td>{{ number_format($article->cout_moyen_pondere, 0, ',', ' ') }}</td>
+                        @php
+                            $ind = $stockIndicators[$article->id] ?? [];
+                            $qCell = static function ($key) use ($ind) {
+                                $v = (float) ($ind[$key] ?? 0);
+                                if ($v <= 0) {
+                                    return '-';
+                                }
+                                if (abs($v - round($v)) < 0.000001) {
+                                    return number_format((int) round($v), 0, ',', ' ');
+                                }
+
+                                return number_format($v, 2, ',', ' ');
+                            };
+                            $cmpAffiche = (float) ($article->cout_moyen_pondere ?? 0);
+                            if ($cmpAffiche <= 0) {
+                                $cmpAffiche = (float) ($article->prix_unitaire ?? 0);
+                            }
+                        @endphp
+                        <td>{{ $cmpAffiche > 0 ? number_format($cmpAffiche, 0, ',', ' ') : '0' }}</td>
                         <td class="app-fw-bold text-center">
                             @php
-                                // Calculer la quantité de stock général comme la somme des quantités des projets
                                 $quantiteStockGeneral = DB::table('stock_projet')
                                     ->whereIn('id_projet', $projets_bu)
                                     ->where('article_id', $article->id)
@@ -116,105 +136,13 @@
                                 {{ $quantiteStockGeneral ?? 0 }}
                             </a>
                         </td>
-                        <td class="text-center">
-                             @php
-                                // Demande de ravitaillement (en attente)
-                                $demandeRav = DB::table('lignes_demande_ravitaillement')
-                                    ->join('demandes_ravitaillement', 'lignes_demande_ravitaillement.demande_ravitaillement_id', '=', 'demandes_ravitaillement.id')
-                                    ->join('contrats', 'demandes_ravitaillement.contrat_id', '=', 'contrats.id')
-                                    ->whereIn('contrats.id_projet', $projets_bu)
-                                    ->where('lignes_demande_ravitaillement.article_id', $article->id)
-                                    ->where('demandes_ravitaillement.statut', 'en_attente')
-                                    ->sum('lignes_demande_ravitaillement.quantite_demandee');
-                            @endphp
-                            {{ $demandeRav > 0 ? $demandeRav : '-' }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Ravitaillement en cours (livré mais pas totalement reçu)
-                                $ravEnCours = DB::table('lignes_demande_ravitaillement')
-                                    ->join('demandes_ravitaillement', 'lignes_demande_ravitaillement.demande_ravitaillement_id', '=', 'demandes_ravitaillement.id')
-                                    ->join('contrats', 'demandes_ravitaillement.contrat_id', '=', 'contrats.id')
-                                    ->whereIn('contrats.id_projet', $projets_bu)
-                                    ->where('lignes_demande_ravitaillement.article_id', $article->id)
-                                    ->whereIn('demandes_ravitaillement.statut', ['en_cours', 'livree'])
-                                    ->select(DB::raw('SUM(quantite_livree - COALESCE(quantite_recue, 0)) as qte_en_cours'))
-                                    ->value('qte_en_cours');
-                            @endphp
-                            {{ $ravEnCours > 0 ? $ravEnCours : '-' }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Retour de ravitaillement (refusé par chantier, en attente de validation gestionnaire)
-                                // Note: Comme on n'a pas de champ retour_valide dans la DB sans migration, on utilise une approximation ou 0 si pas implémenté
-                                // Si on avait le champ: ->where('retour_valide', false)
-                                $retourRav = 0; 
-                                // Pour l'instant on met 0 car on ne peut pas requêter le champ retour_valide qui n'existe pas en DB
-                                // Ou on peut essayer de parser les commentaires mais c'est lourd pour une vue liste.
-                            @endphp
-                            -
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Approvisionnement en cours (Commandé mais pas reçu)
-                                $approEnCours = DB::table('lignes_bon_commande')
-                                    ->join('bon_commandes', 'lignes_bon_commande.bon_commande_id', '=', 'bon_commandes.id')
-                                    ->where('bon_commandes.projet_id', $projets_bu) // Si projet_id est sur bon_commande
-                                    // Ou via demande_appro -> projet
-                                    // Simplification: on suppose projet_id sur bon_commande ou on fait la jointure complète si besoin
-                                    // Vérifions la structure: bon_commandes a projet_id ?
-                                    // Sinon via demande_approvisionnement
-                                    ->leftJoin('demande_approvisionnements', 'bon_commandes.demande_approvisionnement_id', '=', 'demande_approvisionnements.id')
-                                    ->whereIn('demande_approvisionnements.projet_id', $projets_bu)
-                                    ->where('lignes_bon_commande.article_id', $article->id)
-                                    ->whereIn('bon_commandes.statut', ['validee', 'en_cours', 'partiellement_recu']) // Statuts à adapter selon votre système
-                                    ->select(DB::raw('SUM(lignes_bon_commande.quantite - COALESCE(lignes_bon_commande.quantite_recue, 0)) as qte_restante'))
-                                    ->value('qte_restante');
-                            @endphp
-                            {{ $approEnCours > 0 ? $approEnCours : '-' }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Retour appro (pas détaillé dans les scénarios mais demandé dans l'affichage)
-                                // Si table retour_approvisionnement existe ?
-                                // Sinon 0
-                                $retourAppro = 0;
-                            @endphp
-                            -
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Transfert de stock IN (En transit vers ce projet)
-                                $transfertIn = DB::table('transfert_stock')
-                                    ->whereIn('id_projet_destination', $projets_bu)
-                                    ->where('article_id', $article->id)
-                                    // On doit filtrer ceux qui ne sont PAS encore reçus.
-                                    // Comme on n'a pas de statut, on check l'absence de mouvement TR-IN correspondant
-                                    ->whereNotExists(function($query) {
-                                        $query->select(DB::raw(1))
-                                              ->from('mouvements_stock')
-                                              ->whereRaw("reference_mouvement = CONCAT('TR-IN-', transfert_stock.id)");
-                                    })
-                                    ->sum('quantite');
-                            @endphp
-                            {{ $transfertIn > 0 ? $transfertIn : '-' }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                // Transfert de stock OUT (Sorti de ce projet mais pas encore reçu par l'autre - Optionnel, souvent OUT = fini pour la source)
-                                // Mais si on veut voir ce qui est "dehors" venant de nous:
-                                $transfertOut = DB::table('transfert_stock')
-                                    ->whereIn('id_projet_source', $projets_bu)
-                                    ->where('article_id', $article->id)
-                                    ->whereNotExists(function($query) {
-                                        $query->select(DB::raw(1))
-                                              ->from('mouvements_stock')
-                                              ->whereRaw("reference_mouvement = CONCAT('TR-IN-', transfert_stock.id)");
-                                    })
-                                    ->sum('quantite');
-                            @endphp
-                            {{ $transfertOut > 0 ? $transfertOut : '-' }}
-                        </td>
+                        <td class="text-center">{{ $qCell('demande_ravitaillement') }}</td>
+                        <td class="text-center">{{ $qCell('ravitaillement_en_cours') }}</td>
+                        <td class="text-center">{{ $qCell('retour_ravitaillement') }}</td>
+                        <td class="text-center">{{ $qCell('approvisionnement_en_cours') }}</td>
+                        <td class="text-center">{{ $qCell('retour_appro') }}</td>
+                        <td class="text-center">{{ $qCell('transfert_in') }}</td>
+                        <td class="text-center">{{ $qCell('transfert_out') }}</td>
                         <td>
                             <div class="dropdown">
                                 <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

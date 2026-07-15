@@ -16,20 +16,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #033d71;
             padding-bottom: 20px;
         }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
         .company-info {
             text-align: right;
         }
         .title {
             font-size: 24px;
             font-weight: bold;
-            color: #007bff;
+            color: #033d71;
             margin-bottom: 5px;
         }
         .subtitle {
@@ -126,7 +123,18 @@
     <div class="header">
         <div>
             @if($bonCommande->user && $bonCommande->user->bus && $bonCommande->user->bus->logo)
-                <img src="{{ public_path('storage/' . $bonCommande->user->bus->logo) }}" alt="Logo" class="logo">
+                @php
+                    $legacyLogoPath = public_path('storage/' . $bonCommande->user->bus->logo);
+                    $legacyLogoDims = \App\Support\PdfBranding::logoDisplaySize(is_file($legacyLogoPath) ? $legacyLogoPath : null);
+                @endphp
+                <img
+                    src="{{ $legacyLogoPath }}"
+                    alt="Logo"
+                    class="logo"
+                    width="{{ $legacyLogoDims['width'] }}"
+                    height="{{ $legacyLogoDims['height'] }}"
+                    style="width: {{ $legacyLogoDims['width'] }}px; height: {{ $legacyLogoDims['height'] }}px;"
+                >
             @endif
         </div>
         <div class="company-info">
@@ -211,6 +219,7 @@
             <tr>
                 <th>Article</th>
                 <th class="text-center">Quantité</th>
+                <th class="text-center">Unité de mesure</th>
                 <th class="text-right">Prix unitaire</th>
                 <th class="text-center">% Remise</th>
                 <th class="text-right">Montant HT</th>
@@ -222,6 +231,9 @@
             <tr>
                 <td>{{ $ligne->article ? $ligne->article->nom : 'Article supprimé' }}</td>
                 <td class="text-center">{{ $ligne->quantite }}</td>
+                <td class="text-center">
+                    {{ $ligne->article && $ligne->article->uniteMesure ? ($ligne->article->uniteMesure->ref ?? $ligne->article->uniteMesure->nom) : '' }}
+                </td>
                 <td class="text-right">{{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA</td>
                 <td class="text-center">{{ $ligne->remise ?? 0 }}%</td>
                 <td class="text-right">
@@ -241,7 +253,7 @@
             </tr>
             @endforeach
             <tr class="total-row">
-                <td colspan="4" class="text-right">Total général</td>
+                <td colspan="5" class="text-right">Total général</td>
                 <td class="text-right">{{ number_format($bonCommande->montant_total, 2, ',', ' ') }} FCFA</td>
                 <td></td>
             </tr>

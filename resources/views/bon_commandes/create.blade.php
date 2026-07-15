@@ -12,6 +12,7 @@
 @section('content')
 
 <div class=" app-fade-in">
+    <x-stock-flux-nav module="bon_commande" context="create" />
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="app-card app-hover-shadow">
@@ -72,14 +73,14 @@
                                     <div class="app-form col-6">
                                         <div class="app-form-group">
                                             <label for="demande_cotation_id" class="app-form-label">
-                                                <i class="fas fa-file-invoice me-2"></i>Demande de cotation terminée
+                                                <i class="fas fa-file-invoice me-2"></i>Demande de cotation
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <select class="app-form-select @error('demande_cotation_id') is-invalid @enderror" 
                                                 id="demande_cotation_id" name="demande_cotation_id" required>
                                                 <option value="">-- Sélectionner une demande de cotation --</option>
                                                 @foreach($demandesCotation as $demande)
-                                                    <option value="{{ $demande->id }}" {{ old('demande_cotation_id') == $demande->id ? 'selected' : '' }}>
+                                                    <option value="{{ $demande->id }}" {{ (string) old('demande_cotation_id', request('demande_cotation_id')) === (string) $demande->id ? 'selected' : '' }}>
                                                         {{ $demande->reference }} ({{ $demande->date_demande->format('d/m/Y') }})
                                                     </option>
                                                 @endforeach
@@ -87,7 +88,7 @@
                                             @error('demande_cotation_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Demande de cotation terminée à transformer en bon de commande</div>
+                                            <div class="app-form-text">Cotations terminées, validées, ou en cours avec fournisseur retenu (réponse enregistrée)</div>
                                         </div>
                                     </div>
                                     <div class="app-form col-6">
@@ -100,7 +101,7 @@
                                                 id="fournisseur_id" name="fournisseur_id" required>
                                                 <option value="">-- Sélectionner un fournisseur --</option>
                                                 @foreach($fournisseurs as $fournisseur)
-                                                    <option value="{{ $fournisseur->id }}" {{ old('fournisseur_id') == $fournisseur->id ? 'selected' : '' }}>
+                                                    <option value="{{ $fournisseur->id }}" {{ (string) old('fournisseur_id', request('fournisseur_id')) === (string) $fournisseur->id ? 'selected' : '' }}>
                                                         {{ $fournisseur->nom }}   {{ $fournisseur->prenoms }}
                                                     </option>
                                                 @endforeach
@@ -108,7 +109,7 @@
                                             @error('fournisseur_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Fournisseur auprès duquel commander</div>
+                                            <div class="app-form-text">Rempli automatiquement avec le fournisseur retenu sur la demande de cotation</div>
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +133,7 @@
                                             @error('mode_reglement')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Mode de règlement convenu</div>
+                                            <div class="app-form-text">Rempli depuis la fiche du fournisseur (modifiable si besoin)</div>
                                         </div>
                                     </div>
                                     <div class="app-form col-6">
@@ -153,7 +154,7 @@
                                             @error('delai_reglement')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Délai accordé pour le règlement</div>
+                                            <div class="app-form-text">Rempli depuis la fiche du fournisseur (modifiable si besoin)</div>
                                         </div>
                                     </div>
                                 </div>
@@ -176,7 +177,7 @@
                                             @error('projet_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Projet auquel rattacher la commande</div>
+                                            <div class="app-form-text">Projet issu de la demande d’achat / d’approvisionnement</div>
                                         </div>
                                     </div>
                                     <div class="app-form col-6">
@@ -190,7 +191,7 @@
                                             @error('lieu_livraison')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Adresse où livrer la commande</div>
+                                            <div class="app-form-text">Localisation du projet (secteur, quartier, commune…)</div>
                                         </div>
                                     </div>
                                 </div>
@@ -205,7 +206,7 @@
                                                 id="demande_approvisionnement_id" name="demande_approvisionnement_id">
                                                 <option value="">-- Sélectionner une demande --</option>
                                                 @foreach($demandesAppro as $demande)
-                                                    <option value="{{ $demande->id }}" {{ old('demande_approvisionnement_id') == $demande->id ? 'selected' : '' }}>
+                                                    <option value="{{ $demande->id }}" {{ (string) old('demande_approvisionnement_id', request('demande_approvisionnement_id')) === (string) $demande->id ? 'selected' : '' }}>
                                                         {{ $demande->reference }} ({{ $demande->date_demande->format('d/m/Y') }})
                                                     </option>
                                                 @endforeach
@@ -213,7 +214,7 @@
                                             @error('demande_approvisionnement_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Demande d'approvisionnement liée</div>
+                                            <div class="app-form-text">Référence liée à la demande d’achat (préremplie avec la DC)</div>
                                         </div>
                                     </div>
                                     <div class="app-form col-6">
@@ -233,7 +234,7 @@
                                             @error('demande_achat_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="app-form-text">Demande d'achat liée</div>
+                                            <div class="app-form-text">Référence liée à la demande de cotation (préremplie)</div>
                                         </div>
                                     </div>
                                 </div>
@@ -256,7 +257,7 @@
                         <div class="app-card mb-4">
                             <div class="app-card-header">
                                 <h3 class="app-card-title">
-                                    <i class="fas fa-boxes me-2"></i>Articles à Commander
+                                    <i class="fas fa-boxes me-2"></i>Articles à commander
                                 </h3>
                                 <div class="app-card-actions">
                                     <button type="button" class="app-btn app-btn-success app-btn-sm" onclick="addArticle()">
@@ -265,6 +266,7 @@
                                 </div>
                             </div>
                             <div class="app-card-body app-table-responsive">
+                                <p class="text-muted small mb-3">Lignes issues de la demande de cotation (articles et quantités) ; le prix unitaire reprend le tarif article en catalogue (modifiable).</p>
                                 <table class="app-table" id="articles_table">
                                     <thead>
                                         <tr>
@@ -289,7 +291,7 @@
                                                 <span class="article-reference">-</span>
                                             </td>
                                             <td>
-                                                <select class="app-form-select article-select" name="article_id[]" required onchange="updateArticleInfo(this)">
+                                                <select class="app-form-select article-select" name="article_id[]" required>
                                                     <option value="">-- Sélectionner un article --</option>
                                                     @foreach($articles as $article)
                                                         <option value="{{ $article->id }}" data-reference="{{ $article->reference }}" data-unite="{{ $article->uniteMesure->ref ?? 'Unité' }}">
@@ -300,18 +302,18 @@
                                             </td>
                                             <td>
                                                 <input type="number" class="app-form-control quantite" name="quantite[]" 
-                                                    min="1" value="1" required oninput="calculerLigneTotal(this.closest('tr'))">
+                                                    min="1" value="1" required>
                                             </td>
                                             <td>
                                                 <span class="article-unite">-</span>
                                             </td>
                                             <td>
                                                 <input type="number" step="0.01" class="app-form-control prix_unitaire" 
-                                                    name="prix_unitaire[]" min="0" value="0" required oninput="calculerLigneTotal(this.closest('tr'))">
+                                                    name="prix_unitaire[]" min="0" value="0" required>
                                             </td>
                                             <td>
                                                 <input type="number" step="0.01" class="app-form-control remise" name="remise[]" 
-                                                    min="0" max="100" value="0" oninput="calculerLigneTotal(this.closest('tr'))">
+                                                    min="0" max="100" value="0">
                                             </td>
                                             <td>
                                                 <input type="number" step="0.01" class="app-form-control ligne_total" name="ligne_total[]" readonly>
@@ -387,7 +389,7 @@
             <span class="article-reference">-</span>
         </td>
         <td>
-            <select class="app-form-select article-select" name="article_id[]" required onchange="updateArticleInfo(this)">
+            <select class="app-form-select article-select" name="article_id[]" required>
                 <option value="">-- Sélectionner un article --</option>
                 @foreach($articles as $article)
                     <option value="{{ $article->id }}" data-reference="{{ $article->reference }}" data-unite="{{ $article->uniteMesure->ref ?? 'Unité' }}">
@@ -398,21 +400,21 @@
         </td>
         <td>
             <input type="number" class="app-form-control quantite" name="quantite[]" 
-                min="1" value="1" required oninput="calculerLigneTotal(this.closest('tr'))">
+                min="1" value="1" required>
         </td>
         <td>
             <span class="article-unite">-</span>
         </td>
         <td>
             <input type="number" step="0.01" class="app-form-control prix_unitaire" 
-                name="prix_unitaire[]" min="0" value="0" required oninput="calculerLigneTotal(this.closest('tr'))">
+                name="prix_unitaire[]" min="0" value="0" required>
         </td>
         <td>
             <input type="number" step="0.01" class="app-form-control remise" name="remise[]" 
-                min="0" max="100" value="0" oninput="calculerLigneTotal(this.closest('tr'))">
+                min="0" max="100" value="0">
         </td>
         <td>
-            <input type="text" class="app-form-control ligne_total bg-light" readonly>
+            <input type="number" step="0.01" class="app-form-control ligne_total bg-light" name="ligne_total[]" readonly>
         </td>
         <td>
             <input type="text" class="app-form-control" name="commentaire[]" placeholder="Commentaire...">
@@ -427,6 +429,74 @@
 
 @push('scripts')
 <script>
+const FOURNISSEURS_PAIEMENT_BC = @json($fournisseursPaiementMap);
+
+function fixerModeReglementSelect(select, valeurBrute) {
+    if (!select || valeurBrute == null || String(valeurBrute).trim() === '') return;
+    const v = String(valeurBrute).trim();
+    select.value = v;
+    if (select.value === v) return;
+    const vl = v.toLowerCase();
+    for (let i = 0; i < select.options.length; i++) {
+        const o = select.options[i];
+        if (!o.value) continue;
+        if (o.value.toLowerCase() === vl || o.textContent.trim().toLowerCase() === vl) {
+            select.selectedIndex = i;
+            return;
+        }
+    }
+}
+
+function fixerDelaiReglementSelect(select, valeur) {
+    if (!select) return;
+    if (valeur == null || valeur === '') {
+        select.value = '';
+        return;
+    }
+    const s = String(valeur).trim();
+    const m = s.match(/^(\d+)/);
+    const num = m ? m[1] : s;
+    select.value = num;
+    if (select.value === num) return;
+    for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === num) {
+            select.selectedIndex = i;
+            return;
+        }
+    }
+}
+
+/** Mode / délai depuis la fiche fournisseur (liste déroulante BC + JSON serveur). */
+function appliquerPaiementFournisseurParId(fournisseurId, fournisseurApi) {
+    const modeSel = document.getElementById('mode_reglement');
+    const delaiSel = document.getElementById('delai_reglement');
+    if (!fournisseurId || fournisseurId === '') return;
+    const entry = typeof FOURNISSEURS_PAIEMENT_BC !== 'undefined' ? FOURNISSEURS_PAIEMENT_BC[fournisseurId] : null;
+    if (entry) {
+        fixerModeReglementSelect(modeSel, entry.mode_paiement);
+        fixerDelaiReglementSelect(delaiSel, entry.delai_reglement);
+    }
+    if (fournisseurApi) {
+        if (modeSel && !modeSel.value && fournisseurApi.mode_paiement) {
+            fixerModeReglementSelect(modeSel, fournisseurApi.mode_paiement);
+        }
+        if (delaiSel && !delaiSel.value) {
+            const dr = fournisseurApi.delai_reglement != null && fournisseurApi.delai_reglement !== ''
+                ? fournisseurApi.delai_reglement
+                : fournisseurApi.delai_paiement;
+            fixerDelaiReglementSelect(delaiSel, dr);
+        }
+    }
+}
+
+/** Parse une valeur saisie (espaces, virgule décimale) pour les champs montants. */
+function parseNombreBrut(inputEl) {
+    if (!inputEl || inputEl.value == null || inputEl.value === '') return 0;
+    const s = String(inputEl.value).replace(/\s/g, '').replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+}
+
 // Fonction pour mettre à jour les informations de l'article
 function updateArticleInfo(selectElement) {
     const row = selectElement.closest('tr');
@@ -442,6 +512,7 @@ function updateArticleInfo(selectElement) {
         row.querySelector('.article-reference').textContent = '-';
         row.querySelector('.article-unite').textContent = '-';
     }
+    calculerLigneTotal(row);
 }
 
 // Fonction pour calculer le total d'une ligne
@@ -456,9 +527,9 @@ function calculerLigneTotal(row) {
         return;
     }
     
-    const quantite = parseFloat(quantiteEl.value) || 0;
-    const prix = parseFloat(prixEl.value) || 0;
-    const remise = parseFloat(remiseEl.value) || 0;
+    const quantite = parseNombreBrut(quantiteEl);
+    const prix = parseNombreBrut(prixEl);
+    const remise = parseNombreBrut(remiseEl);
     
     // Calcul: Montant HT = (PU x Qté) - (PU x Qté x % Remise / 100)
     const montantBrut = quantite * prix;
@@ -486,9 +557,9 @@ function calculerMontantTotal() {
             return;
         }
         
-        const quantite = parseFloat(quantiteEl.value) || 0;
-        const prix = parseFloat(prixEl.value) || 0;
-        const remise = parseFloat(remiseEl.value) || 0;
+        const quantite = parseNombreBrut(quantiteEl);
+        const prix = parseNombreBrut(prixEl);
+        const remise = parseNombreBrut(remiseEl);
         
         const montantBrut = quantite * prix;
         const montantRemiseLigne = montantBrut * (remise / 100);
@@ -503,11 +574,15 @@ function calculerMontantTotal() {
     const totalTTC = montantNetHT + tvaMontant;
     
     // Mise à jour des affichages
-    document.getElementById('montant_total_ht').textContent = montantTotalHT.toFixed(2) + ' FCFA';
-    document.getElementById('remise_totale').textContent = remiseTotale.toFixed(2) + ' FCFA';
-    document.getElementById('montant_net_ht').textContent = montantNetHT.toFixed(2) + ' FCFA';
-    document.getElementById('tva_montant').textContent = tvaMontant.toFixed(2) + ' FCFA';
-    document.getElementById('total_ttc').textContent = totalTTC.toFixed(2) + ' FCFA';
+    const setFooter = function (id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    setFooter('montant_total_ht', montantTotalHT.toFixed(2) + ' FCFA');
+    setFooter('remise_totale', remiseTotale.toFixed(2) + ' FCFA');
+    setFooter('montant_net_ht', montantNetHT.toFixed(2) + ' FCFA');
+    setFooter('tva_montant', tvaMontant.toFixed(2) + ' FCFA');
+    setFooter('total_ttc', totalTTC.toFixed(2) + ' FCFA');
 }
 
 // Fonction pour mettre à jour la numérotation des lignes
@@ -550,50 +625,55 @@ function removeLine(button) {
     }
 }
 
-// Charger les articles d'une demande de cotation terminée
+/** Remplit le tableau articles à partir du payload (DC ou API lignes). */
+function remplirLignesDepuisPayload(rows) {
+    if (!rows || rows.length === 0) return;
+    document.querySelector('#articles_table tbody').innerHTML = '';
+    rows.forEach(function (item) {
+        const template = document.getElementById('article-row-template');
+        const clone = template.content.cloneNode(true);
+        const select = clone.querySelector('.article-select');
+        select.value = item.article_id;
+        updateArticleInfo(select);
+        clone.querySelector('.quantite').value = item.quantite != null ? item.quantite : 1;
+        clone.querySelector('.prix_unitaire').value = item.prix_unitaire != null ? item.prix_unitaire : 0;
+        clone.querySelector('.remise').value = item.remise != null ? item.remise : 0;
+        const c = clone.querySelector('input[name="commentaire[]"]');
+        if (c) c.value = item.commentaire || '';
+        document.querySelector('#articles_table tbody').appendChild(clone);
+    });
+    updateLineNumbers();
+    document.querySelectorAll('#articles_table tbody tr').forEach(function (row) {
+        calculerLigneTotal(row);
+    });
+}
+
+function reinitialiserLignesArticlesVides() {
+    document.querySelector('#articles_table tbody').innerHTML = '';
+    const template = document.getElementById('article-row-template');
+    const clone = template.content.cloneNode(true);
+    document.querySelector('#articles_table tbody').appendChild(clone);
+    updateLineNumbers();
+    calculerMontantTotal();
+}
+
+// Charger les articles d'une demande de cotation (endpoint lignes seules — secours)
 function chargerArticlesDemandeCotation(demandeId) {
     if (!demandeId) return;
-    
     fetch(`/demandes-cotation/${demandeId}/articles`)
         .then(response => response.json())
         .then(data => {
-            if (data.length > 0) {
-                // Vider le tableau
-                document.querySelector('#articles_table tbody').innerHTML = '';
-                
-                // Ajouter les articles
-                data.forEach((item, index) => {
-                    const template = document.getElementById('article-row-template');
-                    const clone = template.content.cloneNode(true);
-                    
-                    // Sélectionner l'article
-                    const select = clone.querySelector('.article-select');
-                    select.value = item.article_id;
-                    
-                    // Mettre à jour les informations de l'article
-                    const selectedOption = select.options[select.selectedIndex];
-                    if (selectedOption) {
-                        const reference = selectedOption.getAttribute('data-reference');
-                        const unite = selectedOption.getAttribute('data-unite');
-                        clone.querySelector('.article-reference').textContent = reference || '-';
-                        clone.querySelector('.article-unite').textContent = unite || '-';
-                    }
-                    
-                    // Remplir les champs
-                    clone.querySelector('.quantite').value = item.quantite || 1;
-                    clone.querySelector('.prix_unitaire').value = item.prix_unitaire || 0;
-                    clone.querySelector('.remise').value = item.remise || 0;
-                    clone.querySelector('input[name="commentaire[]"]').value = item.commentaire || '';
-                    
-                    document.querySelector('#articles_table tbody').appendChild(clone);
-                });
-                
-                // Mettre à jour la numérotation et calculer les totaux
-                updateLineNumbers();
-                document.querySelectorAll('#articles_table tbody tr').forEach(row => {
-                    calculerLigneTotal(row);
-                });
-            }
+            if (!data.length) return;
+            const rows = data.map(function (item) {
+                return {
+                    article_id: item.article_id,
+                    quantite: item.quantite,
+                    prix_unitaire: item.prix_unitaire != null ? item.prix_unitaire : 0,
+                    remise: item.remise != null ? item.remise : 0,
+                    commentaire: item.commentaire || item.specifications || ''
+                };
+            });
+            remplirLignesDepuisPayload(rows);
         })
         .catch(error => console.error('Erreur:', error));
 }
@@ -682,15 +762,105 @@ function chargerArticlesDemandeAchat(demandeId) {
         .catch(error => console.error('Erreur:', error));
 }
 
+function appliquerDonneesDemandeCotation(data) {
+    if (!data || !data.success) {
+        return;
+    }
+
+    const demandeAchatSelect = document.getElementById('demande_achat_id');
+    const demandeApproSelect = document.getElementById('demande_approvisionnement_id');
+    const fournisseurSelect = document.getElementById('fournisseur_id');
+    const projetSelect = document.getElementById('projet_id');
+    const lieuLivraison = document.getElementById('lieu_livraison');
+
+    const aDa = data.demande_achat_id != null && String(data.demande_achat_id) !== '';
+
+    if (demandeAchatSelect) {
+        demandeAchatSelect.value = aDa ? String(data.demande_achat_id) : '';
+        demandeAchatSelect.disabled = !!aDa;
+        demandeAchatSelect.style.opacity = aDa ? '0.6' : '1';
+    }
+
+    if (demandeApproSelect) {
+        if (data.demande_approvisionnement_id != null && String(data.demande_approvisionnement_id) !== '') {
+            demandeApproSelect.value = String(data.demande_approvisionnement_id);
+        } else {
+            demandeApproSelect.value = '';
+        }
+        demandeApproSelect.disabled = !!aDa;
+        demandeApproSelect.style.opacity = aDa ? '0.6' : '1';
+    }
+
+    if (projetSelect) {
+        if (data.projet_id != null && String(data.projet_id) !== '') {
+            projetSelect.value = String(data.projet_id);
+        } else {
+            projetSelect.value = '';
+        }
+    }
+
+    if (lieuLivraison) {
+        lieuLivraison.value = data.lieu_livraison != null ? String(data.lieu_livraison) : '';
+    }
+
+    const fid = data.fournisseur_id != null ? data.fournisseur_id : (data.fournisseur && data.fournisseur.id);
+    if (fid != null && fournisseurSelect) {
+        fournisseurSelect.value = String(fid);
+    }
+    appliquerPaiementFournisseurParId(fid != null ? String(fid) : '', data.fournisseur || null);
+
+    if (data.lignes_articles && data.lignes_articles.length) {
+        remplirLignesDepuisPayload(data.lignes_articles);
+    }
+}
+
+function chargerInfosDemandeCotation(cotationId) {
+    if (!cotationId) return;
+    fetch(`/bon-commandes/demande-achat/${cotationId}`)
+        .then(response => response.json())
+        .then(data => {
+            appliquerDonneesDemandeCotation(data);
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement de la demande de cotation:', error);
+        });
+}
+
 // Initialisation au chargement
 document.addEventListener('DOMContentLoaded', function() {
-    // Vérifier si une demande de cotation est déjà sélectionnée au chargement
+    const articlesTable = document.getElementById('articles_table');
+    if (articlesTable) {
+        articlesTable.addEventListener('input', function (e) {
+            const t = e.target;
+            if (!t.closest || !t.closest('tbody')) return;
+            if (t.classList.contains('quantite') || t.classList.contains('prix_unitaire') || t.classList.contains('remise')) {
+                const row = t.closest('tr');
+                if (row) calculerLigneTotal(row);
+            }
+        });
+        articlesTable.addEventListener('change', function (e) {
+            const t = e.target;
+            if (!t.closest || !t.closest('tbody')) return;
+            if (t.classList.contains('article-select')) {
+                updateArticleInfo(t);
+            }
+        });
+    }
+
     const demandeCotationSelect = document.getElementById('demande_cotation_id');
     const demandeAchatSelect = document.getElementById('demande_achat_id');
     const demandeApproSelect = document.getElementById('demande_approvisionnement_id');
-    
+    const fournisseurSelectInit = document.getElementById('fournisseur_id');
+    if (fournisseurSelectInit) {
+        fournisseurSelectInit.addEventListener('change', function () {
+            if (this.value) {
+                appliquerPaiementFournisseurParId(this.value, null);
+            }
+        });
+    }
+
     if (demandeCotationSelect && demandeCotationSelect.value) {
-        // Griser les champs si une demande de cotation est déjà sélectionnée
+        chargerInfosDemandeCotation(demandeCotationSelect.value);
         if (demandeAchatSelect) {
             demandeAchatSelect.disabled = true;
             demandeAchatSelect.style.opacity = '0.6';
@@ -709,117 +879,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Événement pour la demande de cotation
-    const demandeCotationSelect = document.getElementById('demande_cotation_id');
     if (demandeCotationSelect) {
         demandeCotationSelect.addEventListener('change', function() {
             if (this.value) {
-                // Charger la demande d'achat liée automatiquement
-                console.log('Chargement de la demande d\'achat pour la cotation ID:', this.value);
-                fetch(`/bon-commandes/demande-achat/${this.value}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Réponse API:', data);
-                        const demandeAchatSelect = document.getElementById('demande_achat_id');
-                        const demandeApproSelect = document.getElementById('demande_approvisionnement_id');
-                        const fournisseurSelect = document.getElementById('fournisseur_id');
-                        const modeReglementSelect = document.getElementById('mode_reglement');
-                        const delaiReglementSelect = document.getElementById('delai_reglement');
-                        
-                        if (data.success && demandeAchatSelect) {
-                            console.log('Sélection de la demande d\'achat ID:', data.demande_achat_id);
-                            demandeAchatSelect.value = data.demande_achat_id;
-                            
-                            // Remplir automatiquement la demande d'approvisionnement si elle existe
-                            if (data.demande_approvisionnement_id && demandeApproSelect) {
-                                console.log('Sélection de la demande d\'approvisionnement ID:', data.demande_approvisionnement_id);
-                                demandeApproSelect.value = data.demande_approvisionnement_id;
-                            } else if (demandeApproSelect) {
-                                demandeApproSelect.value = '';
-                            }
-                            
-                            // Remplir automatiquement le projet si il existe
-                            const projetSelect = document.getElementById('projet_id');
-                            if (data.projet_id && projetSelect) {
-                                console.log('Sélection du projet ID:', data.projet_id);
-                                projetSelect.value = data.projet_id;
-                            } else if (projetSelect) {
-                                projetSelect.value = '';
-                            }
-                            
-                            // Mettre à jour le fournisseur si disponible
-                            if (data.fournisseur && fournisseurSelect) {
-                                console.log('Sélection du fournisseur ID:', data.fournisseur.id);
-                                fournisseurSelect.value = data.fournisseur.id;
-                                
-                                // Mettre à jour le mode de règlement
-                                if (data.fournisseur.mode_paiement && modeReglementSelect) {
-                                    console.log('Sélection du mode de règlement:', data.fournisseur.mode_paiement);
-                                    modeReglementSelect.value = data.fournisseur.mode_paiement;
-                                }
-                                
-                                // Mettre à jour le délai de règlement
-                                if (data.fournisseur.delai_paiement && delaiReglementSelect) {
-                                    console.log('Sélection du délai de règlement:', data.fournisseur.delai_paiement);
-                                    delaiReglementSelect.value = data.fournisseur.delai_paiement;
-                                }
-                            }
-                            
-                            // Griser automatiquement les champs demande d'achat et demande d'approvisionnement
-                            if (demandeAchatSelect) {
-                                demandeAchatSelect.disabled = true;
-                                demandeAchatSelect.style.opacity = '0.6';
-                            }
-                            if (demandeApproSelect) {
-                                demandeApproSelect.disabled = true;
-                                demandeApproSelect.style.opacity = '0.6';
-                            }
-                        } else {
-                            console.log('Aucune demande d\'achat liée trouvée ou élément non trouvé');
-                            if (demandeAchatSelect) demandeAchatSelect.value = '';
-                            if (demandeApproSelect) demandeApproSelect.value = '';
-                        }
-                        
-                        // Réactiver les champs si aucune demande de cotation n'est sélectionnée
-                        if (!this.value) {
-                            if (demandeAchatSelect) {
-                                demandeAchatSelect.disabled = false;
-                                demandeAchatSelect.style.opacity = '1';
-                            }
-                            if (demandeApproSelect) {
-                                demandeApproSelect.disabled = false;
-                                demandeApproSelect.style.opacity = '1';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors du chargement de la demande d\'achat:', error);
-                        const demandeAchatSelect = document.getElementById('demande_achat_id');
-                        const demandeApproSelect = document.getElementById('demande_approvisionnement_id');
-                        const projetSelect = document.getElementById('projet_id');
-                        if (demandeAchatSelect) demandeAchatSelect.value = '';
-                        if (demandeApproSelect) demandeApproSelect.value = '';
-                        if (projetSelect) projetSelect.value = '';
-                        
-                        // Réactiver les champs en cas d'erreur
-                        if (demandeAchatSelect) {
-                            demandeAchatSelect.disabled = false;
-                            demandeAchatSelect.style.opacity = '1';
-                        }
-                        if (demandeApproSelect) {
-                            demandeApproSelect.disabled = false;
-                            demandeApproSelect.style.opacity = '1';
-                        }
-                    });
-                
-                // Charger les articles de la demande de cotation
-                chargerArticlesDemandeCotation(this.value);
+                chargerInfosDemandeCotation(this.value);
+            } else {
+                const da = document.getElementById('demande_achat_id');
+                const dap = document.getElementById('demande_approvisionnement_id');
+                const pr = document.getElementById('projet_id');
+                const fr = document.getElementById('fournisseur_id');
+                const lieu = document.getElementById('lieu_livraison');
+                const mode = document.getElementById('mode_reglement');
+                const delai = document.getElementById('delai_reglement');
+                if (da) { da.value = ''; da.disabled = false; da.style.opacity = '1'; }
+                if (dap) { dap.value = ''; dap.disabled = false; dap.style.opacity = '1'; }
+                if (pr) pr.value = '';
+                if (fr) fr.value = '';
+                if (lieu) lieu.value = '';
+                if (mode) mode.value = '';
+                if (delai) delai.value = '';
+                reinitialiserLignesArticlesVides();
             }
         });
     }
     
     // Événements pour les selects de demandes
-    const demandeApproSelect = document.getElementById('demande_approvisionnement_id');
     if (demandeApproSelect) {
         demandeApproSelect.addEventListener('change', function() {
             if (this.value) {
@@ -843,7 +927,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const demandeAchatSelect = document.getElementById('demande_achat_id');
     if (demandeAchatSelect) {
         demandeAchatSelect.addEventListener('change', function() {
             if (this.value) {

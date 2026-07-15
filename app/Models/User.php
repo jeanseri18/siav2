@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -61,10 +62,73 @@ class User extends Authenticatable
     {
         return $this->date_naissance ? $this->date_naissance->age : null;
     }
+
+    /**
+     * URL publique de la photo de profil (disque public).
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo) {
+            return null;
+        }
+
+        $path = trim($this->photo);
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $path = ltrim(str_replace('\\', '/', $path), '/');
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->url($path);
+        }
+
+        return asset('storage/'.$path);
+    }
     
     public function getAncienneteAttribute()
     {
         return $this->date_embauche ? $this->date_embauche->diffInYears(now()) : null;
+    }
+
+    /**
+     * Rôles du menu « Utilisateurs » (création / édition).
+     * Doit rester aligné sur l'enum `users.role` en base.
+     */
+    public static function roleOptionsForUserManagement(): array
+    {
+        return [
+            'admin' => 'Administrateur',
+            'dg' => 'DG',
+            'chef_projet' => 'Chef de projet',
+            'conducteur_travaux' => 'Conducteur de travaux',
+            'chef_chantier' => 'Chef de chantier',
+            'comptable' => 'Comptable',
+            'magasinier' => 'Magasinier',
+            'acheteur' => 'Acheteur',
+            'controleur_gestion' => 'Contrôleur de gestion',
+            'caissier' => 'Caissier',
+            'controleur_caisse' => 'Contrôleur de caisse',
+            'secretaire' => 'Secrétaire',
+            'chauffeur' => 'Chauffeur',
+            'gardien' => 'Gardien',
+            'employe' => 'Employé',
+        ];
+    }
+
+    /**
+     * Rôles pour les fiches « Employés » (sans administrateur).
+     */
+    public static function roleOptionsForEmployeForms(): array
+    {
+        $roles = self::roleOptionsForUserManagement();
+        unset($roles['admin']);
+
+        return $roles;
     }
     
     // Scopes pour filtrer par rôle

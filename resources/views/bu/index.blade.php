@@ -9,6 +9,7 @@
                 <i class="fas fa-boxes me-2"></i>Liste des BU
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'bu')" />
                 <a href="{{ route('bu.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une bu
                 </a>
@@ -51,14 +52,26 @@
                         <td>{{ $bu->soldecaisse }}</td>
                         <td>{{ ucfirst($bu->statut) }}</td>
                         <td>
-                            <a href="{{ route('bu.edit', $bu->id) }}" class="app-btn app-btn-success app-btn-sm app-btn-icon" >                                    <i class="fas fa-exchange-alt"></i>
-</a>
-                            <form action="{{ route('bu.destroy', $bu->id) }}" method="POST" style="display:inline;"class="delete-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">                                        <i class="fas fa-trash-alt"></i>
-</button>
-                            </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('bu.edit', $bu->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('bu.destroy', $bu->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 @endforeach

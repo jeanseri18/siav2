@@ -17,6 +17,9 @@
                 <i class="fas fa-users me-2"></i>Liste des Employés
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('employes.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
                 <a href="{{ route('employes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i>
                     Ajouter un employé
@@ -57,8 +60,8 @@
                         @forelse($employes as $employe)
                         <tr>
                             <td>
-                                @if($employe->photo)
-                                    <img src="{{ asset('storage/' . $employe->photo) }}" alt="Photo" class="rounded-circle" width="40" height="40">
+                                @if($employe->photo_url)
+                                    <img src="{{ $employe->photo_url }}" alt="Photo" class="rounded-circle" width="40" height="40">
                                 @else
                                     <div class="avatar-initials" style="width: 40px; height: 40px; font-size: 14px;">
                                         {{ strtoupper(substr($employe->prenom, 0, 1) . substr($employe->nom, 0, 1)) }}
@@ -119,22 +122,32 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="app-d-flex app-gap-1">
-                                    <a href="{{ route('employes.show', $employe) }}" class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('employes.edit', $employe) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @if($employe->role !== 'admin')
-                                    <form action="{{ route('employes.destroy', $employe) }}" method="POST" class="delete-form" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                    @endif
+                                <div class="dropdown">
+                                    <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('employes.show', $employe) }}">
+                                                <i class="fas fa-eye me-2"></i>Voir les détails
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('employes.edit', $employe) }}">
+                                                <i class="fas fa-edit me-2"></i>Modifier
+                                            </a>
+                                        </li>
+                                        @if($employe->role !== 'admin')
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('employes.destroy', $employe) }}" method="POST" class="delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                    <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                        @endif
+                                    </ul>
                                 </div>
                             </td>
                         </tr>

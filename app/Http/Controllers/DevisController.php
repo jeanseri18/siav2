@@ -5,17 +5,46 @@ namespace App\Http\Controllers;
 use App\Models\Devis;
 use App\Models\Article;
 use App\Models\ClientFournisseur;
-use App\Models\ConfigGlobal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Concerns\ExportsListPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class DevisController extends Controller
 {
+    use ExportsListPdf;
+
     public function index()
     {
         $devis = Devis::with('client', 'articles', 'user')->get();
         return view('devis.index', compact('devis'));
+    }
+
+    public function exportListePdf()
+    {
+        $devis = Devis::with('client', 'user')->orderByDesc('created_at')->get();
+
+        $rows = [];
+        foreach ($devis as $item) {
+            $rows[] = [
+                $item->ref_devis ?? '#'.$item->id,
+                $item->nom_client ?? $item->client?->nom_raison_sociale ?? '—',
+                $item->created_at?->format('d/m/Y') ?? '—',
+                $item->user?->nom ?? '—',
+                number_format((float) ($item->total_ht ?? 0), 0, ',', ' ').' FCFA',
+                number_format((float) ($item->tva ?? 0), 0, ',', ' ').' FCFA',
+                number_format((float) ($item->total_ttc ?? 0), 0, ',', ' ').' FCFA',
+                $item->statut ?? '—',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des devis',
+            ['Référence', 'Client', 'Date', 'Créé par', 'Total HT', 'TVA', 'Total TTC', 'Statut'],
+            $rows,
+            'liste-devis'
+        );
     }
 
     public function create()
@@ -232,16 +261,18 @@ class DevisController extends Controller
     /**
      * Imprimer un devis en PDF
      */
-    public function print($id)
+    public function print(Devis $devis)
     {
-        $devi = Devis::with(['client', 'articles.uniteMesure', 'user'])->findOrFail($id);
-        
-        // Récupérer les configurations globales
-        $configGlobal = ConfigGlobal::first();
-        
-        $pdf = PDF::loadView('devis.pdf', compact('devi', 'configGlobal'))
-            ->setPaper('a4', 'portrait');
-        
+        $devi = $devis->loadMissing(['client', 'articles.uniteMesure', 'user']);
+
+        $buId = session('selected_bu') ? (int) session('selected_bu') : null;
+        $pdfBranding = PdfBranding::forBu($buId);
+        $configGlobal = $pdfBranding['config'];
+
+        $pdf = Pdf::loadView('devis.pdf', compact('devi', 'configGlobal', 'pdfBranding'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
         return $pdf->stream('Devis_' . ($devi->ref_devis ?? $devi->id) . '.pdf');
     }
 }

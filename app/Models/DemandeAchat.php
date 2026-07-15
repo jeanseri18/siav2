@@ -60,6 +60,16 @@ class DemandeAchat extends Model
         return $this->hasMany(BonCommande::class, 'demande_achat_id');
     }
 
+    /**
+     * Vrai si aucun bon de commande « actif » (tout statut sauf annulée) n’est lié à cette DA.
+     */
+    public function peutAssocierNouveauBonCommande(): bool
+    {
+        return !$this->bonCommandes()
+            ->where('statut', '!=', 'annulée')
+            ->exists();
+    }
+
     public function demandeApprovisionnement()
     {
         return $this->belongsTo(DemandeApprovisionnement::class, 'demande_approvisionnement_id');

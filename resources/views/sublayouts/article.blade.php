@@ -41,16 +41,6 @@
             </div>
         </a>
         
-        <a href="{{ route('bon-commandes.index') }}" class="dashboard-card info">
-            <div class="card-icon">
-                <i class="fas fa-file-invoice"></i>
-            </div>
-            <div class="card-content">
-                <h3>Bons de Commande</h3>
-                <p>Consulter et gérer les commandes</p>
-            </div>
-        </a>
-        
         <a href="{{ route('demande-achats.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-shopping-cart"></i>
@@ -68,6 +58,16 @@
             <div class="card-content">
                 <h3>Demandes de Cotation</h3>
                 <p>Gérer les demandes et comparaisons</p>
+            </div>
+        </a>
+        
+        <a href="{{ route('bon-commandes.index') }}" class="dashboard-card info">
+            <div class="card-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="card-content">
+                <h3>Bons de Commande</h3>
+                <p>Consulter et gérer les commandes</p>
             </div>
         </a>
         
@@ -99,12 +99,12 @@
 :root {
     /* Variables harmonisées avec app.blade.php */
     --primary-color: var(--primary, #033d71);
-    --secondary-color: var(--primary-light, #0A8CFF);
+    --secondary-color: var(--primary-light, #033d71);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
     --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
     --gradient-warning: linear-gradient(135deg, var(--warning, #ffc107) 0%, #fd7e14 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
@@ -298,6 +298,7 @@
 .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
 .dashboard-card:nth-child(6) { animation-delay: 0.6s; }
 .dashboard-card:nth-child(7) { animation-delay: 0.7s; }
+.dashboard-card:nth-child(8) { animation-delay: 0.8s; }
 
 @keyframes slideInUp {
     to {

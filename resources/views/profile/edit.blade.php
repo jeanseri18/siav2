@@ -38,45 +38,27 @@
                                 </h3>
                             </div>
                             <div class="app-card-body">
-                                <div class="text-center mb-3">
-                                    @if($user->photo)
-                                        <img src="{{ Storage::url($user->photo) }}" alt="Photo actuelle" id="photo-preview"
-                                             class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
-                                        
-                                        <div class="mt-2">
-                                            <form action="{{ route('profile.delete-photo') }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="app-btn app-btn-danger app-btn-sm" 
-                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?')">
-                                                    <i class="fas fa-trash me-1"></i>Supprimer la photo
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @else
-                                        @php
-                                            $initials = collect(explode(' ', $user->nom))->map(fn($word) => strtoupper(mb_substr($word, 0, 1)))->join('');
-                                        @endphp
-                                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                                             style="width: 120px; height: 120px; font-size: 2.5rem; font-weight: bold;" id="photo-preview">
-                                            {{ $initials }}
-                                        </div>
-                                    @endif
-                                </div>
-                                
-                                <div class="app-form-group">
-                                    <label for="photo" class="app-form-label">
-                                        <i class="fas fa-upload me-2"></i>Nouvelle photo
-                                    </label>
-                                    <input type="file" class="app-form-control @error('photo') is-invalid @enderror" 
-                                           id="photo" name="photo" accept="image/*" onchange="previewPhoto(this)">
-                                    @error('photo')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="app-form-text">
-                                        Formats acceptés: JPEG, PNG, JPG, GIF. Taille maximale: 2MB.
+                                <x-photo-dropzone
+                                    name="photo"
+                                    id="photo"
+                                    label="Photo de profil"
+                                    :current-url="$user->photo ? Storage::url($user->photo) : null"
+                                    :circle="true"
+                                    help="Formats : JPEG, PNG, JPG, GIF. Taille max : 2MB. Glissez-déposez ou cliquez."
+                                />
+
+                                @if($user->photo)
+                                    <div class="text-center mt-2">
+                                        <form action="{{ route('profile.delete-photo') }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="app-btn app-btn-danger app-btn-sm"
+                                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?')">
+                                                <i class="fas fa-trash me-1"></i>Supprimer la photo
+                                            </button>
+                                        </form>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                         
@@ -213,14 +195,14 @@
                         <i class="fas fa-cogs me-2"></i>Actions
                     </h3>
                 </div>
-                <div class="app-card-body app-d-grid app-gap-2">
+                <div class="app-card-body app-d-grid app-gap-3">
                     <a href="{{ route('profile.show') }}" class="app-btn app-btn-outline-secondary w-100">
                         <i class="fas fa-eye me-2"></i>Voir mon profil
                     </a>
                     <a href="{{ route('profile.edit-password') }}" class="app-btn app-btn-primary w-100">
                         <i class="fas fa-key me-2"></i>Changer le mot de passe
                     </a>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-danger w-100" 
                                 onclick="return confirm('Êtes-vous sûr de vouloir vous déconnecter ?')">
@@ -267,40 +249,12 @@
 
 @push('scripts')
 <script>
-function previewPhoto(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            const preview = document.getElementById('photo-preview');
-            
-            // Si c'est une image, remplacer par la nouvelle
-            if (preview.tagName === 'IMG') {
-                preview.src = e.target.result;
-            } else {
-                // Si c'est un div avec initiales, créer une nouvelle image
-                const newImg = document.createElement('img');
-                newImg.src = e.target.result;
-                newImg.alt = 'Aperçu de la photo';
-                newImg.id = 'photo-preview';
-                newImg.className = 'img-fluid rounded-circle mb-3';
-                newImg.style.width = '120px';
-                newImg.style.height = '120px';
-                newImg.style.objectFit = 'cover';
-                
-                preview.parentNode.replaceChild(newImg, preview);
-            }
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 // Validation côté client
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
-    const nameInput = document.getElementById('name');
+    const nameInput = document.getElementById('nom') || document.getElementById('name');
     const emailInput = document.getElementById('email');
+    if (!form || !nameInput || !emailInput) return;
     
     form.addEventListener('submit', function(e) {
         let isValid = true;

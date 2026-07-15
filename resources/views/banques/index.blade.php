@@ -16,6 +16,7 @@
                 <i class="fas fa-university me-2"></i>Liste des Banques
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'banques')" />
                 <span class="app-badge app-badge-info app-badge-pill">
                     BU: {{ session('selected_bu') }}
                 </span>

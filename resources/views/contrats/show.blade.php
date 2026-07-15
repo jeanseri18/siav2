@@ -15,18 +15,21 @@
 
 <style>
 .contract-detail-page {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    --ctd-primary: #033d71;
+    --ctd-primary-light: #033d71;
+    --ctd-primary-dark: #033d71;
+    background: linear-gradient(180deg, #f1f5f9 0%, #e9ecef 100%);
     min-height: 100vh;
     padding: 20px 0;
 }
 
 .contract-hero {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
+    background: linear-gradient(135deg, var(--ctd-primary) 0%, var(--ctd-primary-dark) 100%);
     border-radius: 20px;
     color: white;
     padding: 30px;
     margin-bottom: 30px;
-    box-shadow: 0 15px 35px rgba(94, 179, 246, 0.3);
+    box-shadow: 0 15px 35px rgba(3, 61, 113, 0.25);
     position: relative;
     overflow: hidden;
 }
@@ -100,7 +103,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #5EB3F6, #033d71);
+    background: linear-gradient(90deg, var(--ctd-primary-light), var(--ctd-primary));
 }
 
 .stat-card.positive::before {
@@ -123,7 +126,7 @@
 .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--ctd-primary-dark);
     margin-bottom: 10px;
 }
 
@@ -137,7 +140,7 @@
 
 .stat-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #5EB3F6, #033d71);
+    background: linear-gradient(90deg, var(--ctd-primary-light), var(--ctd-primary));
     border-radius: 3px;
     transition: width 0.8s ease;
 }
@@ -151,21 +154,21 @@
 .content-card {
     background: white;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 10px 30px rgba(3, 61, 113, 0.08);
+    border: 1px solid rgba(3, 61, 113, 0.1);
     overflow: hidden;
 }
 
 .card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, rgba(3, 61, 113, 0.07) 0%, rgba(10, 140, 255, 0.1) 100%);
     padding: 25px 30px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid rgba(3, 61, 113, 0.12);
 }
 
 .card-title {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--ctd-primary-dark);
     margin: 0;
     display: flex;
     align-items: center;
@@ -173,7 +176,60 @@
 
 .card-title i {
     margin-right: 12px;
-    color: #5EB3F6;
+    color: var(--ctd-primary-light);
+}
+
+.card-header-contract-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.contract-context-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    border: 1px solid rgba(3, 61, 113, 0.18);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    max-width: min(100%, 42rem);
+    margin-left: auto;
+}
+
+.contract-context-badge .contract-name {
+    font-weight: 600;
+    color: #212529;
+    line-height: 1.3;
+    text-align: right;
+}
+
+.contract-context-badge .contract-ref {
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    background: #f8f9fa;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.contract-context-badge .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    flex-shrink: 0;
+    animation: contractStatusPulse 2s infinite;
+}
+
+@keyframes contractStatusPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
 .card-body {
@@ -201,7 +257,7 @@
 
 .form-label i {
     margin-right: 8px;
-    color: #5EB3F6;
+    color: var(--ctd-primary-light);
 }
 
 .form-control, .form-select {
@@ -214,8 +270,8 @@
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #5EB3F6;
-    box-shadow: 0 0 0 0.2rem rgba(94, 179, 246, 0.25);
+    border-color: var(--ctd-primary-light);
+    box-shadow: 0 0 0 0.2rem rgba(10, 140, 255, 0.22);
     background: white;
 }
 
@@ -241,14 +297,14 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
+    background: linear-gradient(135deg, var(--ctd-primary-light) 0%, var(--ctd-primary-dark) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(94, 179, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(3, 61, 113, 0.35);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(94, 179, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(3, 61, 113, 0.4);
 }
 
 .btn-secondary {
@@ -295,7 +351,7 @@
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #5EB3F6 0%, #033d71 100%);
+    background: linear-gradient(135deg, var(--ctd-primary) 0%, var(--ctd-primary-dark) 100%);
     color: white;
     font-weight: 600;
     border: none;
@@ -373,6 +429,56 @@
         flex-direction: column;
     }
 }
+
+/* Représentants client (fiches non vides uniquement) */
+.contract-rep-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ctd-primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.contract-rep-title i {
+    color: var(--ctd-primary);
+}
+.contract-rep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+.contract-rep-card {
+    border: 1px solid rgba(3, 61, 113, 0.14);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(3, 61, 113, 0.07);
+}
+.contract-rep-card-head {
+    background: linear-gradient(135deg, var(--ctd-primary) 0%, var(--ctd-primary-dark) 100%);
+    color: #fff;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.contract-rep-card-body {
+    padding: 1rem;
+}
+.contract-rep-card-body .rep-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+    margin-bottom: 0.15rem;
+}
+.contract-rep-card-body .rep-value {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.65rem;
+}
 </style>
 
 <div class="contract-detail-page">
@@ -382,11 +488,15 @@
 
         <!-- Contract Details Section -->
         <div class="content-card" style="margin-bottom: 30px;">
-            <div class="card-header">
-                <h2 class="card-title">
+            <div class="card-header card-header-contract-meta">
+                <h2 class="card-title mb-0">
                     <i class="fas fa-chart-line"></i>Détails du contrat
                 </h2>
-                
+                <div class="contract-context-badge" title="Contrat en cours">
+                    <span class="contract-name">{{ session('contrat_nom') }}</span>
+                    <span class="contract-ref">{{ session('ref_contrat') }}</span>
+                    <span class="status-indicator active" aria-hidden="true"></span>
+                </div>
             </div>
         </div>
 
@@ -530,53 +640,61 @@
                                 <label class="form-label">
                                     <i class="fas fa-industry"></i>Secteur d'activité
                                 </label>
-                                <div>{{ $contrat->client->secteur->nom ?? 'N/A' }}</div>
+                                <div>{{ $contrat->client->secteur_activite ?? 'N/A' }}</div>
                             </div>
                         </div>
 
-                        <!-- Représentants du client -->
-                        <h4 class="mt-4 mb-3">
+                        @php
+                            $representantsClient = ($contrat->client?->contactPersons ?? collect())
+                                ->filter(fn (\App\Models\ContactPerson $c) => $c->hasDisplayableData())
+                                ->values();
+                        @endphp
+
+                        @if($representantsClient->isNotEmpty())
+                        <!-- Représentants du client (uniquement les fiches renseignées) -->
+                        <h4 class="contract-rep-title mt-4 mb-3">
                             <i class="fas fa-users"></i>Représentants du client
                         </h4>
-                        <div class="form-grid">
-                            @for($i = 0; $i < 3; $i++)
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user-tie"></i>Représentant {{ $i + 1 }}
-                                </label>
-                                @php
-                                    $contact = null;
-                                    if ($contrat->client && $contrat->client->contactPersons) {
-                                        $contact = $contrat->client->contactPersons->slice($i, 1)->first();
-                                    }
-                                @endphp
-                                <div class="border rounded p-2 bg-light">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <small class="text-muted">Nom:</small>
-                                            <div>{{ $contact->nom ?? 'N/A' }}</div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <small class="text-muted">Prénoms:</small>
-                                            <div>{{ $contact->prenoms ?? 'N/A' }}</div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <small class="text-muted">Fonction:</small>
-                                            <div>{{ $contact->fonction ?? 'N/A' }}</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Cel1:</small>
-                                            <div>{{ $contact->telephone_1 ?? 'N/A' }}</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Cel2:</small>
-                                            <div>{{ $contact->telephone_2 ?? 'N/A' }}</div>
+                        <div class="contract-rep-grid">
+                            @foreach($representantsClient as $index => $contact)
+                                <div class="contract-rep-card">
+                                    <div class="contract-rep-card-head">
+                                        <i class="fas fa-user-tie"></i> Représentant {{ $index + 1 }}
+                                    </div>
+                                    <div class="contract-rep-card-body">
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <div class="rep-label">Nom</div>
+                                                <div class="rep-value">{{ $contact->nom ?: '—' }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="rep-label">Prénoms</div>
+                                                <div class="rep-value">{{ $contact->prenoms ?: '—' }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="rep-label">Fonction</div>
+                                                <div class="rep-value">{{ $contact->fonction ?: '—' }}</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="rep-label">Téléphone 1</div>
+                                                <div class="rep-value">{{ $contact->telephone_1 ?: '—' }}</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="rep-label">Téléphone 2</div>
+                                                <div class="rep-value">{{ $contact->telephone_2 ?: '—' }}</div>
+                                            </div>
+                                            @if($contact->email)
+                                                <div class="col-12">
+                                                    <div class="rep-label">E-mail</div>
+                                                    <div class="rep-value"><a href="mailto:{{ $contact->email }}">{{ $contact->email }}</a></div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            @endfor
+                            @endforeach
                         </div>
+                        @endif
                 </div>
             </div>
 
@@ -717,56 +835,56 @@
                                 <label class="form-label">
                                     <i class="fas fa-money-bill-wave"></i>Mt du contrat (CFA)
                                 </label>
-                                <div>{{ $contrat->montant }}</div>
+                                <div>{{ number_format($stats['Montant du contrat'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-line"></i>CA réalisé (CFA)
                                 </label>
-                                <div>{{ $contrat->ca_realise ?? 0 }}</div>
+                                <div>{{ number_format($stats['CA Réalisé'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>DS prévisionnel (CFA)
                                 </label>
-                                <div>{{ $contrat->ds_prev ?? 0 }}</div>
+                                <div>{{ number_format($stats['DS Prévisionnel'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>DS réalisé (CFA)
                                 </label>
-                                <div>{{ $contrat->ds_realise ?? 0 }}</div>
+                                <div>{{ number_format($stats['DS Réalisé'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>FC prévisionnel (CFA)
                                 </label>
-                                <div>{{ $contrat->fc_prev ?? 0 }}</div>
+                                <div>{{ number_format($stats['FC Prévisionnel'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>FC réalisé (CFA)
                                 </label>
-                                <div>{{ $contrat->fc_realise ?? 0 }}</div>
+                                <div>{{ number_format($stats['FC Réalisé'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>FG prévisionnel (CFA)
                                 </label>
-                                <div>{{ $contrat->fg_prev ?? 0 }}</div>
+                                <div>{{ number_format($stats['FG Prévisionnel'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-chart-bar"></i>FG réalisé (CFA)
                                 </label>
-                                <div>{{ $contrat->fg_realise ?? 0 }}</div>
+                                <div>{{ number_format($stats['FG Réalisé'] ?? 0, 0, ',', ' ') }}</div>
                             </div>
                         </div>
                 </div>
@@ -782,13 +900,6 @@
                 
                 <div class="card-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user"></i>Créé par
-                                </label>
-                                <div>{{ $contrat->createdBy->name ?? 'N/A' }}</div>
-                            </div>
-
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-calendar-plus"></i>Date de création
@@ -814,14 +925,13 @@
                                 <label class="form-label">
                                     <i class="fas fa-building"></i>Business Unit
                                 </label>
-                                <div>{{ $contrat->businessUnit->nom ?? 'N/A' }}</div>
+                                <div>{{ $contrat->projet?->bu?->nom ?? 'N/A' }}</div>
                             </div>
                         </div>
                 </div>
             </div>
-                </div>
-            </div>
-            
+        </div>
+
             <!-- Financial Analysis -->
             <div class="content-card">
                 <div class="card-header">
@@ -907,11 +1017,11 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Marge brute estimée</strong></td>
-                                            <td>{{ number_format($stats['Montant du contrat'] - $stats['Coût de revient Prév.'], 0, ',', ' ') }} CFA</td>
+                                            <td><strong>Bénéfice prévisionnel</strong></td>
+                                            <td>{{ number_format($stats['Bénéfice Prévisionnel'], 0, ',', ' ') }} CFA</td>
                                             <td>
-                                                {{ $stats['Montant du contrat'] > 0 ? 
-                                                    number_format((($stats['Montant du contrat'] - $stats['Coût de revient Prév.']) / $stats['Montant du contrat']) * 100, 1) : 0 
+                                                {{ $stats['Montant du contrat'] > 0 ?
+                                                    number_format(($stats['Bénéfice Prévisionnel'] / $stats['Montant du contrat']) * 100, 1) : 0
                                                 }}%
                                             </td>
                                         </tr>
@@ -955,7 +1065,7 @@
                                     <tbody>
                                         @foreach($factures as $facture)
                                             <tr>
-                                                <td><strong>{{ $facture->numero_facture }}</strong></td>
+                                                <td><strong>{{ $facture->num ?? ('#'.$facture->id) }}</strong></td>
                                                 <td>{{ \Carbon\Carbon::parse($facture->date_emission)->format('d/m/Y') }}</td>
                                                 <td>{{ number_format($facture->montant_total, 0, ',', ' ') }} CFA</td>
                                                 <td>
@@ -977,125 +1087,157 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Graphique de comparaison
-const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
-const comparisonChart = new Chart(comparisonCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Déboursé Sec', 'Coût de revient'],
-        datasets: [{
-            label: 'Prévisionnel',
-            data: [{{ $stats['DS Prévisionnel'] }}, {{ $stats['Coût de revient Prév.'] }}],
-            backgroundColor: 'rgba(94, 179, 246, 0.8)',
-            borderColor: 'rgba(94, 179, 246, 1)',
-            borderWidth: 2,
-            borderRadius: 8
-        }, {
-            label: 'Réalisé',
-            data: [{{ $stats['DS Réalisé'] }}, {{ $stats['Coût de revient Réel'] }}],
-            backgroundColor: 'rgba(3, 55, 101, 0.8)',
-            borderColor: 'rgba(3, 55, 101, 1)',
-            borderWidth: 2,
-            borderRadius: 8
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: {
-                    usePointStyle: true,
-                    padding: 20
-                }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: 'white',
-                bodyColor: 'white',
-                borderColor: 'rgba(94, 179, 246, 1)',
-                borderWidth: 1,
-                callbacks: {
-                    label: function(context) {
-                        return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.parsed.y) + ' CFA';
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.1)'
-                },
-                ticks: {
-                    callback: function(value) {
-                        return new Intl.NumberFormat('fr-FR', {
-                            notation: 'compact',
-                            compactDisplay: 'short'
-                        }).format(value) + ' CFA';
-                    }
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                }
-            }
-        }
-    }
-});
-
-// Graphique de rentabilité
-const profitabilityCtx = document.getElementById('profitabilityChart').getContext('2d');
-const profitabilityChart = new Chart(profitabilityCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Coût de revient réel', 'Marge brute réalisée'],
-        datasets: [{
-            data: [{{ $stats['Coût de revient Réel'] }}, {{ max(0, $stats['CA Réalisé'] - $stats['Coût de revient Réel']) }}],
-            backgroundColor: [
-                'rgba(220, 53, 69, 0.8)',
-                'rgba(40, 167, 69, 0.8)'
-            ],
-            borderColor: [
-                'rgba(220, 53, 69, 1)',
-                'rgba(40, 167, 69, 1)'
-            ],
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    usePointStyle: true,
-                    padding: 20
-                }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: 'white',
-                bodyColor: 'white',
-                borderColor: 'rgba(94, 179, 246, 1)',
-                borderWidth: 1,
-                callbacks: {
-                    label: function(context) {
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = ((context.parsed / total) * 100).toFixed(1);
-                        return context.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.parsed) + ' CFA (' + percentage + '%)';
-                    }
-                }
-            }
-        }
-    }
-});
-</script>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    function initContratCharts() {
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js non chargé');
+            return;
+        }
+        var compEl = document.getElementById('comparisonChart');
+        var profEl = document.getElementById('profitabilityChart');
+        if (!compEl || !profEl) {
+            return;
+        }
+
+        var dsPrev = Number({!! json_encode((float) ($stats['DS Prévisionnel'] ?? 0)) !!});
+        var coutPrev = Number({!! json_encode((float) ($stats['Coût de revient Prév.'] ?? 0)) !!});
+        var dsReal = Number({!! json_encode((float) ($stats['DS Réalisé'] ?? 0)) !!});
+        var coutReal = Number({!! json_encode((float) ($stats['Coût de revient Réel'] ?? 0)) !!});
+        var caReal = Number({!! json_encode((float) ($stats['CA Réalisé'] ?? 0)) !!});
+
+        new Chart(compEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Déboursé Sec', 'Coût de revient'],
+                datasets: [{
+                    label: 'Prévisionnel',
+                    data: [dsPrev, coutPrev],
+                    backgroundColor: 'rgba(94, 179, 246, 0.8)',
+                    borderColor: 'rgba(94, 179, 246, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }, {
+                    label: 'Réalisé',
+                    data: [dsReal, coutReal],
+                    backgroundColor: 'rgba(3, 55, 101, 0.8)',
+                    borderColor: 'rgba(3, 55, 101, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(94, 179, 246, 1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) {
+                                var y = context.parsed.y;
+                                if (y === undefined || y === null) {
+                                    return context.dataset.label + ': —';
+                                }
+                                return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(y) + ' CFA';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        ticks: {
+                            callback: function (value) {
+                                return new Intl.NumberFormat('fr-FR', {
+                                    notation: 'compact',
+                                    compactDisplay: 'short'
+                                }).format(value) + ' CFA';
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        var marge = Math.max(0, caReal - coutReal);
+        var profitData, profitLabels, profitBg, profitBorder;
+        if (coutReal + marge <= 0) {
+            profitData = [1];
+            profitLabels = ['En attente de données (prévoir CA / coûts réalisés)'];
+            profitBg = ['rgba(108, 117, 125, 0.35)'];
+            profitBorder = ['rgba(108, 117, 125, 0.9)'];
+        } else {
+            profitData = [coutReal, marge];
+            profitLabels = ['Coût de revient réel', 'Marge brute réalisée'];
+            profitBg = ['rgba(220, 53, 69, 0.8)', 'rgba(40, 167, 69, 0.8)'];
+            profitBorder = ['rgba(220, 53, 69, 1)', 'rgba(40, 167, 69, 1)'];
+        }
+
+        new Chart(profEl.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: profitLabels,
+                datasets: [{
+                    data: profitData,
+                    backgroundColor: profitBg,
+                    borderColor: profitBorder,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(94, 179, 246, 1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) {
+                                var raw = context.raw;
+                                var dataArr = context.dataset.data || [];
+                                var total = dataArr.reduce(function (a, b) { return a + Number(b); }, 0);
+                                if (total <= 0) {
+                                    return context.label;
+                                }
+                                var pct = ((Number(raw) / total) * 100).toFixed(1);
+                                if (profitData.length === 1 && profitData[0] === 1 && coutReal + marge <= 0) {
+                                    return 'Aucun montant réalisé à afficher pour l’instant';
+                                }
+                                return context.label + ': ' + new Intl.NumberFormat('fr-FR').format(raw) + ' CFA (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initContratCharts);
+    } else {
+        initContratCharts();
+    }
+})();
+</script>
+@endpush

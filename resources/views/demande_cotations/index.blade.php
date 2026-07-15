@@ -11,6 +11,8 @@
 @section('content')
 
 <div class=" app-fade-in">
+    <x-stock-flux-nav module="cotation" context="list" />
+
     <!-- Statistiques rapides -->
     <div class="row mt-4">
         <div class="col-md-3">
@@ -56,6 +58,10 @@
                 <i class="fas fa-file-invoice me-2"></i>Liste des Demandes de Cotation
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('demande-cotations.export.pdf')" />
+                <a href="{{ route('bon-commandes.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
+                    <i class="fas fa-file-invoice"></i> Bons de commande
+                </a>
                 <a href="{{ route('demande-cotations.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Demande
                 </a>
@@ -135,6 +141,10 @@
                                         $statutClass = 'warning';
                                         $statutIcon = 'spinner';
                                         break;
+                                    case 'validée':
+                                        $statutClass = 'info';
+                                        $statutIcon = 'check-double';
+                                        break;
                                     case 'terminée':
                                         $statutClass = 'success';
                                         $statutIcon = 'check-circle';
@@ -154,45 +164,56 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('demande-cotations.show', $demande) }}" 
-                                   class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                @if($demande->statut == 'en cours')
-                                <a href="{{ route('demande-cotations.edit', $demande) }}" 
-                                   class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <form action="{{ route('demande-cotations.destroy', $demande) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                                
-                                <form action="{{ route('demande-cotations.terminate', $demande) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Terminer">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </form>
-                                @endif
-                                
-                                @if($demande->statut == 'terminée')
-                                @php
-                                    $fournisseurRetenu = $demande->fournisseurs->where('retenu', true)->first();
-                                @endphp
-                                @if($fournisseurRetenu)
-                                <a href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id]) }}" 
-                                   class="app-btn app-btn-primary app-btn-sm app-btn-icon" title="Créer bon de commande">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </a>
-                                @endif
-                                @endif
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('demande-cotations.show', $demande) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    @if($demande->statut == 'en cours')
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('demande-cotations.edit', $demande) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if(in_array($demande->statut, ['en cours', 'validée'], true))
+                                    <li>
+                                        <form action="{{ route('demande-cotations.terminate', $demande) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-success" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-check me-2"></i>Terminer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                    @if($demande->statut == 'en cours')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('demande-cotations.destroy', $demande) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                    @if($demande->estEligiblePourBonCommande())
+                                    @php
+                                        $fournisseurRetenu = $demande->fournisseurs->where('retenu', true)->first();
+                                    @endphp
+                                    @if($fournisseurRetenu && $demande->bon_commandes_count === 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id, 'demande_cotation_id' => $demande->id]) }}">
+                                            <i class="fas fa-shopping-cart me-2"></i>Créer bon de commande
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @endif
+                                </ul>
                             </div>
                         </td>
                     </tr>

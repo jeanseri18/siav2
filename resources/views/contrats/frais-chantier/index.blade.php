@@ -68,10 +68,17 @@
                                         </td>
                                     </tr>
                                     @endforeach
-                                    <!-- Total Général -->
-                                    <tr class="table-dark font-weight-bold">
-                                        <td colspan="3" class="text-right">Total Général des Frais de Chantier :</td>
-                                        <td colspan="3">{{ number_format($fraisChantierParents->sum('montant_total'), 2, ',', ' ') }} F CFA</td>
+                                    @php
+                                        $totalFcPrev = $fraisChantierParents->where('type', \App\Models\FraisChantierParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                        $totalFcReal = $fraisChantierParents->where('type', '!=', \App\Models\FraisChantierParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                    @endphp
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="3" class="text-end">Total prévisionnel :</td>
+                                        <td colspan="3">{{ number_format($totalFcPrev, 2, ',', ' ') }} F CFA</td>
+                                    </tr>
+                                    <tr class="table-success fw-bold">
+                                        <td colspan="3" class="text-end">Total réalisé :</td>
+                                        <td colspan="3">{{ number_format($totalFcReal, 2, ',', ' ') }} F CFA</td>
                                     </tr>
                                 </tbody>
                             </table>

@@ -54,20 +54,34 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            if ($user->bus->count() > 1) {
-                return redirect()->route('select.bu');
-            } elseif ($user->bus->count() == 1) {
-                session(['selected_bu' => $user->bus->first()->id]);
-                return redirect()->route('menu');
-            }
+        // Refuser les comptes inactifs (status !== actif)
+        $credentials['status'] = 'actif';
+
+        if (! Auth::attempt($credentials)) {
+            return back()->withErrors(['email' => 'Les identifiants ne sont pas valides.']);
         }
 
-        return back()->withErrors(['email' => 'Les identifiants ne sont pas valides.']);
+        $user = Auth::user();
+        $busCount = $user->bus()->count();
+
+        if ($busCount > 1) {
+            return redirect()->route('select.bu');
+        }
+
+        if ($busCount === 1) {
+            session(['selected_bu' => $user->bus->first()->id]);
+
+            return redirect()->route('menu');
+        }
+
+        // Compte sans BU (ex. utilisateur créé sans case « Assignation des Bus » cochée)
+        return redirect()->route('menu')->with(
+            'warning',
+            'Votre compte n\'a aucune unité (BU) assignée. Demandez à un administrateur de vous associer au moins une BU pour utiliser les modules qui en dépendent.'
+        );
     }
 
     // Afficher la page de sélection de BU après connexion

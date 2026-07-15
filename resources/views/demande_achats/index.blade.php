@@ -11,7 +11,7 @@
 @section('content')
 
 <div class=" app-fade-in">
-
+    <x-stock-flux-nav module="achat" context="list" />
 
     <!-- Statistiques rapides -->
     <div class="row mt-4">
@@ -58,6 +58,12 @@
                 <i class="fas fa-shopping-cart me-2"></i>Liste des Demandes d'Achat
             </h2>
             <div class="app-card-actions">
+                <a href="{{ route('demande-achats.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-2"></i>Voir PDF
+                </a>
+                <a href="{{ route('demande-cotations.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
+                    <i class="fas fa-calculator"></i> Demande de cotation
+                </a>
                 <a href="{{ route('demande-achats.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Demande
                 </a>
@@ -184,40 +190,47 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('demande-achats.show', $demande) }}" 
-                                   class="app-btn app-btn-info app-btn-sm app-btn-icon" title="Voir">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                @if($demande->statut == 'en attente')
-                                <a href="{{ route('demande-achats.edit', $demande) }}" 
-                                   class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <form action="{{ route('demande-achats.destroy', $demande) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                                
-                                <form action="{{ route('demande-achats.approve', $demande) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="app-btn app-btn-success app-btn-sm app-btn-icon" title="Approuver">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </form>
-                                @endif
-                                
-                                @if($demande->statut == 'approuvée')
-                                <a href="{{ route('demande-cotations.create', ['demande_achat_id' => $demande->id]) }}" 
-                                   class="app-btn app-btn-primary app-btn-sm app-btn-icon" title="Créer demande de cotation">
-                                    <i class="fas fa-file-invoice"></i>
-                                </a>
-                                @endif
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('demande-achats.show', $demande) }}">
+                                            <i class="fas fa-eye me-2"></i>Voir les détails
+                                        </a>
+                                    </li>
+                                    @if($demande->statut == 'en attente')
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('demande-achats.edit', $demande) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form action="{{ route('demande-achats.approve', $demande) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-success" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-check me-2"></i>Approuver
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('demande-achats.destroy', $demande) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                    @endif
+                                    @if($demande->statut == 'approuvée' && $demande->demande_cotations_count === 0)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('demande-cotations.create', ['demande_achat_id' => $demande->id]) }}">
+                                            <i class="fas fa-file-invoice me-2"></i>Créer demande de cotation
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
                             </div>
                         </td>
                     </tr>

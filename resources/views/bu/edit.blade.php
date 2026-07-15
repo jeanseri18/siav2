@@ -75,6 +75,17 @@
                         </div>
                         
                         <div class="app-form-group">
+                            <label for="soldecaisse" class="app-form-label">
+                                <i class="fas fa-coins me-2"></i>Solde caisse (FCFA)
+                            </label>
+                            <input type="number" name="soldecaisse" id="soldecaisse" step="0.01" value="{{ old('soldecaisse', $bu->soldecaisse) }}" class="app-form-control @error('soldecaisse') is-invalid @enderror" required>
+                            @error('soldecaisse')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div class="app-form-text">Montant affiché sur le brouillard de caisse pour cette BU. Une modification manuelle peut différer du total du brouillard.</div>
+                        </div>
+                        
+                        <div class="app-form-group">
                             <label for="statut" class="app-form-label">
                                 <i class="fas fa-toggle-on me-2"></i>Statut
                             </label>
@@ -84,18 +95,13 @@
                             </select>
                         </div>
                         
-                        <div class="app-form-group">
-                            <label for="logo" class="app-form-label">
-                                <i class="fas fa-image me-2"></i>Logo
-                            </label>
-                            <input type="file" name="logo" class="app-form-control">
-                            <div class="app-form-text">Télécharger un nouveau logo (facultatif)</div>
-                            @if ($bu->logo)
-                                <div class="app-mt-3">
-                                    <img src="{{ asset('storage/' . $bu->logo) }}" alt="Logo actuel" class="img-fluid" style="max-width: 150px; border-radius: var(--border-radius-md); border: 1px solid var(--gray-200);">
-                                </div>
-                            @endif
-                        </div>
+                        <x-photo-dropzone
+                            name="logo"
+                            id="logo"
+                            label="Logo"
+                            :current-url="$bu->logo ? asset('storage/' . $bu->logo) : null"
+                            help="Télécharger un nouveau logo (facultatif). Glissez-déposez ou cliquez."
+                        />
                         
                         <div class="app-card-footer">
                             <a href="{{ route('bu.index') }}" class="app-btn app-btn-secondary">

@@ -32,6 +32,10 @@
                         <input type="text" name="designation" class="form-control form-control-sm" value="{{ $bpu->designation }}" style="width: 240px; font-size: 15px; height: 40px;" required>
                     </div>
                     <div class="d-flex flex-column">
+                        <small>Quantité</small>
+                        <input type="number" name="qte" class="form-control form-control-sm" value="{{ $bpu->qte }}" step="0.01" min="0" style="width: 120px; font-size: 15px; height: 40px;" required>
+                    </div>
+                    <div class="d-flex flex-column">
                         <small>Unité</small>
                         <select name="unite" class="form-select form-select-sm" style="width: 120px; font-size: 15px; height: 40px;" required>
                             <option value="" style="font-size: 15px;">Choisir</option>

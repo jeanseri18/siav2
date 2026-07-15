@@ -64,10 +64,17 @@
                                         </td>
                                     </tr>
                                     @endforeach
-                                    <!-- Total Général -->
-                                    <tr class="table-dark font-weight-bold">
-                                        <td colspan="3" class="text-right">Total Général des Frais Généraux :</td>
-                                        <td colspan="3">{{ number_format($fraisGenerauxParents->sum('montant_total'), 2, ',', ' ') }} F CFA</td>
+                                    @php
+                                        $totalFgPrev = $fraisGenerauxParents->where('type', \App\Models\FraisGenerauxParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                        $totalFgReal = $fraisGenerauxParents->where('type', '!=', \App\Models\FraisGenerauxParent::TYPE_PREVISIONNEL)->sum('montant_total');
+                                    @endphp
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="3" class="text-end">Total prévisionnel :</td>
+                                        <td colspan="3">{{ number_format($totalFgPrev, 2, ',', ' ') }} F CFA</td>
+                                    </tr>
+                                    <tr class="table-success fw-bold">
+                                        <td colspan="3" class="text-end">Total réalisé :</td>
+                                        <td colspan="3">{{ number_format($totalFgReal, 2, ',', ' ') }} F CFA</td>
                                     </tr>
                                 </tbody>
                             </table>

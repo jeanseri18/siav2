@@ -16,6 +16,7 @@
                 <i class="fas fa-industry me-2"></i>Liste des Secteurs d'Activité
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'secteur_activites')" />
                 <a href="{{ route('secteur_activites.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un secteur
                 </a>

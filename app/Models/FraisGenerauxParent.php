@@ -30,6 +30,8 @@ class FraisGenerauxParent extends Model
 
     const TYPE_PREVISIONNEL = 'previsionnelle';
 
+    const TYPE_REALISE = 'réalisé';
+
     protected $attributes = [
         'type' => self::TYPE_PREVISIONNEL,
         'statut' => self::STATUT_BROUILLON

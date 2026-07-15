@@ -10,23 +10,21 @@
 
 <div class="container-fluid py-4">
     <!-- Header avec recherche et filtres -->
-    <div class="utilities-header card mb-4">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h2 class="utilities-title">
-                        <i class="fas fa-tools me-2"></i>Centre d'Utilitaires
-                    </h2>
-                    <p class="text-muted">Accédez rapidement aux outils de configuration et aux modules du système</p>
-                </div>
-                <div class="col-md-6">
-                    <div class="utilities-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="searchUtilities" placeholder="Rechercher un outil..." aria-label="Rechercher">
-                            <button class="btn btn-outline-primary" type="button">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
+    <div class="utilities-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="utilities-title">
+                    <i class="fas fa-tools me-2"></i>Centre d'Utilitaires
+                </h2>
+                <p class="text-muted mb-0">Accédez rapidement aux outils de configuration et aux modules du système</p>
+            </div>
+            <div class="col-md-6">
+                <div class="utilities-search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchUtilities" placeholder="Rechercher un outil..." aria-label="Rechercher">
+                        <button class="btn btn-outline-primary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -103,7 +101,7 @@
             'color' => 'success'
         ],
         [
-            'route' => 'bu.create', 
+            'route' => 'bu.index', 
             'icon' => 'fa-city', 
             'text' => 'Business Units', 
             'description' => 'Gérer les unités d\'affaires',
@@ -201,8 +199,8 @@
         [
             'route' => 'type-travaux.index', 
             'icon' => 'fa-cogs', 
-            'text' => 'Types de travaux', 
-            'description' => 'Gérer les types de travaux',
+            'text' => 'Types de travaux / activités', 
+            'description' => 'Liste des types de travaux / activités',
             'category' => 'projects',
             'color' => 'primary'
         ],
@@ -298,10 +296,11 @@
 
 <style>
     .utilities-header {
-        background: linear-gradient(135deg, #f8f9fa, #ffffff);
-        border-radius: 15px;
+        background: transparent;
         border: none;
-        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
     }
 
     .utilities-title {

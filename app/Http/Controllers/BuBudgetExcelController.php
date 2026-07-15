@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\BuBudgetExcel;
 use App\Models\BuBudgetExcelRow;
 use App\Models\BuBudgetExcelValue;
+use App\Models\TypeTravaux;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BuBudgetExcelController extends Controller
 {
@@ -68,12 +70,18 @@ class BuBudgetExcelController extends Controller
             ->value('value_text');
         $calc['seuil_rentabilite']['commentaire'] = $seuilCommentaire;
 
+        $typesTravaux = TypeTravaux::query()->orderBy('nom')->get(['id', 'nom']);
+
+        $hypothesesRows = $rowsBySheet['hypotheses'] ?? collect();
+
         return view('bu-budget.show', compact(
             'budget',
             'tab',
             'rowsBySheet',
+            'hypothesesRows',
             'calc',
-            'seuilCommentaire'
+            'seuilCommentaire',
+            'typesTravaux'
         ));
     }
 
@@ -119,6 +127,8 @@ class BuBudgetExcelController extends Controller
         }
 
         $sheet = (string) $request->sheet;
+        $this->mergeParsedAmountDecimal($request);
+
         $rules = [
             'sheet' => 'required|string|max:50',
             'amount_decimal' => 'required|numeric',
@@ -126,7 +136,7 @@ class BuBudgetExcelController extends Controller
         ];
 
         if ($sheet === 'hypotheses') {
-            $rules['reference'] = 'required|string|max:255';
+            $rules['reference'] = ['required', 'string', 'max:255', Rule::exists('type_travaux', 'nom')];
             $rules['parametre'] = 'required|numeric';
         } else {
             $rules['label'] = 'required|string|max:255';
@@ -176,11 +186,18 @@ class BuBudgetExcelController extends Controller
         ];
 
         if ($row->sheet === 'hypotheses') {
-            $rules['reference'] = 'required|string|max:255';
+            $allowedRefs = $this->typeTravauxNoms();
+            $cur = trim((string) $row->reference);
+            if ($cur !== '' && ! in_array($cur, $allowedRefs, true)) {
+                $allowedRefs[] = $cur;
+            }
+            $rules['reference'] = ['required', 'string', 'max:255', Rule::in($allowedRefs)];
             $rules['parametre'] = 'required|numeric';
         } else {
             $rules['label'] = 'required|string|max:255';
         }
+
+        $this->mergeParsedAmountDecimal($request);
 
         $request->validate($rules);
 
@@ -216,6 +233,49 @@ class BuBudgetExcelController extends Controller
         $row->delete();
 
         return redirect()->route('bu-budget.show', ['budget' => $budget->id, 'tab' => $tab])->with('success', 'Ligne supprimée.');
+    }
+
+    /**
+     * Interprète un montant saisi avec espaces (milliers) et virgule décimale (ex. "1 234 567,50").
+     */
+    protected function parseBudgetAmountInput(string $value): ?float
+    {
+        $s = trim($value);
+        if ($s === '') {
+            return null;
+        }
+        $s = preg_replace('/[\s\x{00A0}\x{202F}]/u', '', $s);
+        if (str_contains($s, ',')) {
+            $s = str_replace('.', '', $s);
+            $s = str_replace(',', '.', $s);
+        }
+        if (! is_numeric($s)) {
+            return null;
+        }
+
+        return (float) $s;
+    }
+
+    /**
+     * Remplace amount_decimal dans la requête par une valeur numérique exploitable par la validation.
+     */
+    protected function mergeParsedAmountDecimal(Request $request): void
+    {
+        if (! $request->has('amount_decimal') || ! $request->filled('amount_decimal')) {
+            return;
+        }
+        $parsed = $this->parseBudgetAmountInput((string) $request->input('amount_decimal'));
+        if ($parsed !== null) {
+            $request->merge(['amount_decimal' => $parsed]);
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function typeTravauxNoms(): array
+    {
+        return TypeTravaux::query()->orderBy('nom')->pluck('nom')->all();
     }
 
     private function sumRows(array $rowsBySheet, string $sheet): float

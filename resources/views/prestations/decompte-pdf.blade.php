@@ -2,394 +2,531 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Décompte - {{ $decompte->titre }}</title>
+    <title>Fiche de versement artisan — Décompte {{ $fiche['numero_decompte_label'] }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            font-size: 12px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 20px;
-        }
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
-        .company-info {
-            text-align: right;
-        }
-        .company-info p {
-            margin: 5px 0;
-            line-height: 1.6;
-        }
-        .document-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .document-details {
-            margin-bottom: 30px;
-        }
-        .document-details table {
-            width: 100%;
-        }
-        .document-details td {
-            padding: 5px 0;
-        }
-        .prestation-info {
-            float: left;
-            width: 50%;
-        }
-        .decompte-info {
-            float: right;
-            width: 50%;
-            text-align: right;
-        }
-        .clear {
-            clear: both;
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
+            font-size: 11.5px;
+            color: #000;
+            margin: 18px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .bordered td,
+        .bordered th {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
         }
-        th {
-            background-color: #007bff;
-            color: white;
+        .decompte-header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin: 0 0 3px 0;
+        }
+        .decompte-header-table td {
+            padding: 6px 8px;
+            vertical-align: top;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .decompte-header-table .cell-divider {
+            border-right: 1px solid #000;
+        }
+        .decompte-header-table .col-65 { width: 65%; }
+        .decompte-header-table .col-35 { width: 35%; }
+        .decompte-header-table .col-54 { width: 54%; }
+        .decompte-row3-wrap {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 0 3px 0;
+        }
+        .decompte-row3-wrap td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+        .decompte-row3-number {
+            width: 11%;
+            padding: 6px 8px;
+            font-size: 27px;
             font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
         }
-        .text-end {
+        .decompte-row3-content {
+            width: 89%;
+        }
+        .decompte-row3-content .decompte-header-table td {
+            padding: 3px 4px 3px 3px;
+        }
+        .decompte-row3-content .row3-meta-table td {
+            padding-left: 0;
+        }
+        .decompte-header-wrap {
+            margin-bottom: 8px;
+        }
+        .row3-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .row3-meta-table td {
+            border: none;
+            padding: 0;
+            font-size: 11.5px;
+            line-height: 1.5;
+            vertical-align: top;
+        }
+        .row3-meta-label {
+            white-space: nowrap;
+            padding-right: 8px;
+        }
+        .cell-title {
+            font-weight: bold;
+            text-decoration: underline;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 11.5px;
+        }
+        .donneur-inner {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .donneur-inner td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+        .logo-cell {
+            width: 120px;
+            padding-right: 10px;
+        }
+        .logo {
+            display: inline-block;
+            border: 0;
+        }
+        .company-block {
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+        .prestataire-box {
+            text-align: center;
+            line-height: 1.45;
+        }
+        .prestataire-name {
+            font-size: 13.5px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .info-line {
+            line-height: 1.45;
+            margin: 0;
+            padding: 0;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .bold { font-weight: bold; }
+        .decompte-main-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin-bottom: 3px;
+        }
+        .decompte-main-table th,
+        .decompte-main-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+            font-size: 11.5px;
+        }
+        .decompte-main-table thead th {
+            background: #d9d9d9;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10.5px;
+            vertical-align: middle;
+        }
+        .decompte-main-table .libelle-stack {
+            padding-left: 8px;
+        }
+        .decompte-main-table .body-line {
+            line-height: 1.55;
+            min-height: 14px;
+        }
+        .decompte-main-table .body-line-section {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .decompte-main-table .body-line-item {
+            padding-left: 4px;
+        }
+        .decompte-main-table .taux-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .decompte-main-table .inner-wrap {
+            padding: 0;
+        }
+        .decompte-inner-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .decompte-inner-grid td {
+            border: none;
+            padding: 4px 6px;
+            line-height: 1.55;
+            min-height: 14px;
+            font-size: 11.5px;
+            vertical-align: top;
+        }
+        .decompte-main-table .totals-label {
+            background: #d9d9d9;
+            font-weight: bold;
             text-align: right;
         }
-        .text-center {
-            text-align: center;
+        .decompte-main-table .totals-value {
+            background: #fff;
         }
-        .totals {
-            float: right;
-            width: 40%;
+        .decompte-main-table tr.totals-row td.totals-left-empty {
+            border-left: none !important;
+            border-bottom: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            background: #fff;
         }
-        .totals table {
+        .decompte-main-table tbody tr.totals-row:nth-child(2) td.totals-left-empty {
+            border-top: 1px solid #000 !important;
+        }
+        .decompte-paiement-table {
             width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-top: 0;
+        }
+        .decompte-paiement-table th,
+        .decompte-paiement-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 11.5px;
+            vertical-align: middle;
+        }
+        .decompte-paiement-table thead th {
+            background: #fff;
+            font-weight: bold;
+        }
+        .grey-head th {
+            background: #d9d9d9;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10.5px;
         }
         .totals td {
-            padding: 5px;
+            border: 1px solid #000;
+            padding: 4px 8px;
         }
-        .totals td:last-child {
+        .signature {
+            margin-top: 24px;
             text-align: right;
+            font-size: 12.5px;
         }
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 10px;
-            color: #777;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-        .total-highlight {
-            font-size: 16px;
+        .signature u {
             font-weight: bold;
-            background-color: #007bff;
-            color: white;
-        }
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        .badge-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .badge-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .section-title {
-            background-color: #f8f9fa;
-            padding: 10px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            border-left: 4px solid #007bff;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .btn-print {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn-print:hover {
-            background-color: #0056b3;
-        }
-        @media print {
-            .btn-print {
-                display: none;
-            }
         }
     </style>
 </head>
 <body>
-    <button class="btn-print" onclick="window.print()">
-     Imprimer
-    </button>
+@php
+    $cg = $configGlobal ?? null;
+    $pdfBranding = $pdfBranding ?? \App\Support\PdfBranding::forBu(null);
+    $fmt = function ($value, $decimals = 0) {
+        $n = (float) $value;
+        if ($decimals === 0 && abs($n - round($n)) < 0.00001) {
+            return number_format($n, 0, ',', ' ');
+        }
+        return number_format($n, $decimals, ',', ' ');
+    };
+    $fmtPct = fn ($value) => number_format((float) $value, 2, ',', ' ') . '%';
 
-    <div class="header">
-        <div>
-            @if(auth()->user() && auth()->user()->bus && auth()->user()->bus->logo)
-                <img src="{{ public_path('storage/' . auth()->user()->bus->logo) }}" alt="Logo" class="logo">
-            @else
-                <h2 style="margin: 0; color: #007bff;">{{ auth()->user()->bus->nom ?? 'SIA' }}</h2>
-            @endif
-        </div>
-        <div class="company-info">
-            @if($prestation->artisan)
-                {{-- Informations Artisan --}}
-                <p><strong>{{ $prestation->artisan->nom }} {{ $prestation->artisan->prenoms }}</strong></p>
-                <p>{{ $prestation->artisan->adresse ?? 'Adresse non renseignée' }}</p>
-                <p>Tel: {{ $prestation->artisan->telephone ?? 'N/A' }} 
-                @if($prestation->artisan->email)
-                    | Email: {{ $prestation->artisan->email }}
-                @endif
-                </p>
-                @if($prestation->artisan->specialite)
-                    <p>Spécialité: {{ $prestation->artisan->specialite }}</p>
-                @endif
-            @elseif($prestation->fournisseur)
-                {{-- Informations Fournisseur --}}
-                <p><strong>{{ $prestation->fournisseur->nom_raison_sociale }}</strong></p>
-                <p>{{ $prestation->fournisseur->adresse ?? 'Adresse non renseignée' }}</p>
-                <p>Tel: {{ $prestation->fournisseur->telephone ?? 'N/A' }} 
-                @if($prestation->fournisseur->email)
-                    | Email: {{ $prestation->fournisseur->email }}
-                @endif
-                </p>
-                @if($prestation->fournisseur->rccm || $prestation->fournisseur->ifu)
-                    <p>
-                        @if($prestation->fournisseur->rccm)
-                            RCCM: {{ $prestation->fournisseur->rccm }}
+    $company = $pdfBranding['company'] ?? [];
+    $logoSrc = $pdfBranding['logo_src'] ?? null;
+    $companyNom = $company['nom'] ?? $pdfBranding['nom_entreprise'];
+    $nomCourt = $pdfBranding['nom_entreprise'];
+    $raisonSociale = null;
+    if (filled($companyNom) && strtoupper(trim($companyNom)) !== strtoupper(trim($nomCourt))) {
+        $raisonSociale = $companyNom;
+    }
+    $telEntreprise = $company['tel1'] ?? $cg?->tel1 ?? '';
+    if (filled($telEntreprise)) {
+        $telEntreprise = trim(explode('/', (string) $telEntreprise)[0]);
+        $telEntreprise = trim((string) preg_replace('/^\(\+225\)\s*/', '', $telEntreprise));
+    }
+
+    $artisan = $prestation->artisan;
+    $corpsMetier = $prestation->corpMetier?->nom ?? $artisan?->fonction ?? '—';
+    $nomArtisan = $artisan
+        ? trim(($artisan->nom ?? '') . ' ' . ($artisan->prenoms ?? ''))
+        : ($prestation->fournisseur?->nom_raison_sociale ?? '—');
+    $localisationArtisan = $artisan?->localisation ?? $prestation->fournisseur?->adresse_localisation ?? '';
+    $bpArtisan = $artisan?->boite_postale ?? $prestation->fournisseur?->boite_postale ?? '';
+    $telArtisan = $artisan?->tel1 ?? $prestation->fournisseur?->telephone ?? '—';
+    $numeroDecompteAffiche = str_pad((string) ($fiche['numero_decompte'] ?? 1), 2, '0', STR_PAD_LEFT);
+
+    $bodyLines = [];
+    $bodyLines[] = ['type' => 'section', 'libelle' => '1. TRAVAUX EXECUTES :'];
+
+    if (count($fiche['lignes_travaux'] ?? []) > 0) {
+        foreach ($fiche['lignes_travaux'] as $ligneTravaux) {
+            $bodyLines[] = [
+                'type' => 'full',
+                'libelle' => $ligneTravaux['libelle'],
+                'unite' => $ligneTravaux['unite'],
+                'quantite' => $fmt($ligneTravaux['quantite'], 0),
+                'prix_unitaire' => $fmt($ligneTravaux['prix_unitaire']),
+                'montant' => $fmt($ligneTravaux['montant']),
+            ];
+        }
+    } else {
+        $bodyLines[] = [
+            'type' => 'full',
+            'libelle' => 'Travaux exécutés',
+            'unite' => 'Ff',
+            'quantite' => '1',
+            'prix_unitaire' => $fmt($decompte->montant),
+            'montant' => $fmt($decompte->montant),
+        ];
+    }
+
+    $bodyLines[] = [
+        'type' => 'amount_only',
+        'libelle' => 'Travaux Supplémentaires',
+        'montant' => $fmt($fiche['travaux_supplementaires']),
+    ];
+
+    $bodyLines[] = ['type' => 'section', 'libelle' => '3. RETENUES :'];
+    $bodyLines[] = [
+        'type' => 'full',
+        'libelle' => 'Retenue de garantie ' . $fmt($fiche['taux_garantie'], 0) . '%',
+        'unite' => 'Ff',
+        'quantite' => '1',
+        'prix_unitaire' => $fmt($fiche['retenue']['montant']),
+        'montant' => $fmt($fiche['retenue']['montant']),
+    ];
+    $bodyLines[] = [
+        'type' => 'amount_only',
+        'libelle' => 'Pénalités (Mals façons)',
+        'montant' => $fmt($fiche['montant_penalites']),
+    ];
+    $bodyLines[] = [
+        'type' => 'amount_only',
+        'libelle' => 'PPSI',
+        'montant' => $fmt($fiche['montant_ppsi']),
+    ];
+
+    $bodyLines[] = ['type' => 'section', 'libelle' => '4. RECUPERATION AVANCES APPRO :'];
+    $bodyLines[] = [
+        'type' => 'amount_only',
+        'libelle' => 'Récupération Avance Diverses',
+        'montant' => $fmt($fiche['montant_recuperation_avances']),
+    ];
+@endphp
+
+{{-- En-tête décompte : 3 tableaux empilés (effet double bordure) --}}
+<div class="decompte-header-wrap">
+
+{{-- Tableau 1 : Donneur d'ordre / Prestataire --}}
+<table class="decompte-header-table" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="col-65 cell-divider">
+            <div class="cell-title">DONNEUR D'ORDRE :</div>
+            <table class="donneur-inner" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="logo-cell" valign="top">
+                        @include('partials.pdf-logo', ['pdfBranding' => $pdfBranding ?? [], 'logoClass' => 'logo', 'maxWidth' => 190, 'maxHeight' => 95])
+                    </td>
+                    <td valign="top" class="company-block">
+                        <strong>{{ $nomCourt }}</strong><br>
+                        @if(filled($raisonSociale))
+                            <strong>{{ $raisonSociale }}</strong><br>
                         @endif
-                        @if($prestation->fournisseur->ifu)
-                            | IFU: {{ $prestation->fournisseur->ifu }}
+                        @if(filled($company['localisation'] ?? $cg?->localisation))
+                            {{ $company['localisation'] ?? $cg->localisation }}<br>
                         @endif
-                    </p>
-                @endif
-            @else
-                {{-- Aucun prestataire affecté --}}
-                <p><strong>Prestataire</strong></p>
-                <p>Non affecté</p>
-                <p>Tel: N/A | Email: N/A</p>
-            @endif
-        </div>
-    </div>
-
-    <div class="document-title">DÉCOMPTE DE PRESTATION</div>
-
-    <div class="document-details">
-        <div class="prestation-info">
-            <h3 style="color: #007bff;">Informations Prestation</h3>
-            <table style="border: none;">
-                <tr>
-                    <td style="border: none;"><strong>Titre:</strong></td>
-                    <td style="border: none;">{{ $prestation->prestation_titre }}</td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Contrat:</strong></td>
-                    <td style="border: none;">{{ $prestation->contrat->nom_contrat ?? 'N/A' }}</td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Réf. Contrat:</strong></td>
-                    <td style="border: none;">{{ $prestation->contrat->ref_contrat ?? 'N/A' }}</td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Prestataire:</strong></td>
-                    <td style="border: none;">
-                        @if($prestation->artisan)
-                            {{ $prestation->artisan->nom }} {{ $prestation->artisan->prenoms }}
-                        @elseif($prestation->fournisseur)
-                            {{ $prestation->fournisseur->nom_raison_sociale }}
-                        @else
-                            Non affecté
+                        @if(filled($company['adresse_postale'] ?? $cg?->adresse_postale))
+                            {{ $company['adresse_postale'] ?? $cg->adresse_postale }}<br>
+                        @endif
+                        @if(filled($telEntreprise))
+                            Tel : {{ $telEntreprise }}<br>
+                        @endif
+                        @if(filled($company['email'] ?? $cg?->email))
+                            Email : {{ $company['email'] ?? $cg->email }}
                         @endif
                     </td>
                 </tr>
             </table>
-        </div>
-        
-        <div class="decompte-info">
-            <h3 style="color: #007bff;">Informations Décompte</h3>
-            <table style="border: none;">
+        </td>
+        <td class="col-35 prestataire-box">
+            <div class="cell-title">PRESTATAIRE / ARTISAN</div>
+            <div class="prestataire-name">{{ strtoupper($nomArtisan) }}</div>
+            @if(filled($localisationArtisan))
+                {{ $localisationArtisan }}<br>
+            @endif
+            @if(filled($bpArtisan))
+                {{ $bpArtisan }}<br>
+            @endif
+            @if($telArtisan !== '—')
+                Tel : {{ $telArtisan }}<br>
+            @endif
+            CORPS DE METIER : <strong>{{ strtoupper($corpsMetier) }}</strong>
+        </td>
+    </tr>
+</table>
+
+{{-- Tableau 2 : Projet --}}
+<table class="decompte-header-table" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="col-65">
+            <div class="info-line">PROJET : {{ $fiche['projet'] }}</div>
+            <div class="info-line">CONTRAT : {{ $fiche['contrat'] }}</div>
+            <div class="info-line">LOCALISATION : {{ $fiche['localisation'] }}</div>
+        </td>
+        <td class="col-35">
+            <div class="info-line">DATE DEBUT : {{ $fiche['date_debut'] }}</div>
+            <div class="info-line">DELAI D'EXECUTION : {{ $fiche['delai_execution'] }}</div>
+            <div class="info-line">% RETENUE DE GARANTIE : {{ $fmt($fiche['taux_garantie'], 0) }}%</div>
+        </td>
+    </tr>
+</table>
+
+{{-- Tableau 3 : Numéro / Montants / Décompte --}}
+<table class="decompte-row3-wrap" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="decompte-row3-number">{{ $numeroDecompteAffiche }}</td>
+        <td class="decompte-row3-content">
+            <table class="decompte-header-table" cellspacing="0" cellpadding="0" style="margin-bottom: 0;">
                 <tr>
-                    <td style="border: none;"><strong>Titre:</strong></td>
-                    <td style="border: none;">{{ $decompte->titre }}</td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Date d'émission:</strong></td>
-                    <td style="border: none;">{{ $decompte->created_at->format('d/m/Y H:i') }}</td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Pourcentage:</strong></td>
-                    <td style="border: none;">
-                        <span class="badge badge-info">{{ number_format($decompte->pourcentage, 2) }}%</span>
+                    <td class="col-54 cell-divider">
+                        Montant Contrat HT : {{ $fmt($fiche['montant_contrat_ht']) }}<br>
+                        Montant Avenant HT : {{ $fiche['montant_avenant_ht'] !== null ? $fmt($fiche['montant_avenant_ht']) : '' }}<br>
+                        Montant Total Contrat HT : {{ $fmt($fiche['montant_total_contrat_ht']) }}
                     </td>
-                </tr>
-                <tr>
-                    <td style="border: none;"><strong>Montant:</strong></td>
-                    <td style="border: none;">
-                        <strong style="font-size: 16px; color: #007bff;">
-                            {{ number_format($decompte->montant, 2, ',', ' ') }} FCFA
-                        </strong>
+                    <td class="col-35">
+                        <table class="row3-meta-table" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td colspan="2">Décompte N° : {{ $fiche['numero_decompte_label'] }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Date d'émission : {{ $fiche['date_emission'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="row3-meta-label">Saisi Par :</td>
+                                <td>{{ $fiche['saisi_par'] }}</td>
+                            </tr>
+                        </table>
                     </td>
                 </tr>
             </table>
-        </div>
-        
-        <div class="clear"></div>
-    </div>
+        </td>
+    </tr>
+</table>
 
-    <!-- Détails des lignes du décompte -->
-    <div class="section-title">DÉTAILS DES LIGNES DE PRESTATION</div>
+</div>
 
-    @php
-        // Récupérer les lignes de prestation qui ont été payées dans ce décompte
-        // On va afficher toutes les lignes de la prestation avec leur état
-        $lignes = \App\Models\LignePrestation::where('id_prestation', $prestation->id)
-            ->with(['rubrique.sousCategorie.categorie'])
-            ->get();
-    @endphp
-
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 5%;">N°</th>
-                <th style="width: 30%;">Désignation</th>
-                <th style="width: 10%;">Unité</th>
-                <th style="width: 10%;">Quantité</th>
-                <th style="width: 12%;">Coût unitaire</th>
-                <th style="width: 12%;">Montant total</th>
-                <th style="width: 10%;">Taux avanc.</th>
-                <th style="width: 11%;">Montant payé</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php 
-                $totalMontant = 0;
-                $totalPaye = 0;
-            @endphp
-            
-            @foreach($lignes as $index => $ligne)
-                @php
-                    $totalMontant += $ligne->montant;
-                    $totalPaye += $ligne->montant_paye;
-                @endphp
-                <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $ligne->designation }}</td>
-                    <td class="text-center">{{ $ligne->unite }}</td>
-                    <td class="text-end">{{ number_format($ligne->quantite, 2, ',', ' ') }}</td>
-                    <td class="text-end">{{ number_format($ligne->cout_unitaire, 2, ',', ' ') }}</td>
-                    <td class="text-end">{{ number_format($ligne->montant, 2, ',', ' ') }}</td>
-                    <td class="text-center">
-                        <span class="badge badge-info">{{ number_format($ligne->taux_avancement, 2) }}%</span>
-                    </td>
-                    <td class="text-end">{{ number_format($ligne->montant_paye, 2, ',', ' ') }}</td>
-                </tr>
-            @endforeach
-            
-            <!-- Total -->
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-                <td colspan="5" class="text-end">TOTAL</td>
-                <td class="text-end">{{ number_format($totalMontant, 2, ',', ' ') }}</td>
-                <td></td>
-                <td class="text-end" style="color: #007bff;">{{ number_format($totalPaye, 2, ',', ' ') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Récapitulatif -->
-    <div class="totals">
-        <table>
-            <tr>
-                <td><strong>Montant total prestation</strong></td>
-                <td>{{ number_format($totalMontant, 2, ',', ' ') }} FCFA</td>
-            </tr>
-            <tr>
-                <td><strong>Total déjà payé</strong></td>
-                <td>{{ number_format($totalPaye, 2, ',', ' ') }} FCFA</td>
-            </tr>
-            <tr>
-                <td><strong>Reste à payer</strong></td>
-                <td>{{ number_format($totalMontant - $totalPaye, 2, ',', ' ') }} FCFA</td>
-            </tr>
-            <tr class="total-highlight">
-                <td><strong>CE DÉCOMPTE</strong></td>
-                <td>{{ number_format($decompte->montant, 2, ',', ' ') }} FCFA</td>
-            </tr>
-            <tr>
-                <td><strong>Taux d'avancement global</strong></td>
-                <td>
-                    <span class="badge badge-success">{{ number_format($prestation->taux_avancement ?? 0, 2) }}%</span>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="clear"></div>
-
-    <!-- Informations supplémentaires -->
-    <div class="section-title">INFORMATIONS COMPLÉMENTAIRES</div>
-    <table style="border: none;">
+{{-- Tableau principal --}}
+<table class="decompte-main-table" cellspacing="0" cellpadding="0">
+    <thead>
         <tr>
-            <td style="border: none; width: 30%;"><strong>Corps de métier:</strong></td>
-            <td style="border: none;">{{ $prestation->corpMetier->nom ?? 'N/A' }}</td>
+            <th width="28%">LIBELLE</th>
+            <th width="12%">Taux d'avancement<br>précédent</th>
+            <th width="12%">Taux d'avancement</th>
+            <th width="8%">Unité</th>
+            <th width="8%">Quantité</th>
+            <th width="16%">Prix unitaire HT</th>
+            <th width="16%">MontantHT</th>
         </tr>
-        <tr>
-            <td style="border: none;"><strong>Statut prestation:</strong></td>
-            <td style="border: none;">
-                <span class="badge 
-                    @if($prestation->statut == 'En cours') badge-info
-                    @else badge-success
-                    @endif">
-                    {{ $prestation->statut }}
-                </span>
+    </thead>
+    <tbody>
+        <tr class="decompte-body-row">
+            <td class="libelle-stack" valign="top">
+                @foreach($bodyLines as $line)
+                    <div class="body-line {{ $line['type'] === 'section' ? 'body-line-section' : 'body-line-item' }}">{{ $line['libelle'] }}</div>
+                @endforeach
+            </td>
+            <td class="taux-cell" valign="middle">{{ $fmtPct($fiche['retenue']['taux_precedent']) }}</td>
+            <td class="taux-cell" valign="middle">{{ $fmtPct($fiche['retenue']['taux_actuel']) }}</td>
+            <td colspan="4" class="inner-wrap" valign="top">
+                <table class="decompte-inner-grid" cellspacing="0" cellpadding="0">
+                    <colgroup>
+                        <col width="16.67%">
+                        <col width="16.67%">
+                        <col width="33.33%">
+                        <col width="33.33%">
+                    </colgroup>
+                    @foreach($bodyLines as $line)
+                        <tr>
+                            @if($line['type'] === 'section')
+                                <td colspan="4">&nbsp;</td>
+                            @elseif($line['type'] === 'amount_only')
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="text-right">{{ $line['montant'] }}</td>
+                            @else
+                                <td class="text-center">{{ $line['unite'] }}</td>
+                                <td class="text-center">{{ $line['quantite'] }}</td>
+                                <td class="text-right">{{ $line['prix_unitaire'] }}</td>
+                                <td class="text-right">{{ $line['montant'] }}</td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </table>
             </td>
         </tr>
-        <tr>
-            <td style="border: none;"><strong>Date création prestation:</strong></td>
-            <td style="border: none;">{{ $prestation->created_at->format('d/m/Y') }}</td>
-        </tr>
-    </table>
 
-    <div class="footer">
-        <p><strong>Conditions de paiement :</strong><br>
-        Paiement par virement bancaire : Banque: XXXXX | N° de compte: XXXXXXXXXX</p>
-        <p>Ce décompte est émis dans le cadre du suivi de l'avancement des travaux.<br>
-        Pour toute question concernant ce décompte, veuillez contacter notre service comptabilité.</p>
-        <p><strong>Document généré le {{ date('d/m/Y à H:i') }}</strong></p>
-    </div>
+        <tr class="totals-row">
+            <td colspan="3" class="totals-left-empty"></td>
+            <td colspan="3" class="totals-label">TOTAL HT à régler</td>
+            <td class="text-right bold totals-value">{{ $fmt($fiche['total_ht_regler']) }}</td>
+        </tr>
+        <tr class="totals-row">
+            <td colspan="3" class="totals-left-empty"></td>
+            <td colspan="3" class="totals-label">TVA {{ $fmt($fiche['taux_tva'], 0) }}%</td>
+            <td class="text-right totals-value">{{ $fmt($fiche['montant_tva'], 1) }}</td>
+        </tr>
+        <tr class="totals-row">
+            <td colspan="3" class="totals-left-empty"></td>
+            <td colspan="3" class="totals-label">TOTAL Net TTC à régler</td>
+            <td class="text-right bold totals-value">{{ $fmt($fiche['total_net_ttc'], 1) }}</td>
+        </tr>
+    </tbody>
+</table>
+
+{{-- Récapitulatif paiement --}}
+<table class="decompte-paiement-table" cellspacing="0" cellpadding="0">
+    <thead>
+        <tr>
+            <th>Mode de paiement</th>
+            <th>Total décomptes perçus</th>
+            <th>Total retenue de garantie</th>
+            <th>Reste à percevoir</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ $fiche['mode_paiement'] }}</td>
+            <td>{{ $fmt($fiche['total_decomptes_percus']) }}</td>
+            <td>{{ $fmt($fiche['total_retenue_garantie']) }}</td>
+            <td>{{ $fmt($fiche['reste_a_percevoir']) }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="signature">
+    <u>Signature prestataire</u>
+</div>
+
 </body>
 </html>

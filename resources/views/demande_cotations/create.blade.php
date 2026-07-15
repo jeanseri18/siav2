@@ -91,6 +91,7 @@
 @section('content')
 
 <div class=" app-fade-in">
+    <x-stock-flux-nav module="cotation" context="create" />
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="app-card app-hover-shadow">
@@ -152,7 +153,7 @@
                                         id="demande_achat_id" name="demande_achat_id">
                                         <option value="">-- Sélectionner une demande --</option>
                                         @foreach($demandesAchat as $demande)
-                                            <option value="{{ $demande->id }}" {{ old('demande_achat_id') == $demande->id ? 'selected' : '' }}>
+                                            <option value="{{ $demande->id }}" {{ (string) old('demande_achat_id', request('demande_achat_id')) === (string) $demande->id ? 'selected' : '' }}>
                                                 {{ $demande->reference }} ({{ $demande->date_demande->format('d/m/Y') }})
                                             </option>
                                         @endforeach

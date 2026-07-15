@@ -22,7 +22,7 @@ class TypeTravauxController extends Controller
         $request->validate(['nom' => 'required|string|max:255']);
 
         TypeTravaux::create($request->all());
-        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux ajouté avec succès.');
+        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux / activité ajouté avec succès.');
     }
 
     public function edit($id)
@@ -37,13 +37,13 @@ class TypeTravauxController extends Controller
 
         $type = TypeTravaux::findOrFail($id);
         $type->update($request->all());
-        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux mis à jour avec succès.');
+        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux / activité mis à jour avec succès.');
     }
 
     public function destroy($id)
     {
         $type = TypeTravaux::findOrFail($id);
         $type->delete();
-        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux supprimé avec succès.');
+        return redirect()->route('type-travaux.index')->with('success', 'Type de travaux / activité supprimé avec succès.');
     }
 }

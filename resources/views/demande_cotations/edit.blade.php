@@ -92,6 +92,7 @@
 @section('content')
 
 <div class=" app-fade-in">
+    <x-stock-flux-nav module="cotation" context="edit" />
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="app-card app-hover-shadow">

@@ -96,6 +96,7 @@
                         <div class="mb-3">
                             <label for="statut" class="form-label">Statut <span class="text-danger">*</span></label>
                             <select class="form-select" id="statut" name="statut" required>
+                                <option value="non débuté" {{ old('statut', 'non débuté') == 'non débuté' ? 'selected' : '' }}>Non débuté</option>
                                 <option value="en cours" {{ old('statut') == 'en cours' ? 'selected' : '' }}>En cours</option>
                                 <option value="terminé" {{ old('statut') == 'terminé' ? 'selected' : '' }}>Terminé</option>
                                 <option value="annulé" {{ old('statut') == 'annulé' ? 'selected' : '' }}>Annulé</option>

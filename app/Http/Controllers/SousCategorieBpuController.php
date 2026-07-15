@@ -14,8 +14,8 @@ class SousCategorieBpuController extends Controller
             'id_session' => 'required|exists:categorierubriques,id',
         ]);
         
-        $contratId = session('contrat_id');
-        
+        $contratId = $request->boolean('bpu_utilitaires') ? null : session('contrat_id');
+
         SousCategorieRubrique::create([
             'nom' => $request->nom,
             'id_session' => $request->id_session,

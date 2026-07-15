@@ -18,6 +18,7 @@
                 <i class="fas fa-file-contract me-2"></i>Liste des Factures Contrat
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('facture-contrat.export.pdf')" />
                 <a href="{{ route('dqe.index') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Générer une facture contrat
                 </a>
@@ -70,19 +71,25 @@
                             </td>
                             <td>{{ $facture->created_at->format('d/m/Y H:i') }}</td>
                             <td>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('facture-contrat.show', $facture->id) }}" class="btn btn-sm btn-info" title="Voir les détails">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <form action="{{ route('facture-contrat.destroy', $facture->id) }}" method="POST" 
-                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette facture contrat ?')" 
-                                          style="display: inline-block;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                <div class="dropdown">
+                                    <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('facture-contrat.show', $facture->id) }}">
+                                                <i class="fas fa-eye me-2"></i>Voir les détails
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('facture-contrat.destroy', $facture->id) }}" method="POST" class="delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                    <i class="fas fa-trash me-2"></i>Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
                                 </div>
                             </td>
                         </tr>

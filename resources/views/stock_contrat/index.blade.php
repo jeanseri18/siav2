@@ -18,6 +18,7 @@
                 <i class="fas fa-boxes me-2"></i>Liste des Stocks pour le Projet
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('stock_contrat.export.pdf')" />
                 <div class="btn-group me-2" role="group">
                     <a href="{{ route('stock_contrat.historique') }}" class="app-btn app-btn-info app-btn-icon">
                         <i class="fas fa-history"></i> Historique

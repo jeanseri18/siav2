@@ -60,4 +60,19 @@ class ContactPerson extends Model
     {
         return $this->civilite . ' ' . $this->prenoms . ' ' . $this->nom;
     }
+
+    /**
+     * Indique si au moins une information utile est renseignée (affichage détail contrat / projet).
+     */
+    public function hasDisplayableData(): bool
+    {
+        foreach (['civilite', 'nom', 'prenoms', 'fonction', 'telephone_1', 'telephone_2', 'email'] as $field) {
+            $v = $this->{$field} ?? null;
+            if ($v !== null && trim((string) $v) !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

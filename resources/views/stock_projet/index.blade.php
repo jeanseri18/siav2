@@ -19,6 +19,7 @@
                 <i class="fas fa-boxes me-2"></i>Inventaire du Projet
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('stock.export.pdf')" />
                 <a href="{{ route('stock.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un article
                 </a>
@@ -83,7 +84,7 @@
                             </div>
                         </td>
                         <td>{{ $stock->article ? $stock->article->type : '-' }}</td>
-                        <td>{{ $stock->article->uniteMesure->ref }}</td>
+                        <td>{{ $stock->article && $stock->article->uniteMesure ? $stock->article->uniteMesure->ref : '—' }}</td>
                         <!-- <td class="app-fw-bold">{{ $stock->cout_moyen_pondere ? number_format($stock->cout_moyen_pondere, 2) : '0' }}</td> -->
                         <td class="app-fw-bold">{{ $stock->qte_disponible ?? $stock->quantite }}</td>
                         <!-- <td>{{ $stock->paiement_en_cours ?? '0' }}</td> -->
@@ -168,7 +169,7 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" data-stock-id="{{ $stock->id }}" data-article-id="{{ $stock->article_id }}" data-article-name="{{ $stock->article ? $stock->article->nom : 'Article' }}">
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" data-stock-id="{{ $stock->id }}" data-article-id="{{ $stock->article_id }}" data-article-name="{{ $stock->article ? $stock->article->nom : 'Article' }}" data-qty-max="{{ (int) $stock->quantite }}">
                                             <i class="fas fa-exchange-alt me-2"></i>Transférer
                                         </a>
                                     </li>
@@ -209,13 +210,15 @@
             <div class="app-modal-body">
                 <form action="{{ route('transferts.store') }}" method="POST" class="app-form" id="transfertForm">
                     @csrf
-                    <input type="hidden" name="article_id" id="transfertArticleId">
-                    
+                    @if(session('projet_id'))
+                    <input type="hidden" name="projet_source" value="{{ session('projet_id') }}">
+                    @endif
+
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-building me-2"></i>Projet Source</label>
-                                <select name="id_projet_source" class="app-form-select" required>
+                                <select name="projet_source" id="transfert_projet_source" class="app-form-select" required @if(session('projet_id')) disabled @endif>
                                     <option value="">Sélectionner le projet source</option>
                                     @foreach($projets as $projet)
                                     <option value="{{ $projet->id }}" {{ session('projet_id') == $projet->id ? 'selected' : '' }}>
@@ -223,14 +226,14 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                <div class="app-form-text">Le projet d'où provient le stock</div>
+                                <div class="app-form-text">Stock disponible = inventaire de ce projet</div>
                             </div>
                         </div>
 
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-bullseye me-2"></i>Projet Destination</label>
-                                <select name="id_projet_destination" class="app-form-select" required>
+                                <select name="projet_destination" id="transfert_projet_destination" class="app-form-select" required>
                                     <option value="">Sélectionner le projet destination</option>
                                     @foreach($projets as $projet)
                                     <option value="{{ $projet->id }}" {{ session('projet_id') == $projet->id ? 'disabled' : '' }}>
@@ -243,35 +246,32 @@
                         </div>
                     </div>
 
+                    <input type="hidden" name="items[0][article_id]" id="transfertArticleIdHidden" value="">
+
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-box me-2"></i>Article</label>
                                 <div class="app-form-control" id="selectedArticle" style="background-color: var(--gray-100);">
-                                    Article sélectionné
+                                    Sélectionnez une ligne dans le tableau puis « Transférer »
                                 </div>
-                                <div class="app-form-text">L'article à transférer</div>
+                                <div class="app-form-text">Article issu de l’inventaire du projet source</div>
                             </div>
                         </div>
 
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-sort-numeric-up me-2"></i>Quantité</label>
-                                <input type="number" name="quantite" class="app-form-control" placeholder="Quantité à transférer" min="1" required>
-                                <div class="app-form-text">Nombre d'unités à transférer</div>
+                                <input type="number" name="items[0][quantite]" id="transfertQuantite" class="app-form-control" placeholder="Quantité à transférer" min="1" required>
+                                <div class="app-form-text">Nombre d’unités (max = disponible sur la ligne)</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="app-form-group">
                         <label class="app-form-label"><i class="fas fa-calendar-alt me-2"></i>Date de Transfert</label>
-                        <input type="date" name="date_transfert" class="app-form-control" value="{{ date('Y-m-d') }}" required>
+                        <input type="date" name="date_transfert" id="transfert_date_transfert" class="app-form-control" value="{{ date('Y-m-d') }}" required>
                         <div class="app-form-text">Date à laquelle le transfert est effectué</div>
-                    </div>
-
-                    <div class="app-form-group">
-                        <label class="app-form-label"><i class="fas fa-comment-alt me-2"></i>Commentaire</label>
-                        <textarea name="commentaire" class="app-form-control" rows="3" placeholder="Commentaire optionnel sur ce transfert..."></textarea>
                     </div>
                 </form>
             </div>
@@ -330,15 +330,19 @@
             }
         });
         
-        // Modal de transfert
+        // Modal de transfert (inventaire : article pré-rempli depuis la ligne)
         $('#transfertModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             const articleId = button.data('article-id');
             const articleName = button.data('article-name');
-            
+            const qtyMax = parseInt(button.data('qty-max'), 10) || 1;
+
             const modal = $(this);
-            modal.find('#transfertArticleId').val(articleId);
+            modal.find('#transfertArticleIdHidden').val(articleId);
             modal.find('#selectedArticle').text(articleName);
+            const $q = modal.find('#transfertQuantite');
+            $q.attr('max', qtyMax);
+            $q.val('');
         });
     });
 </script>

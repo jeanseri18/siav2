@@ -9,18 +9,41 @@ use App\Models\ClientFournisseur;
 use App\Models\User;
 use App\Models\Pays;
 use App\Models\Ville;
-use App\Models\Commune;
-use App\Models\Quartier;
 use App\Models\Secteur;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class ProjetController extends Controller
 {
     public function index()
     {
-        $projets = Projet::with(['clientFournisseur', 'chefProjet', 'conducteurTravaux'])->get();
+        $projets = $this->projetsForListing();
         return view('projets.index', compact('projets'));
+    }
+
+    public function exportPdf()
+    {
+        $buId = session('selected_bu');
+        $projets = $this->projetsForListing();
+        $pdfBranding = PdfBranding::forBu($buId ? (int) $buId : null);
+
+        $pdf = Pdf::loadView('projets.liste-export', [
+            'projets' => $projets,
+            'pdfBranding' => $pdfBranding,
+            'printMode' => false,
+            'documentTitle' => 'Liste des projets',
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('liste-projets-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    private function projetsForListing()
+    {
+        return Projet::with(['clientFournisseur', 'chefProjet', 'conducteurTravaux', 'secteurActivite', 'bu'])
+            ->orderByDesc('date_creation')
+            ->orderByDesc('id')
+            ->get();
     }
 
 
@@ -38,31 +61,31 @@ class ProjetController extends Controller
                                    ->where('id_bu', $id_bu)  // Filtrage selon l'ID du bus
                                    ->get();
         $secteurs = SecteurActivite::all();
-        $bus = BU::all();
-        
+        $buCourante = BU::find($id_bu);
+
         // Récupérer les employés pour les sélecteurs
         $chefs = User::chefsProjets()->actifs()->get();
         $conducteurs = User::conducteursTravaux()->actifs()->get();
         
-        // Récupérer les données de localisation
+        // Récupérer les données de localisation (listes communes / secteurs chargées en AJAX dans la vue)
         $pays = Pays::all();
         $villes = Ville::all();
-        $communes = Commune::all();
-        $quartiers = Quartier::all();
-        $secteursLocalisation = Secteur::all();
 
-        return view('projets.create', compact('clients', 'secteurs', 'bus', 'chefs', 'conducteurs', 'pays', 'villes', 'communes', 'quartiers', 'secteursLocalisation'));
+        return view('projets.create', compact('clients', 'secteurs', 'buCourante', 'chefs', 'conducteurs', 'pays', 'villes'));
     }
 
 
 
     public function store(Request $request)
     {
+        $id_bu = session('selected_bu');
+        if (! $id_bu) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
         $request->validate([
             'nom_projet' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'client' => 'required|string',
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
             'chef_projet_id' => 'nullable|exists:users,id',
@@ -70,8 +93,7 @@ class ProjetController extends Controller
             'montant_global' => 'nullable|numeric|min:0',
             'chiffre_affaire_global' => 'nullable|numeric|min:0',
             'total_depenses' => 'nullable|numeric|min:0',
-            'statut' => 'required|in:en cours,terminé,annulé',
-            'bu_id' => 'required|exists:bus,id',
+            'statut' => 'nullable|in:non débuté,en cours,terminé,annulé',
             'pays_id' => 'nullable|exists:pays,id',
             'ville_id' => 'nullable|exists:villes,id',
             'commune_id' => 'nullable|exists:communes,id',
@@ -87,14 +109,24 @@ class ProjetController extends Controller
         $newReference = $lastReference ? $lastReference->ref : 'Prj_0000';
         $newReference = 'Prj_' . now()->format('YmdHis');
         
-        // Préparer les données
-        $data = $request->except(['hastva', 'tva_achat']);
+        // Préparer les données (dates projet = agrégat des contrats, pas de saisie ici)
+        $data = $request->except(['hastva', 'tva_achat', 'date_debut', 'date_fin']);
+        if (! empty($data['secteur_id']) && empty($data['quartier_id'])) {
+            $data['quartier_id'] = Secteur::query()->whereKey($data['secteur_id'])->value('quartier_id');
+        }
+        $data['bu_id'] = $id_bu;
+        $data['date_debut'] = null;
+        $data['date_fin'] = null;
         $data['hastva'] = $request->has('hastva');
         $data['tva_achat'] = $request->has('tva_achat');
         $data['date_creation'] = now(); // Ajout automatique de la date de création
         $data['ref_projet'] = $newReference;
+        $data['montant_global'] = null;
+        $data['chiffre_affaire_global'] = null;
+        $data['total_depenses'] = null;
         $data['created_by'] = auth()->id();
         $data['updated_by'] = auth()->id();
+        $data['statut'] = $request->input('statut', 'non débuté');
         
         Projet::create($data);
         return redirect()->route('projets.index')->with('success', 'Projet créé avec succès.');
@@ -116,8 +148,10 @@ class ProjetController extends Controller
             'bu',
             'createdBy',
             'updatedBy',
-            'contrats'
+            'contrats.dqes',
         ]);
+
+        $projet->syncFinancialAggregates();
         
         $projets = Projet::all();
         $articles = Article::all();
@@ -131,11 +165,16 @@ class ProjetController extends Controller
         if (!$id_bu) {
             return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un BU avant d\'accéder à cette page.']);
         }
-    
+
+        if ((int) $projet->bu_id !== (int) $id_bu) {
+            return redirect()->route('projets.index')
+                ->with('error', 'Ce projet n\'appartient pas à la BU actuellement sélectionnée. Changez d\'unité ou choisissez un autre projet.');
+        }
+
         $clients = ClientFournisseur::where('type', 'client')->where('id_bu', $id_bu)->get();
         $secteurs = SecteurActivite::all();
-        $bus = BU::all();
-        
+        $buCourante = BU::find($id_bu);
+
         // Récupérer les employés pour les sélecteurs
         $chefsProjet = User::chefsProjets()->actifs()->get();
         $conducteursTravaux = User::conducteursTravaux()->actifs()->get();
@@ -143,19 +182,23 @@ class ProjetController extends Controller
         // Récupérer les données de localisation
         $pays = Pays::all();
         $villes = Ville::all();
-        $communes = Commune::all();
-        $quartiers = Quartier::all();
-        $secteursLocalisation = Secteur::all();
     
-        return view('projets.edit', compact('projet', 'clients', 'secteurs', 'bus', 'chefsProjet', 'conducteursTravaux', 'pays', 'villes', 'communes', 'quartiers', 'secteursLocalisation'));
+        return view('projets.edit', compact('projet', 'clients', 'secteurs', 'buCourante', 'chefsProjet', 'conducteursTravaux', 'pays', 'villes'));
     }
     public function update(Request $request, Projet $projet)
     {
+        $id_bu = session('selected_bu');
+        if (! $id_bu) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un BU avant d\'accéder à cette page.']);
+        }
+        if ((int) $projet->bu_id !== (int) $id_bu) {
+            return redirect()->route('projets.index')
+                ->with('error', 'Ce projet n\'appartient pas à la BU actuellement sélectionnée.');
+        }
+
         $request->validate([
             'nom_projet' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'client' => 'required|string',
             'secteur_activite_id' => 'required|exists:secteur_activites,id',
             'chef_projet_id' => 'nullable|exists:users,id',
@@ -163,8 +206,7 @@ class ProjetController extends Controller
             'montant_global' => 'nullable|numeric|min:0',
             'chiffre_affaire_global' => 'nullable|numeric|min:0',
             'total_depenses' => 'nullable|numeric|min:0',
-            'statut' => 'required|in:en cours,terminé,annulé',
-            'bu_id' => 'required|exists:bus,id',
+            'statut' => 'required|in:non débuté,en cours,terminé,annulé',
             'pays_id' => 'nullable|exists:pays,id',
             'ville_id' => 'nullable|exists:villes,id',
             'commune_id' => 'nullable|exists:communes,id',
@@ -172,14 +214,38 @@ class ProjetController extends Controller
             'secteur_id' => 'nullable|exists:secteurs,id'
         ]);
 
-        // Préparer les données avec updated_by
-        $data = $request->except(['hastva', 'tva_achat', 'date_creation']);
+        // Préparer les données avec updated_by (dates projet gérées par les contrats)
+        $data = $request->except(['hastva', 'tva_achat', 'date_creation', 'date_debut', 'date_fin']);
+        if (! empty($data['secteur_id']) && empty($data['quartier_id'])) {
+            $data['quartier_id'] = Secteur::query()->whereKey($data['secteur_id'])->value('quartier_id');
+        }
+        $data['bu_id'] = $id_bu;
         $data['hastva'] = $request->has('hastva');
         $data['tva_achat'] = $request->has('tva_achat');
         $data['updated_by'] = auth()->id();
         
         $projet->update($data);
         return redirect()->route('projets.index')->with('success', 'Projet mis à jour.');
+    }
+
+    public function updateStatut(Request $request, Projet $projet)
+    {
+        $id_bu = session('selected_bu');
+        if (! $id_bu || (int) $projet->bu_id !== (int) $id_bu) {
+            return redirect()->route('projets.index')
+                ->with('error', 'Action non autorisée pour ce projet.');
+        }
+
+        $request->validate([
+            'statut' => 'required|in:non débuté,en cours,terminé,annulé',
+        ]);
+
+        $projet->update([
+            'statut' => $request->statut,
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('projets.index')->with('success', 'Statut du projet mis à jour.');
     }
 
     public function destroy(Projet $projet)

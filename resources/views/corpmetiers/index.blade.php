@@ -17,6 +17,7 @@
                 <i class="fas fa-hard-hat me-2"></i>Liste des Corps de Métier
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'corpmetiers')" />
                 <a href="{{ route('corpsmetiers.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un Corps de Métier
                 </a>
@@ -59,18 +60,25 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="app-d-flex app-gap-2">
-                                    <a href="{{ route('corpsmetiers.edit', $corpsMetier->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    
-                                    <form action="{{ route('corpsmetiers.destroy', $corpsMetier->id) }}" method="POST" class="delete-form" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+                                <div class="dropdown">
+                                    <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('corpsmetiers.edit', $corpsMetier->id) }}">
+                                                <i class="fas fa-edit me-2"></i>Modifier
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('corpsmetiers.destroy', $corpsMetier->id) }}" method="POST" class="delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                    <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
                                 </div>
                             </td>
                         </tr>

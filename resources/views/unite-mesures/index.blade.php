@@ -17,6 +17,7 @@
                 <i class="fas fa-ruler me-2"></i>Liste des Unités de Mesure
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'unite_mesures')" />
                 <a href="{{ route('unite-mesures.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une unité
                 </a>

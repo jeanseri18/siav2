@@ -59,13 +59,13 @@
 :root {
     /* Variables harmonisées avec app.blade.php */
     --primary-color: var(--primary, #033d71);
-    --secondary-color: var(--primary-light, #0A8CFF);
+    --secondary-color: var(--primary-light, #033d71);
     --success-color: var(--success, #28a745);
     --info-color: var(--info, #17a2b8);
     --warning-color: var(--warning, #ffc107);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
-    --gradient-success: linear-gradient(135deg,  var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
+    --gradient-success: linear-gradient(135deg,  var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);
     --gradient-utilities: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
     --gradient-card: linear-gradient(135deg, var(--white, #ffffff) 0%, #f8f9ff 100%);

@@ -17,8 +17,8 @@
         <div class="col-lg-4">
             <div class="app-card">
                 <div class="app-card-body text-center">
-                    @if($employe->photo)
-                        <img src="{{ asset('storage/' . $employe->photo) }}" alt="Photo" class="rounded-circle mb-3" width="120" height="120">
+                    @if($employe->photo_url)
+                        <img src="{{ $employe->photo_url }}" alt="Photo" class="rounded-circle mb-3" width="120" height="120">
                     @else
                         <div class="avatar-initials mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">
                             {{ strtoupper(substr($employe->prenom, 0, 1) . substr($employe->nom, 0, 1)) }}

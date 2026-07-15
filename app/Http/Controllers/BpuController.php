@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BpuListingExport;
 use App\Models\CategorieRubrique;
 use App\Models\SousCategorieRubrique;
 use App\Models\Rubrique;
 use App\Models\Bpu;
 use App\Models\UniteMesure;
 use App\Models\CategoriesBpu;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BpuController extends Controller
 {
@@ -19,24 +23,50 @@ class BpuController extends Controller
         $rubriques = Rubrique::all();
         $uniteMesures = UniteMesure::all();
         
-        // Récupérer seulement les catégories qui ont des BPU utilitaires
-        $categories = CategorieRubrique::with([
-            'sousCategories.rubriques.bpus' => function($query) {
-                $query->where('contrat_id', null); // BPU utilitaires
-            }
-        ])->whereHas('sousCategories.rubriques.bpus', function($query) {
-            $query->where('contrat_id', null);
-        })->get();
+        // BPU utilitaires : même ordre d’affichage que /bpu/until (nom, puis id).
+        $categories = CategorieRubrique::query()
+            ->whereNull('contrat_id')
+            ->with([
+                'sousCategories' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques.bpus' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('id');
+                },
+            ])
+            ->whereHas('sousCategories.rubriques.bpus', function ($query) {
+                $query->whereNull('contrat_id');
+            })
+            ->orderBy('nom')
+            ->orderBy('id')
+            ->get();
+        $categories = $this->applyBpuCatalogDisplayOrder($categories);
 
         if ($contratId) {
-            // Mode contrat : récupérer seulement les catégories qui ont des BPU de contrat
-            $categoriesContrat = CategorieRubrique::with([
-                'sousCategories.rubriques.bpus' => function($query) use ($contratId) {
+            // BPU contrat : tri identique au catalogue (nom / id), pas l’ordre d’insertion après copie.
+            $categoriesContrat = CategorieRubrique::query()
+                ->where('contrat_id', $contratId)
+                ->with([
+                    'sousCategories' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('nom')->orderBy('id');
+                    },
+                    'sousCategories.rubriques' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('nom')->orderBy('id');
+                    },
+                    'sousCategories.rubriques.bpus' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('id');
+                    },
+                ])
+                ->whereHas('sousCategories.rubriques.bpus', function ($query) use ($contratId) {
                     $query->where('contrat_id', $contratId);
-                }
-            ])->whereHas('sousCategories.rubriques.bpus', function($query) use ($contratId) {
-                $query->where('contrat_id', $contratId);
-            })->get();
+                })
+                ->orderBy('nom')
+                ->orderBy('id')
+                ->get();
+            $categoriesContrat = $this->applyBpuCatalogDisplayOrder($categoriesContrat);
             
             return view('bpu.index', compact('categories', 'categoriesContrat', 'rubriques', 'uniteMesures', 'contratId'));
         } else {
@@ -49,10 +79,25 @@ class BpuController extends Controller
     {
         $uniteMesures = UniteMesure::all();
 
-        // Récupérer seulement les catégories qui ont des BPU
-        $categories = CategorieRubrique::with([
-            'sousCategories.rubriques.bpus'
-        ])->whereHas('sousCategories.rubriques.bpus')->get();
+        // Catalogue utilitaire : catégories / sous-catégories / rubriques sans contrat_id.
+        // Pas de whereHas sur les BPU : une catégorie vide doit quand même s'afficher après création.
+        $categories = CategorieRubrique::query()
+            ->whereNull('contrat_id')
+            ->with([
+                'sousCategories' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques.bpus' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('id');
+                },
+            ])
+            ->orderBy('nom')
+            ->orderBy('id')
+            ->get();
+        $categories = $this->applyBpuCatalogDisplayOrder($categories);
 
         return view('bpu.until', compact('categories', 'uniteMesures'));
     }
@@ -66,10 +111,110 @@ class BpuController extends Controller
         $categories = CategorieRubrique::with([
             'sousCategories.rubriques.bpus'
         ])->whereHas('sousCategories.rubriques.bpus')->get();
+        $categories = $this->applyBpuCatalogDisplayOrder($categories);
 
         return view('bpu.print', compact('categories', 'uniteMesures'));
     }
-    
+
+    public function exportExcel(Request $request)
+    {
+        $scope = $request->validate([
+            'scope' => 'required|in:contrat,utilitaires,complet',
+        ])['scope'];
+
+        $categories = $this->categoriesForBpuScope($scope);
+        $contratId = session('contrat_id');
+        if ($scope === 'complet') {
+            $base = 'bpu-complet';
+        } elseif ($scope === 'contrat' && $contratId) {
+            $base = 'bpu-contrat-'.$contratId;
+        } else {
+            $base = 'bpu-utilitaires';
+        }
+        $filename = $base.'-'.now()->format('Y-m-d_His').'.xlsx';
+
+        return Excel::download(new BpuListingExport($categories), $filename);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $scope = $request->validate([
+            'scope' => 'required|in:contrat,utilitaires,complet',
+        ])['scope'];
+
+        $categories = $this->categoriesForBpuScope($scope);
+        $contratId = session('contrat_id');
+
+        if ($scope === 'complet') {
+            $documentTitle = 'Bordereau des prix unitaires — Liste complète';
+            $filename = 'bpu-complet.pdf';
+        } elseif ($scope === 'contrat') {
+            $documentTitle = 'Bordereau des prix unitaires — BPU contrat';
+            $filename = $contratId ? 'bpu-contrat-'.$contratId.'.pdf' : 'bpu-contrat.pdf';
+        } else {
+            $documentTitle = 'Bordereau des prix unitaires — BPU utilitaires';
+            $filename = 'bpu-utilitaires.pdf';
+        }
+
+        $pdf = Pdf::loadView('bpu.pdf', compact('categories', 'documentTitle'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream($filename);
+    }
+
+    protected function categoriesForBpuScope(string $scope): Collection
+    {
+        if ($scope === 'complet') {
+            return $this->applyBpuCatalogDisplayOrder(CategorieRubrique::with([
+                'sousCategories.rubriques.bpus',
+            ])->whereHas('sousCategories.rubriques.bpus')->get());
+        }
+
+        if ($scope === 'contrat') {
+            $contratId = session('contrat_id');
+            if (! $contratId) {
+                abort(403, 'Aucun contrat sélectionné en session.');
+            }
+
+            return $this->applyBpuCatalogDisplayOrder(CategorieRubrique::query()
+                ->where('contrat_id', $contratId)
+                ->with([
+                    'sousCategories' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('nom')->orderBy('id');
+                    },
+                    'sousCategories.rubriques' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('nom')->orderBy('id');
+                    },
+                    'sousCategories.rubriques.bpus' => function ($query) use ($contratId) {
+                        $query->where('contrat_id', $contratId)->orderBy('id');
+                    },
+                ])
+                ->whereHas('sousCategories.rubriques.bpus', function ($query) use ($contratId) {
+                    $query->where('contrat_id', $contratId);
+                })
+                ->orderBy('nom')
+                ->orderBy('id')
+                ->get());
+        }
+
+        return $this->applyBpuCatalogDisplayOrder(CategorieRubrique::query()
+            ->whereNull('contrat_id')
+            ->with([
+                'sousCategories' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('nom')->orderBy('id');
+                },
+                'sousCategories.rubriques.bpus' => function ($query) {
+                    $query->whereNull('contrat_id')->orderBy('id');
+                },
+            ])
+            ->orderBy('nom')
+            ->orderBy('id')
+            ->get());
+    }
+
     public function create()
     {
         $rubriques = Rubrique::all();
@@ -179,9 +324,13 @@ class BpuController extends Controller
 
     public function store(Request $request)
 {
+        if ($request->input('qte') === null || $request->input('qte') === '') {
+            $request->merge(['qte' => 1]);
+        }
+
     $request->validate([
         'designation' => 'required',
-        'qte' => 'nullable|numeric',
+        'qte' => 'required|numeric|min:0',
         'materiaux' => 'required|numeric',
         'taux_mo' => 'nullable|numeric',
         'taux_mat' => 'nullable|numeric',
@@ -192,27 +341,44 @@ class BpuController extends Controller
         'id_rubrique' => 'required|exists:rubriques,id'
     ]);
 
-    // Création du BPU avec les données de base et les taux
-    $bpu = Bpu::create([
-        'designation' => $request->designation,
-        'qte' => $request->qte ?? null,
-        'materiaux' => $request->materiaux,
-        'taux_mo' => $request->taux_mo ?? 0,
-        'taux_mat' => $request->taux_mat ?? 0,
-        'taux_fc' => $request->taux_fc ?? 0,
-        'taux_fg' => $request->taux_fg ?? 0,
-        'taux_benefice' => $request->taux_benefice ?? 0,
-        'unite' => $request->unite,
-        'id_rubrique' => $request->id_rubrique,
-        'contrat_id' => $request->has('contrat_id') && $request->contrat_id ? $request->contrat_id : null,
-    ]);
-    
-    // La méthode updateDerivedValues s'occupe de tous les calculs selon les formules BPU
-    $bpu->updateDerivedValues();
-
-    // Redirection intelligente selon la page d'origine
     $redirectRoute = $request->input('redirect_to', 'bpu.index');
-    return redirect()->route($redirectRoute)->with('success', 'BPU ajouté avec succès.');
+
+    /**
+     * Règle métier :
+     * - Depuis la page "BPU Utilitaires" (/bpu/until), toute création doit être utilitaire.
+     *   Donc contrat_id = NULL, même si un contrat est encore en session.
+     * - Sinon, en mode contrat : on accepte contrat_id du formulaire, puis fallback session.
+     */
+    if ($redirectRoute === 'bpu.indexuntil') {
+        $contratId = null;
+    } else {
+        $contratId = $request->filled('contrat_id') ? $request->input('contrat_id') : session('contrat_id');
+        $contratId = $contratId ?: null;
+    }
+
+    try {
+        // Création du BPU avec les données de base et les taux
+        $bpu = Bpu::create([
+            'designation' => $request->designation,
+            'qte' => $request->qte,
+            'materiaux' => $request->materiaux,
+            'taux_mo' => $request->taux_mo ?? 0,
+            'taux_mat' => $request->taux_mat ?? 0,
+            'taux_fc' => $request->taux_fc ?? 0,
+            'taux_fg' => $request->taux_fg ?? 0,
+            'taux_benefice' => $request->taux_benefice ?? 0,
+            'unite' => $request->unite,
+            'id_rubrique' => $request->id_rubrique,
+            'contrat_id' => $contratId,
+        ]);
+        
+        // La méthode updateDerivedValues s'occupe de tous les calculs selon les formules BPU
+        $bpu->updateDerivedValues();
+
+        return redirect()->route($redirectRoute)->with('success', 'BPU ajouté avec succès.');
+    } catch (\Throwable $e) {
+        return redirect()->route($redirectRoute)->with('error', 'Erreur ajout BPU : ' . $e->getMessage());
+    }
 }
 
 public function update(Request $request, $id)
@@ -222,7 +388,7 @@ public function update(Request $request, $id)
     // Validation des données
     $request->validate([
         'designation' => 'required',
-        'qte' => 'nullable|numeric',
+        'qte' => 'required|numeric|min:0',
         'materiaux' => 'required|numeric',
         'taux_mo' => 'nullable|numeric',
         'taux_mat' => 'nullable|numeric',
@@ -235,7 +401,7 @@ public function update(Request $request, $id)
     // Mise à jour des données de base et des taux
     $bpu->update([
         'designation' => $request->designation,
-        'qte' => $request->qte ?? null,
+        'qte' => $request->input('qte', $bpu->qte ?? 0),
         'materiaux' => $request->materiaux,
         'taux_mo' => $request->taux_mo ?? 0,
         'taux_mat' => $request->taux_mat ?? 0,
@@ -433,5 +599,94 @@ public function update(Request $request, $id)
                 'message' => 'Erreur lors de la copie: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Trie catégories, sous-catégories et rubriques : « Lot n° X » par X croissant, puis les autres par nom.
+     */
+    protected function applyBpuCatalogDisplayOrder(Collection $categories): Collection
+    {
+        return $this->sortNamedBpuLevel($categories)
+            ->values()
+            ->map(function (CategorieRubrique $categorie) {
+                $categorie->setRelation(
+                    'sousCategories',
+                    $this->sortNamedBpuLevel($categorie->sousCategories)->values()
+                );
+                foreach ($categorie->sousCategories as $sous) {
+                    $sous->setRelation(
+                        'rubriques',
+                        $this->sortNamedBpuLevel($sous->rubriques)->values()
+                    );
+                    foreach ($sous->rubriques as $rubrique) {
+                        if ($rubrique->relationLoaded('bpus')) {
+                            $rubrique->setRelation('bpus', $rubrique->bpus->sortBy('id')->values());
+                        }
+                    }
+                }
+
+                return $categorie;
+            });
+    }
+
+    /**
+     * @param  Collection<int, CategorieRubrique|SousCategorieRubrique|Rubrique>  $items
+     * @return Collection<int, CategorieRubrique|SousCategorieRubrique|Rubrique>
+     */
+    protected function sortNamedBpuLevel(Collection $items): Collection
+    {
+        return $items->sort(function ($a, $b) {
+            $na = (string) ($a->nom ?? '');
+            $nb = (string) ($b->nom ?? '');
+            $cmp = $this->compareBpuLotNom($na, $nb);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return ((int) ($a->id ?? 0)) <=> ((int) ($b->id ?? 0));
+        });
+    }
+
+    /**
+     * Compare deux libellés : lots d’abord (Lot 0 / Lot n° 0 en premier, puis 1, 2…), puis le reste par nom.
+     */
+    protected function compareBpuLotNom(string $a, string $b): int
+    {
+        $la = $this->parseLotNumeroFromNom($a);
+        $lb = $this->parseLotNumeroFromNom($b);
+
+        if ($la !== null && $lb !== null) {
+            return $la <=> $lb;
+        }
+        if ($la !== null) {
+            return -1;
+        }
+        if ($lb !== null) {
+            return 1;
+        }
+
+        return strcasecmp(mb_strtolower($a, 'UTF-8'), mb_strtolower($b, 'UTF-8'));
+    }
+
+    /**
+     * Retourne le numéro X pour un lot (0, 1, 2…), ou null si ce n’est pas un libellé de type « Lot ».
+     * « LOT 0 », « Lot 0 », « Lot n° 0 » sont reconnus ; le 0 est trié avant tous les autres lots.
+     */
+    protected function parseLotNumeroFromNom(string $nom): ?int
+    {
+        $nom = trim($nom);
+        if ($nom === '') {
+            return null;
+        }
+        // Lot n° 1, LOT N° 12, Lot nº 3, etc.
+        if (preg_match('/^lot\s+n\s*[°º]?\s*(\d+)/iu', $nom, $m)) {
+            return (int) $m[1];
+        }
+        // LOT 0, Lot 0, Lot 15… (sans « n° »)
+        if (preg_match('/^lot\s+(\d+)\b/iu', $nom, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
     }
 }

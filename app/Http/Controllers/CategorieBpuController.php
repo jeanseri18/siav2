@@ -13,8 +13,9 @@ class CategorieBpuController extends Controller
             'nom' => 'required|string|max:255',
         ]);
         
-        $contratId = session('contrat_id');
-        
+        // Page /bpu/until : catalogue utilitaire, ignorer le contrat en session
+        $contratId = $request->boolean('bpu_utilitaires') ? null : session('contrat_id');
+
         CategorieRubrique::create([
             'nom' => $request->nom,
             'type' => 'bpu',

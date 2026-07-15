@@ -16,6 +16,7 @@
                 <i class="fas fa-users me-2"></i>Liste des Utilisateurs
             </h2>
             <div class="app-card-actions">
+                <x-export-pdf-button :route="route('liste.export.pdf', 'users')" />
                 <a href="{{ route('users.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-user-plus"></i> Ajouter un utilisateur
                 </a>
@@ -76,17 +77,25 @@
                             </span>
                         </td>
                         <td>
-                            <div class="app-d-flex app-gap-2">
-                                <a href="{{ route('users.edit', $user->id) }}" class="app-btn app-btn-warning app-btn-sm app-btn-icon" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="app-btn app-btn-danger app-btn-sm app-btn-icon delete-btn" title="Supprimer">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                            <div class="dropdown">
+                                <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('users.edit', $user->id) }}">
+                                            <i class="fas fa-edit me-2"></i>Modifier
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger delete-btn" style="border: none; background: none; width: 100%; text-align: left;">
+                                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>

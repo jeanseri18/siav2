@@ -82,18 +82,23 @@
             <button class="modal-close" onclick="closeModal('saisirDepenseModal')">&times;</button>
         </div>
         <div class="modal-body-modern">
-            <form action="{{ route('caisse.saisirDepense', $bus->id) }}" method="POST" class="modern-form">
+            <form action="{{ route('caisse.saisirDepense') }}" method="POST" class="modern-form">
                 @csrf
                 <div class="form-group">
                     <label for="montant"><i class="fas fa-money-bill-wave"></i> Montant</label>
-                    <input type="number" id="montant" name="montant" class="form-control-modern" placeholder="0.00" required>
+                    <input type="number" id="montant" name="montant" class="form-control-modern" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="date_operation"><i class="fas fa-calendar-alt"></i> Date de l'opération</label>
+                    <input type="date" id="date_operation" name="date_operation" class="form-control-modern"
+                           value="{{ old('date_operation', now()->format('Y-m-d')) }}" required>
                 </div>
                 <div class="form-group">
                     <label for="motif"><i class="fas fa-comment"></i> Motif</label>
                     <input type="text" id="motif" name="motif" class="form-control-modern" placeholder="Motif de la dépense" required>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('caisse.approvisionnement') }}" class="btn-modern btn-secondary-modern">
+                    <a href="{{ route('caisse.brouillard') }}" class="btn-modern btn-secondary-modern">
                         <i class="fas fa-external-link-alt"></i> Formulaire détaillé
                     </a>
                     <button type="submit" class="btn-modern btn-primary-modern">
@@ -291,12 +296,12 @@
 :root {
     /* Variables harmonisées avec app.blade.php */
     --primary-color: var(--primary, #033d71);
-    --secondary-color: var(--primary-light, #0A8CFF);
+    --secondary-color: var(--primary-light, #033d71);
     --success-color: var(--success, #28a745);
     --warning-color: var(--warning, #ffc107);
     --info-color: var(--info, #17a2b8);
     --accent-color: var(--white, #ffffff);
-    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #0A8CFF) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary, #033d71) 0%, var(--primary-light, #033d71) 100%);
     --gradient-success: linear-gradient(135deg, var(--success, #28a745) 0%, #20c997 100%);
     --gradient-warning: linear-gradient(135deg, var(--warning, #ffc107) 0%, #fd7e14 100%);
     --gradient-info: linear-gradient(135deg, var(--info, #17a2b8) 0%, #20c997 100%);

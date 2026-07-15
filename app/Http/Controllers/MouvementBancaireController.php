@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Banque;
 use App\Models\MouvementBancaire;
+use App\Http\Controllers\Concerns\ExportsListPdf;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class MouvementBancaireController extends Controller
 {
+    use ExportsListPdf;
+
     public function index(Request $request)
     {
         $buId = session('selected_bu');
@@ -28,9 +32,47 @@ class MouvementBancaireController extends Controller
             $query->where('banque_id', $banqueId);
         }
 
-        $mouvements = $query->get();
+        $mouvements = $query->paginate(15)->withQueryString();
 
         return view('banque.mouvements.index', compact('banques', 'banqueId', 'mouvements'));
+    }
+
+    public function exportListePdf(Request $request)
+    {
+        $buId = session('selected_bu');
+        if (! $buId) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        $banqueId = $request->query('banque_id');
+        $query = MouvementBancaire::with('banque')
+            ->where('bu_id', $buId)
+            ->orderByDesc('date_operation')
+            ->orderByDesc('id');
+
+        if ($banqueId) {
+            $query->where('banque_id', $banqueId);
+        }
+
+        $mouvements = $query->get();
+        $rows = [];
+        foreach ($mouvements as $mouvement) {
+            $rows[] = [
+                $mouvement->date_operation?->format('d/m/Y') ?? '—',
+                $mouvement->banque?->nom ?? '—',
+                $mouvement->libelle ?? '—',
+                $mouvement->type ?? '—',
+                number_format((float) ($mouvement->montant ?? 0), 0, ',', ' ').' FCFA',
+                $mouvement->est_passe ? 'Passé' : 'En attente',
+            ];
+        }
+
+        return $this->streamListPdf(
+            'Liste des mouvements bancaires',
+            ['Date', 'Banque', 'Libellé', 'Type', 'Montant', 'Statut'],
+            $rows,
+            'liste-mouvements-bancaires'
+        );
     }
 
     public function soldes(Request $request)
@@ -108,6 +150,64 @@ class MouvementBancaireController extends Controller
             return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
         }
 
+        MouvementBancaire::create($this->validateAndAttributesForMouvement($request, (int) $buId, null));
+
+        return redirect()->route('banque.mouvements.index')->with('success', 'Mouvement bancaire ajouté avec succès.');
+    }
+
+    public function edit(MouvementBancaire $mouvementBancaire)
+    {
+        $buId = session('selected_bu');
+        if (! $buId) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        if ((int) $mouvementBancaire->bu_id !== (int) $buId) {
+            abort(404);
+        }
+
+        $banques = Banque::where('bu_id', $buId)->orderBy('nom')->get();
+
+        return view('banque.mouvements.edit', compact('banques', 'mouvementBancaire'));
+    }
+
+    public function update(Request $request, MouvementBancaire $mouvementBancaire)
+    {
+        $buId = session('selected_bu');
+        if (! $buId) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        if ((int) $mouvementBancaire->bu_id !== (int) $buId) {
+            abort(404);
+        }
+
+        $mouvementBancaire->update($this->validateAndAttributesForMouvement($request, (int) $buId, $mouvementBancaire));
+
+        return redirect()->route('banque.mouvements.index')->with('success', 'Mouvement bancaire modifié avec succès.');
+    }
+
+    public function destroy(MouvementBancaire $mouvementBancaire)
+    {
+        $buId = session('selected_bu');
+        if (! $buId) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        if ((int) $mouvementBancaire->bu_id !== (int) $buId) {
+            abort(404);
+        }
+
+        $mouvementBancaire->delete();
+
+        return redirect()->route('banque.mouvements.index')->with('success', 'Mouvement bancaire supprimé.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateAndAttributesForMouvement(Request $request, int $buId, ?MouvementBancaire $existingMouvement = null): array
+    {
         $request->validate([
             'banque_id' => [
                 'required',
@@ -125,6 +225,21 @@ class MouvementBancaireController extends Controller
             'date_passage' => ['nullable', 'date'],
         ]);
 
+        if ($request->input('type') === 'sortie') {
+            $banqueId = (int) $request->input('banque_id');
+            $montant = (float) $request->input('montant');
+            $solde = $this->getSoldePrevisionnel($buId, $banqueId, $existingMouvement);
+
+            if ($montant > $solde) {
+                throw ValidationException::withMessages([
+                    'montant' => sprintf(
+                        'Solde insuffisant pour effectuer cette opération. Solde disponible : %s.',
+                        number_format($solde, 0, ',', ' ')
+                    ),
+                ]);
+            }
+        }
+
         $estPasse = (bool) $request->boolean('est_passe');
         $datePassage = $request->input('date_passage');
         if ($estPasse && ! $datePassage) {
@@ -137,7 +252,7 @@ class MouvementBancaireController extends Controller
         $mode = (string) $request->input('mode');
         $numeroPiece = $mode === 'espece' ? null : $request->input('numero_piece');
 
-        MouvementBancaire::create([
+        return [
             'bu_id' => $buId,
             'banque_id' => $request->input('banque_id'),
             'type' => $request->input('type'),
@@ -150,9 +265,7 @@ class MouvementBancaireController extends Controller
             'libelle' => $request->input('libelle'),
             'est_passe' => $estPasse,
             'date_passage' => $datePassage,
-        ]);
-
-        return redirect()->route('banque.mouvements.index')->with('success', 'Mouvement bancaire ajouté avec succès.');
+        ];
     }
 
     public function toggleRapprochement(Request $request, MouvementBancaire $mouvementBancaire)
@@ -178,6 +291,23 @@ class MouvementBancaireController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Rapprochement mis à jour.');
+    }
+
+    private function getSoldePrevisionnel(int $buId, int $banqueId, ?MouvementBancaire $excludeMouvement = null): float
+    {
+        $banque = Banque::where('bu_id', $buId)->findOrFail($banqueId);
+        $soldeInitial = (float) $banque->solde_initial;
+
+        $baseAggregate = MouvementBancaire::where('bu_id', $buId)->where('banque_id', $banqueId);
+
+        if ($excludeMouvement) {
+            $baseAggregate->where('id', '!=', $excludeMouvement->id);
+        }
+
+        $entreesPrev = (float) (clone $baseAggregate)->where('type', 'entree')->sum('montant');
+        $sortiesPrev = (float) (clone $baseAggregate)->where('type', 'sortie')->sum('montant');
+
+        return $soldeInitial + $entreesPrev - $sortiesPrev;
     }
 
     private function aggregateForBanque(int $buId, int $banqueId, float $soldeInitial): array

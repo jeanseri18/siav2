@@ -64,7 +64,7 @@ function updatePaiementCalculations() {
 }
 
 .categorie-header {
-    background-color: #0d6efd !important;
+    background-color: #033d71 !important;
     color: white !important;
     font-weight: 700;
 }

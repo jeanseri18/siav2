@@ -80,21 +80,33 @@
                             <h2 class="app-card-title">Hypotheses</h2>
                         </div>
                         <div class="app-card-body app-table-responsive">
-                            <form method="POST" action="{{ route('bu-budget.rows.store', $budget) }}" class="d-flex gap-2 align-items-end mb-3">
+                            <form method="POST" action="{{ route('bu-budget.rows.store', $budget) }}" class="d-flex gap-2 align-items-end mb-3 flex-wrap">
                                 @csrf
                                 <input type="hidden" name="tab" value="hypotheses">
                                 <input type="hidden" name="sheet" value="hypotheses">
-                                <div class="flex-grow-1">
-                                    <label class="form-label">Références</label>
-                                    <input type="text" name="reference" class="form-control" required>
+                                <div class="flex-grow-1" style="min-width: 220px;">
+                                    <label class="form-label">Type de travaux</label>
+                                    <select name="reference" class="form-select{{ $errors->has('reference') ? ' is-invalid' : '' }}" required>
+                                        <option value="">— Sélectionner —</option>
+                                        @foreach($typesTravaux as $type)
+                                            <option value="{{ $type->nom }}" {{ old('reference') === $type->nom ? 'selected' : '' }}>{{ $type->nom }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('reference')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    @if($typesTravaux->isEmpty())
+                                        <div class="form-text text-warning">Aucun type défini. <a href="{{ route('type-travaux.index') }}">Gérer les types de travaux</a>.</div>
+                                    @endif
                                 </div>
                                 <div class="flex-grow-1">
                                     <label class="form-label">Quantité moyenne</label>
                                     <input type="number" step="1" name="parametre" class="form-control" required>
                                 </div>
-                                <div style="width: 220px;">
-                                    <label class="form-label">Montant moyen</label>
-                                    <input type="number" step="0.01" name="amount_decimal" class="form-control" required>
+                                <div style="width: 260px;">
+                                    <label class="form-label">Montant moyen (FCFA)</label>
+                                    <input type="text" name="amount_decimal" class="form-control js-budget-montant-moyen" inputmode="decimal" autocomplete="off" value="{{ old('amount_decimal') }}" required>
+                                    <div class="form-text">Séparateurs de milliers autorisés (ex. 35 000 000,00).</div>
                                 </div>
                                 <button type="submit" class="app-btn app-btn-primary">Ajouter</button>
                             </form>
@@ -102,28 +114,34 @@
                             <table class="app-table">
                                 <thead>
                                     <tr>
-                                        <th>Références</th>
+                                        <th>Type de travaux</th>
                                         <th>Quantité moyenne</th>
                                         <th>Montant moyen</th>
                                         <th style="width: 220px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php($rows = $rowsBySheet['hypotheses'] ?? [])
-                                    @foreach($rows as $row)
+                                    @foreach($hypothesesRows as $row)
                                     <tr>
                                         <td>
-                                            <form method="POST" action="{{ route('bu-budget.rows.update', [$budget, $row]) }}" class="d-flex gap-2">
+                                            <form method="POST" action="{{ route('bu-budget.rows.update', [$budget, $row]) }}" class="d-flex gap-2 flex-wrap align-items-start">
                                                 @csrf
                                                 @method('PATCH')
                                                 <input type="hidden" name="tab" value="hypotheses">
-                                                <input type="text" name="reference" value="{{ $row->reference }}" class="form-control" required>
+                                                <select name="reference" class="form-select{{ $errors->has('reference') ? ' is-invalid' : '' }}" required style="min-width: 200px;">
+                                                    @foreach($typesTravaux as $type)
+                                                        <option value="{{ $type->nom }}" {{ old('reference', $row->reference) === $type->nom ? 'selected' : '' }}>{{ $type->nom }}</option>
+                                                    @endforeach
+                                                    @if(filled($row->reference) && ! $typesTravaux->contains('nom', $row->reference))
+                                                        <option value="{{ $row->reference }}" selected>{{ $row->reference }} (ancienne saisie)</option>
+                                                    @endif
+                                                </select>
                                         </td>
                                         <td>
                                                 <input type="number" step="1" name="parametre" value="{{ $row->parametre }}" class="form-control" required>
                                         </td>
                                         <td class="d-flex gap-2">
-                                                <input type="number" step="0.01" name="amount_decimal" value="{{ $row->amount_decimal }}" class="form-control" required style="max-width: 220px;">
+                                                <input type="text" name="amount_decimal" value="{{ old('amount_decimal', number_format((float) $row->amount_decimal, 2, ',', ' ')) }}" class="form-control js-budget-montant-moyen" inputmode="decimal" autocomplete="off" required style="max-width: 240px;">
                                                 <button type="submit" class="app-btn app-btn-outline-primary app-btn-sm">Enregistrer</button>
                                             </form>
                                             <form method="POST" action="{{ route('bu-budget.rows.delete', [$budget, $row]) }}">
@@ -591,4 +609,34 @@
         </div>
     </div>
 </div>
+@if($tab === 'hypotheses')
+@push('scripts')
+<script>
+(function () {
+    function parseMontantFr(s) {
+        if (s == null || typeof s !== 'string') return NaN;
+        var t = s.trim().replace(/[\s\u00A0\u202F]/g, '');
+        if (t === '') return NaN;
+        if (t.indexOf(',') !== -1) {
+            t = t.replace(/\./g, '').replace(',', '.');
+        }
+        var n = parseFloat(t);
+        return isNaN(n) ? NaN : n;
+    }
+    function formatMontantFr(n) {
+        if (isNaN(n)) return '';
+        return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    document.querySelectorAll('.js-budget-montant-moyen').forEach(function (el) {
+        el.addEventListener('blur', function () {
+            var n = parseMontantFr(this.value);
+            if (!isNaN(n)) {
+                this.value = formatMontantFr(n);
+            }
+        });
+    });
+})();
+</script>
+@endpush
+@endif
 @endsection

@@ -55,7 +55,7 @@
 }
 
 .planning-table .week-header {
-    background-color: #0d6efd;
+    background-color: #033d71;
     color: white;
     text-align: center;
     font-weight: bold;

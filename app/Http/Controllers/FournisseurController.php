@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\SecteurActivite;
 use App\Models\RegimeImposition;
 use App\Models\ModePaiement;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class FournisseurController extends Controller {
   
@@ -20,13 +22,40 @@ class FournisseurController extends Controller {
         return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
     }
 
-    // Récupérer les clients associés à l'ID du bus
-    $fournisseurs = ClientFournisseur::where('type', 'Fournisseur')
-                                ->where('id_bu', $id_bu)  // Filtrage selon l'ID du bus
-                                ->get();
+    $fournisseurs = $this->fournisseursForListing((int) $id_bu);
 
     return view('fournisseurs.index', compact('fournisseurs'));
 }
+
+    public function exportPdf()
+    {
+        $id_bu = session('selected_bu');
+        if (! $id_bu) {
+            return redirect()->route('select.bu')->withErrors(['error' => 'Veuillez sélectionner un bus avant d\'accéder à cette page.']);
+        }
+
+        $fournisseurs = $this->fournisseursForListing((int) $id_bu);
+        $pdfBranding = PdfBranding::forBu((int) $id_bu);
+
+        $pdf = Pdf::loadView('fournisseurs.liste-export', [
+            'fournisseurs' => $fournisseurs,
+            'pdfBranding' => $pdfBranding,
+            'printMode' => false,
+            'documentTitle' => 'Liste des fournisseurs',
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('liste-fournisseurs-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    private function fournisseursForListing(int $buId)
+    {
+        return ClientFournisseur::with('bus')
+            ->where('type', 'Fournisseur')
+            ->where('id_bu', $buId)
+            ->orderBy('nom_raison_sociale')
+            ->orderBy('code')
+            ->get();
+    }
 
 
     public function create() {

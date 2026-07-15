@@ -134,7 +134,7 @@
         <div class="app-card-footer">
             <div class="app-card-actions">
                 <button type="button" class="app-btn app-btn-primary" data-bs-toggle="modal" data-bs-target="#transfertModal" 
-                        onclick="populateTransfertModal({{ $stock->id }}, '{{ $stock->article->designation_article }}', {{ $stock->quantite }})">
+                        onclick="populateTransfertModal({{ $stock->article_id }}, {{ json_encode($stock->article->nom) }}, {{ (int) $stock->quantite }})">
                     <i class="fas fa-exchange-alt me-2"></i>Transférer
                 </button>
                 
@@ -168,16 +168,19 @@
             <div class="app-modal-body">
                 <form action="{{ route('transferts.store') }}" method="POST" class="app-form" id="transfertForm">
                     @csrf
-                    <input type="hidden" name="article_id" id="transfertArticleId">
-                    
+                    @if(session('projet_id'))
+                    <input type="hidden" name="projet_source" value="{{ session('projet_id') }}">
+                    @endif
+                    <input type="hidden" name="items[0][article_id]" id="transfertArticleId">
+
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
-                                <label class="app-form-label"><i class="fas fa-building me-2"></i>Projet Destination</label>
-                                <select name="id_projet_destination" class="app-form-select" required>
+                                <label class="app-form-label"><i class="fas fa-bullseye me-2"></i>Projet Destination</label>
+                                <select name="projet_destination" class="app-form-select" required>
                                     <option value="">Sélectionner le projet destination</option>
                                     @foreach(\App\Models\Projet::all() as $projet)
-                                    <option value="{{ $projet->id }}">{{ $projet->nom_projet }}</option>
+                                    <option value="{{ $projet->id }}" @if(session('projet_id') == $projet->id) disabled @endif>{{ $projet->nom_projet }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -185,32 +188,27 @@
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-box me-2"></i>Article</label>
-                                <input type="text" id="transfertArticleNom" class="app-form-input" readonly>
+                                <input type="text" id="transfertArticleNom" class="app-form-control" readonly>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="app-form-row">
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-sort-numeric-up me-2"></i>Quantité à transférer</label>
-                                <input type="number" name="quantite" id="transfertQuantite" class="app-form-input" min="1" required>
-                                <small class="app-form-help">Quantité disponible: <span id="quantiteDisponible"></span></small>
+                                <input type="number" name="items[0][quantite]" id="transfertQuantite" class="app-form-control" min="1" required>
+                                <small class="app-form-help">Quantité disponible : <span id="quantiteDisponible"></span></small>
                             </div>
                         </div>
                         <div class="app-form-col">
                             <div class="app-form-group">
                                 <label class="app-form-label"><i class="fas fa-calendar me-2"></i>Date de transfert</label>
-                                <input type="date" name="date_transfert" class="app-form-input" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="date_transfert" class="app-form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="app-form-group">
-                        <label class="app-form-label"><i class="fas fa-comment me-2"></i>Commentaires</label>
-                        <textarea name="commentaires" class="app-form-textarea" rows="3" placeholder="Commentaires optionnels..."></textarea>
-                    </div>
-                    
+
                     <div class="app-modal-actions">
                         <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-2"></i>Annuler
@@ -230,7 +228,9 @@ function populateTransfertModal(articleId, articleNom, quantiteDisponible) {
     document.getElementById('transfertArticleId').value = articleId;
     document.getElementById('transfertArticleNom').value = articleNom;
     document.getElementById('quantiteDisponible').textContent = quantiteDisponible;
-    document.getElementById('transfertQuantite').max = quantiteDisponible;
+    const q = document.getElementById('transfertQuantite');
+    q.max = quantiteDisponible;
+    q.value = '';
 }
 </script>
 @endsection

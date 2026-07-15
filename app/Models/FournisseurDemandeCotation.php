@@ -18,7 +18,9 @@ class FournisseurDemandeCotation extends Model
         'date_reponse',
         'montant_total',
         'retenu',
-        'commentaire'
+        'commentaire',
+        'devis_fichier',
+        'devis_fichier_nom',
     ];
 
     protected $casts = [

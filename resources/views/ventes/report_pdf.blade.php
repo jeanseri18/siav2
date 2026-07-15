@@ -26,20 +26,17 @@
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #007bff;
+            border-bottom: 3px solid #033d71;
         }
 
-        .logo {
-            max-width: 120px;
-            max-height: 80px;
-        }
+        .logo { display: inline-block; border: 0; }
 
         .company-info {
             text-align: right;
         }
 
         .header h1 {
-            color: #007bff;
+            color: #033d71;
             font-size: 24px;
             margin-bottom: 5px;
         }
@@ -93,7 +90,7 @@
         .stat-card .icon {
             font-size: 18px;
             margin-bottom: 8px;
-            color: #007bff;
+            color: #033d71;
         }
 
         .stat-card .value {
@@ -114,7 +111,7 @@
         }
 
         .table-title {
-            background: #007bff;
+            background: #033d71;
             color: white;
             padding: 10px 15px;
             margin: 0;
@@ -202,13 +199,13 @@
         }
 
         .total-row {
-            background: #007bff !important;
+            background: #033d71 !important;
             color: white;
             font-weight: bold;
         }
 
         .total-row td {
-            border-color: #0056b3;
+            border-color: #033d71;
         }
 
         .articles-list {
@@ -265,7 +262,18 @@
     <div class="header">
         <div>
             @if(isset($bus) && $bus && $bus->logo)
-                <img src="{{ public_path('storage/' . $bus->logo) }}" alt="Logo" class="logo">
+                @php
+                    $legacyLogoPath = public_path('storage/' . $bus->logo);
+                    $legacyLogoDims = \App\Support\PdfBranding::logoDisplaySize(is_file($legacyLogoPath) ? $legacyLogoPath : null);
+                @endphp
+                <img
+                    src="{{ $legacyLogoPath }}"
+                    alt="Logo"
+                    class="logo"
+                    width="{{ $legacyLogoDims['width'] }}"
+                    height="{{ $legacyLogoDims['height'] }}"
+                    style="width: {{ $legacyLogoDims['width'] }}px; height: {{ $legacyLogoDims['height'] }}px;"
+                >
             @endif
         </div>
         <div class="company-info">

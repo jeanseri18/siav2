@@ -5,12 +5,39 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Artisan;
 use App\Models\CorpMetier;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfBranding;
 
 class ArtisanController extends Controller
 {
     public function index() {
-        $artisans = Artisan::all(); 
+        $artisans = Artisan::orderBy('nom')->orderBy('reference')->get();
         return view('artisans.index', compact('artisans'));
+    }
+
+    public function exportPdf()
+    {
+        $buId = session('selected_bu') ? (int) session('selected_bu') : null;
+        $artisans = $this->artisansForListing();
+        $pdfBranding = PdfBranding::forBu($buId);
+
+        $pdf = Pdf::loadView('artisans.liste-export', [
+            'artisans' => $artisans,
+            'pdfBranding' => $pdfBranding,
+            'documentTitle' => 'Liste des artisans',
+        ])
+            ->setPaper('a4', 'landscape')
+            ->setOption('defaultFont', 'DejaVu Sans');
+
+        return $pdf->stream('liste-artisans-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+    }
+
+    private function artisansForListing()
+    {
+        return Artisan::query()
+            ->orderBy('nom')
+            ->orderBy('reference')
+            ->get();
     }
 
     public function create() {
@@ -53,6 +80,11 @@ $request->merge([
 ]);
         Artisan::create($request->all());
         return redirect()->route('artisans.index')->with('success', 'Artisan ajouté avec succès.');
+    }
+
+    public function show(Artisan $artisan)
+    {
+        return view('artisans.show', compact('artisan'));
     }
 
     public function edit($id) {
