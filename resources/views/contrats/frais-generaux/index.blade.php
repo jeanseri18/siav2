@@ -10,12 +10,14 @@
                 <div class="card-header">
                     <h3 class="card-title">Frais Généraux du Contrat - {{ $contrat->nom_contrat }}</h3>
                     <div class="card-tools">
+                        @if(auth()->user()->hasPermission('frais-chantier.create'))
                         <form action="{{ route('contrats.frais-generaux.store', $contrat) }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Créer document
                             </button>
                         </form>
+                        @endif
                         <a href="{{ route('contrats.show', $contrat) }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Retour au contrat
                         </a>

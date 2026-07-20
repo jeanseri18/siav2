@@ -62,9 +62,11 @@
                 <a href="{{ route('bon-commandes.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
                     <i class="fas fa-file-invoice"></i> Bons de commande
                 </a>
+                @if(auth()->user()->hasPermission('demande-cotasion.create'))
                 <a href="{{ route('demande-cotations.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Demande
                 </a>
+                @endif
             </div>
         </div>
 
@@ -173,13 +175,16 @@
                                         </a>
                                     </li>
                                     @if($demande->statut == 'en cours')
+                                     @if(auth()->user()->hasPermission('demande-cotasion.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('demande-cotations.edit', $demande) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
                                     @endif
+                                    @endif
                                     @if(in_array($demande->statut, ['en cours', 'validée'], true))
+                                    @if(auth()->user()->hasPermission('demande-cotasion.terminate'))
                                     <li>
                                         <form action="{{ route('demande-cotations.terminate', $demande) }}" method="POST">
                                             @csrf
@@ -189,7 +194,9 @@
                                         </form>
                                     </li>
                                     @endif
+                                    @endif
                                     @if($demande->statut == 'en cours')
+                                    @if(auth()->user()->hasPermission('demande-cotasion.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('demande-cotations.destroy', $demande) }}" method="POST" class="delete-form">
@@ -201,16 +208,19 @@
                                         </form>
                                     </li>
                                     @endif
+                                    @endif
                                     @if($demande->estEligiblePourBonCommande())
                                     @php
                                         $fournisseurRetenu = $demande->fournisseurs->where('retenu', true)->first();
                                     @endphp
                                     @if($fournisseurRetenu && $demande->bon_commandes_count === 0)
+                                    @if(auth()->user()->hasPermission('commande-bon.create'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id, 'demande_cotation_id' => $demande->id]) }}">
                                             <i class="fas fa-shopping-cart me-2"></i>Créer bon de commande
                                         </a>
                                     </li>
+                                    @endif
                                     @endif
                                     @endif
                                 </ul>

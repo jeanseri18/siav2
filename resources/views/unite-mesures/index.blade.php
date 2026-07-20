@@ -18,9 +18,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('liste.export.pdf', 'unite_mesures')" />
+                @if(auth()->user()->hasPermission('unite-mesures.create'))
                 <a href="{{ route('unite-mesures.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une unité
                 </a>
+                @endif
             </div>
         </div>
 
@@ -71,11 +73,14 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('unite-mesures.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('unite-mesures.edit', $unite->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('unite-mesures.destroy'))
                                     <li>
                                         <form action="{{ route('unite-mesures.destroy', $unite->id) }}" method="POST" class="delete-form">
                                             @csrf
@@ -85,6 +90,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

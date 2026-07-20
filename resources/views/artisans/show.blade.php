@@ -24,9 +24,11 @@
                 </p>
             </div>
             <div class="app-d-flex app-gap-2">
+                @if(auth()->user()->hasPermission('artisans.edit'))
                 <a href="{{ route('artisans.edit', $artisan->id) }}" class="app-btn app-btn-warning app-btn-sm">
                     <i class="fas fa-edit me-1"></i>Modifier
                 </a>
+                @endif
                 <a href="{{ route('artisans.index') }}" class="app-btn app-btn-secondary app-btn-sm">
                     <i class="fas fa-arrow-left me-1"></i>Retour à la liste
                 </a>

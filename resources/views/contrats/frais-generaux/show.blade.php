@@ -53,7 +53,7 @@
                                     <p class="text-muted">Aucune ligne de frais généraux pour ce parent.</p>
                                 </div>
                             @endif
-                            
+                            @if(auth()->user()->hasPermission('frais-chantier.create'))
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h4>Lignes des frais généraux</h4>
                                 @if($parent->type === 'réalisé')
@@ -62,6 +62,7 @@
                                     </button>
                                 @endif
                             </div>
+                            @endif
                             
                             @if(!$parent->lignes->isEmpty())
                                 @if($parent->type === 'réalisé')

@@ -18,9 +18,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('liste.export.pdf', 'corpmetiers')" />
+                @if(auth()->user()->hasPermission('documents.create'))
                 <a href="{{ route('corpsmetiers.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un Corps de Métier
                 </a>
+                @endif
             </div>
         </div>
 
@@ -63,11 +65,14 @@
                                 <div class="dropdown">
                                     <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        @if(auth()->user()->hasPermission('documents.edit'))
                                         <li>
                                             <a class="dropdown-item" href="{{ route('corpsmetiers.edit', $corpsMetier->id) }}">
                                                 <i class="fas fa-edit me-2"></i>Modifier
                                             </a>
                                         </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('documents.destroy'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('corpsmetiers.destroy', $corpsMetier->id) }}" method="POST" class="delete-form">
@@ -78,6 +83,7 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </td>

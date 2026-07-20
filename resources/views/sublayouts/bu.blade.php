@@ -11,6 +11,7 @@
     </div>
     
     <div class="dashboard-grid">
+         @if(auth()->user()->hasPermission('bu.show'))
         <a href="{{ route('bu.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-list-ul"></i>
@@ -19,9 +20,9 @@
                 <h3>Liste des BU</h3>
                 <p>Consulter toutes les Business Units</p>
             </div>
-
         </a>
-        
+        @endif
+         @if(auth()->user()->hasPermission('bu.create'))
         <a href="{{ route('bu.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -32,6 +33,7 @@
             </div>
        
         </a>
+        @endif
     </div>
 </div>
 

@@ -27,6 +27,7 @@ class User extends Authenticatable
         'date_naissance' => 'date',
     ];
 
+
  
 
 
@@ -104,9 +105,9 @@ class User extends Authenticatable
         return [
             'admin' => 'Administrateur',
             'dg' => 'DG',
-            'chef_projet' => 'Chef de projet',
-            'conducteur_travaux' => 'Conducteur de travaux',
-            'chef_chantier' => 'Chef de chantier',
+            //'chef_projet' => 'Chef de projet',
+            //'conducteur_travaux' => 'Conducteur de travaux',
+            //'chef_chantier' => 'Chef de chantier',
             'comptable' => 'Comptable',
             'magasinier' => 'Magasinier',
             'acheteur' => 'Acheteur',
@@ -117,8 +118,28 @@ class User extends Authenticatable
             'chauffeur' => 'Chauffeur',
             'gardien' => 'Gardien',
             'employe' => 'Employé',
+
+            'raf'=> "RAF",
+            'rt'=> "RT",
+            'caisse'=> "Caisse",
+            'charge_des_achats'=> "Charge des Achats",
+            'gestionnaire_stock'=> "Gestionnaire Stock",
+            'qse'=> "QSE",
+            'gestion_projets'=> "Gestion Projets",
+            'conducteur_des_travaux'=> "Conducteur des Travaux",
+            'chef_chantier'=> "Chef Chantier",
         ];
     }
+
+
+public function hasPermission($permission)
+{
+    $rolePermissions = config("permissions.{$this->role}", []);
+
+
+    return in_array($permission, $rolePermissions);
+}
+
 
     /**
      * Rôles pour les fiches « Employés » (sans administrateur).
@@ -196,3 +217,4 @@ class User extends Authenticatable
         ];
     }
 }
+ 

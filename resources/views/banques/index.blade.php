@@ -20,9 +20,11 @@
                 <span class="app-badge app-badge-info app-badge-pill">
                     BU: {{ session('selected_bu') }}
                 </span>
+                @if(auth()->user()->hasPermission('banques.create'))
                 <a href="{{ route('banques.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter une banque
                 </a>
+                @endif
             </div>
         </div>
 
@@ -121,11 +123,14 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                     @if(auth()->user()->hasPermission('banques.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('banques.edit', $banque) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('banques.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('banques.destroy', $banque) }}" method="POST" class="delete-form">
@@ -136,6 +141,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

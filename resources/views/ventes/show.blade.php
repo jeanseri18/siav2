@@ -231,6 +231,7 @@
                 </div>
                 <div class="app-card-body app-d-grid app-gap-2">
                     @if($vente->statut !== 'Payée')
+                    @if(auth()->user()->hasPermission('ventes.valider'))
                     <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST">
                         @csrf
                         @method('PATCH')
@@ -238,6 +239,7 @@
                             <i class="fas fa-check me-2"></i>Valider la vente
                         </button>
                     </form>
+                    @endif
                     @else
                     <button class="app-btn app-btn-secondary w-100" disabled>
                         <i class="fas fa-check-circle me-2"></i>Vente déjà validée

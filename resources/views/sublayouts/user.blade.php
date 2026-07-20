@@ -10,8 +10,9 @@
             Gestion des Utilisateurs
         </h2>
     </div>
-    
+     
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('users.show'))
         <a href="{{ route('users.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-list"></i>
@@ -21,7 +22,8 @@
                 <p>Consulter tous les utilisateurs</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('users.create'))
         <a href="{{ route('users.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-user-plus"></i>
@@ -31,6 +33,7 @@
                 <p>Créer un nouvel utilisateur</p>
             </div>
         </a>
+        @endif
         
        
       

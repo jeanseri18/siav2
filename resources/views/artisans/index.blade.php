@@ -19,9 +19,11 @@
                 <a href="{{ route('artisans.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                @if(auth()->user()->hasPermission('artisans.edit'))
                 <a href="{{ route('artisans.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un artisan
                 </a>
+                @endif
             </div>
         </div>
 
@@ -88,11 +90,14 @@
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('artisans.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('artisans.edit', $artisan->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('artisans.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('artisans.destroy', $artisan->id) }}" method="POST" class="delete-form">
@@ -103,6 +108,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

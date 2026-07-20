@@ -9,12 +9,14 @@
             <h2 class="mb-4">Détail Quantitatif Estimatif (DQE)</h2>
             <h4>Contrat : {{ $contrat->nom_contrat }}</h4>
         </div>
+        @if(auth()->user()->hasPermission('dqe.create'))
         <div class="col-md-6 text-end">
             <a href="{{ route('dqe.create', $contrat->id) }}" class="btn btn-primary">
                 <i class="fas fa-plus-circle"></i> Nouveau DQE
             </a>
    
         </div>
+        @endif
     </div>
 
     @if(session('success'))
@@ -68,59 +70,79 @@
                             <td>
                                 <div class="btn-group">
                                     @if($dqe->statut == 'brouillon')
+                                     @if(auth()->user()->hasPermission('dqe.edit'))
                                         <a href="{{ route('dqe.edit', $dqe->id) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-edit"></i> Éditer
                                         </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dqe.soumettre'))
                                         <form action="{{ route('dqe.soumettre', $dqe->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Êtes-vous sûr de vouloir soumettre ce DQE pour approbation ?')">
                                                 <i class="fas fa-paper-plane"></i> Soumettre
                                             </button>
                                         </form>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dqe.rejeter'))
                                         <form action="{{ route('dqe.rejeter', $dqe->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce DQE ?')">
                                                 <i class="fas fa-times"></i> Rejeter
                                             </button>
                                         </form>
+                                        @endif
                                     @elseif($dqe->statut == 'soumis')
+                                        @if(auth()->user()->hasPermission('dqe.edit'))
                                         <button class="btn btn-sm btn-secondary" disabled>
                                             <i class="fas fa-lock"></i> Éditer
                                         </button>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dqe.approuver'))
                                         <form action="{{ route('dqe.approuver', $dqe->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Êtes-vous sûr de vouloir approuver ce DQE ?')">
                                                 <i class="fas fa-thumbs-up"></i> Approuver
                                             </button>
                                         </form>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dqe.rejeter'))
                                         <form action="{{ route('dqe.rejeter', $dqe->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce DQE ?')">
                                                 <i class="fas fa-times"></i> Rejeter
                                             </button>
                                         </form>
+                                        @endif
                                     @elseif($dqe->statut == 'approuvé')
+                                        @if(auth()->user()->hasPermission('dqe.edit'))
                                         <button class="btn btn-sm btn-secondary" disabled>
                                             <i class="fas fa-lock"></i> Éditer
                                         </button>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dqe.approuver'))
                                         <form action="{{ route('dqe.valider', $dqe->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Êtes-vous sûr de vouloir valider ce DQE ?')">
                                                 <i class="fas fa-check"></i> Valider
                                             </button>
                                         </form>
+                                        @endif
                                         <button class="btn btn-sm btn-secondary" disabled>
                                             <i class="fas fa-lock"></i> Actions verrouillées
                                         </button>
                                     @else
+                                        @if(auth()->user()->hasPermission('dqe.edit'))
                                         <button class="btn btn-sm btn-secondary" disabled>
                                             <i class="fas fa-lock"></i> Éditer
                                         </button>
+                                        @endif
+                                        
                                         <button class="btn btn-sm btn-secondary" disabled>
                                             <i class="fas fa-lock"></i> Actions verrouillées
                                         </button>
                                     @endif
                                     @if($dqe->statut != 'archivé')
+                                        @if(auth()->user()->hasPermission('dqe.generate'))
                                         <div class="btn-group ms-1" role="group">
                                             <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
                                                 <i class="fas fa-calculator"></i> Générer
@@ -129,9 +151,6 @@
 
                                             
                                                 <li>
-
-
-
                                                     <form action="{{ route('debourse-sec.generate', $dqe) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
@@ -175,7 +194,9 @@
                                                 </li>
                                             </ul>
                                         </div>
+                                        @endif
                                     @endif
+                                     @if(auth()->user()->hasPermission('dqe.destroy'))
                                     <form action="{{ route('dqe.destroy', $dqe->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce DQE ?');">
                                         @csrf
                                         @method('DELETE')
@@ -183,6 +204,7 @@
                                             <i class="fas fa-trash"></i> Supprimer
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -203,11 +225,14 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <form action="{{ route('dqe.generate', $contrat->id) }}" method="POST">
+
                 @csrf
+                @if(auth()->user()->hasPermission('dqe.generate'))
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateDQEModalLabel">Générer un DQE à partir du BPU</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                @endif
                 <div class="modal-body">
                     <div class="mb-3">
                         <p>Sélectionnez les éléments du BPU à inclure dans votre DQE :</p>
@@ -273,7 +298,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    @if(auth()->user()->hasPermission('dqe.generate'))
                     <button type="submit" class="btn btn-primary">Générer le DQE</button>
+                    @endif
                 </div>
             </form>
         </div>

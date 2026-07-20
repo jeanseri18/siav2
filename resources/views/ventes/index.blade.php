@@ -12,21 +12,27 @@
 
 <div class="container app-fade-in">
     <div class="app-card">
-        <div class="app-card-header">
+        <div class="app-card-header"> 
             <h2 class="app-card-title">
                 <i class="fas fa-shopping-cart me-2"></i>Liste des Ventes
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('ventes.export.pdf')" />
+                @if(auth()->user()->hasPermission('ventes.devis.show'))
                 <a href="{{ route('devis.index') }}" class="app-btn app-btn-secondary app-btn-icon">
                     <i class="fas fa-file-alt"></i> Devis
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('ventes.create'))
                 <a href="{{ route('ventes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Vente
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('ventes.report.form'))
                 <a href="{{ route('ventes.report.form') }}" class="app-btn app-btn-info app-btn-icon">
                     <i class="fas fa-chart-bar"></i> Rapport
                 </a>
+                @endif
             </div>
         </div>
 
@@ -134,6 +140,7 @@
                                         </a>
                                     </li>
                                     @if($vente->statut !== 'Payée')
+                                        @if(auth()->user()->hasPermission('ventes.valider'))
                                         <li>
                                             <form action="{{ route('ventes.updateStatus', $vente->id) }}" method="POST">
                                                 @csrf
@@ -143,7 +150,9 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     @endif
+                                    @if(auth()->user()->hasPermission('ventes.destroy'))
                                     <li>
                                         <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="delete-form">
                                             @csrf
@@ -153,6 +162,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

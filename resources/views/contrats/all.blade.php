@@ -12,11 +12,13 @@
             <h2 class="app-card-title">
                 <i class="fas fa-file-contract me-2"></i>Liste de Tous les Contrats
             </h2>
+            @if(auth()->user()->hasPermission('contrats.allcreate'))
             <div class="app-card-actions">
                 <a href="{{ route('contrats.allcreate') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Créer un nouveau contrat
                 </a>
             </div>
+            @endif
         </div>
 
         @if(session('success'))
@@ -96,11 +98,14 @@
                                             <i class="fas fa-eye me-2"></i>Voir
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('contrats.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('contrats.edit', $contrat->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('contrats.update-statut'))
                                     <li><h6 class="dropdown-header text-muted small mb-0">Changer le statut</h6></li>
                                     @foreach (['non débuté' => 'Non débuté', 'en cours' => 'En cours', 'terminé' => 'Terminé', 'annulé' => 'Annulé'] as $valeurStatut => $libelleStatut)
                                         @if ($contrat->statut !== $valeurStatut)
@@ -115,7 +120,10 @@
                                             </li>
                                         @endif
                                     @endforeach
+                                    @endif
+                                     @if(auth()->user()->hasPermission('contrats.destroy'))
                                     <li><hr class="dropdown-divider"></li>
+                                   
                                     <li>
                                         <form action="{{ route('contrats.destroy', $contrat->id) }}" method="POST" class="delete-form">
                                             @csrf
@@ -125,6 +133,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

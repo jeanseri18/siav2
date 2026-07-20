@@ -8,7 +8,7 @@
 <li class="breadcrumb-item active">Demandes d'Approvisionnement</li>
 @endsection
 
-@section('content')
+@section('content') 
 
 <div class=" app-fade-in">
     <x-stock-flux-nav module="approvisionnement" context="list" />
@@ -95,12 +95,16 @@
                 <a href="{{ route('demande-approvisionnements.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                @if(auth()->user()->hasPermission('demande-approvisionnements.store'))
                 <a href="{{ route('demande-achats.create') }}" class="app-btn app-btn-outline-primary app-btn-icon">
                     <i class="fas fa-shopping-cart"></i> Demande d'achat
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('demande-approvisionnements.create'))
                 <a href="{{ route('demande-approvisionnements.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Demande
                 </a>
+                @endif
             </div>
         </div>
 
@@ -209,11 +213,14 @@
                                         </a>
                                     </li>
                                     @if($demande->statut == 'en attente')
+                                     @if(auth()->user()->hasPermission('demande-approvisionnements.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('demande-approvisionnements.edit', $demande) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('demande-approvisionnements.approuver'))
                                     <li>
                                         <form action="{{ route('demande-approvisionnements.approve', $demande) }}" method="POST">
                                             @csrf
@@ -222,6 +229,8 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
+                                     @if(auth()->user()->hasPermission('demande-approvisionnements.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('demande-approvisionnements.destroy', $demande) }}" method="POST" class="delete-form">
@@ -233,12 +242,15 @@
                                         </form>
                                     </li>
                                     @endif
+                                    @endif
                                     @if($demande->statut == 'approuvée' && $demande->demande_achats_count === 0)
+                                     @if(auth()->user()->hasPermission('demande-commande.store'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('bon-commandes.create', ['demande_approvisionnement_id' => $demande->id]) }}">
                                             <i class="fas fa-shopping-cart me-2"></i>Créer bon de commande
                                         </a>
                                     </li>
+                                    @endif
                                     @endif
                                 </ul>
                             </div>

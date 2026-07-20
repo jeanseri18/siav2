@@ -14,10 +14,13 @@
                     </h4>
                 </div>
                 @if($type === 'contrat')
+                    @if(auth()->user()->hasPermission('bpus.edit'))
                     <div class="col">
                         <!-- Boutons Modifier et Supprimer -->
                         <button class="btn btn-primary btn-sm form-control" onclick="editCategorie('{{ $categorie->id }}', '{{ $categorie->nom }}')">Modifier</button>
                     </div>
+                    @endif
+                    @if(auth()->user()->hasPermission('bpus.destroy'))
                     <div class="col">
                         <form action="{{ route('categoriesbpu.destroy', $categorie->id) }}" method="POST" style="display:inline;">
                             @csrf
@@ -25,6 +28,7 @@
                             <button type="submit" class="btn btn-danger btn-sm form-control">Supprimer</button>
                         </form>
                     </div>
+                    @endif
                 @else
                     <div class="col-md-4">
                         <span class="text-white"><em>Lecture seule - Modifiez depuis les utilitaires</em></span>
@@ -36,6 +40,7 @@
 
     @if($type === 'contrat')
         <!-- Formulaire d'ajout de sous-catégorie -->
+        @if(auth()->user()->hasPermission('bpus.create'))
         <tr>
             <td colspan="{{ $type === 'utilitaires' ? '17' : '16' }}">
                 <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
@@ -52,6 +57,7 @@
                 </form>
             </td>
         </tr>
+        @endif
     @endif
 
     @foreach ($categorie->sousCategories as $sousCategorie)
@@ -62,9 +68,12 @@
                         <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
                     </div>
                     @if($type === 'contrat')
+                        @if(auth()->user()->hasPermission('bpus.edit'))
                         <div class="col-md-2">
                             <button class="btn btn-warning form-control btn-sm" onclick="editSousCategorie('{{ $sousCategorie->id }}', '{{ $sousCategorie->nom }}')">Modifier</button>
                         </div>
+                        @endif
+                        @if(auth()->user()->hasPermission('bpus.destroy'))
                         <div class="col-md-2">
                             <form action="{{ route('souscategoriesbpu.destroy', $sousCategorie->id) }}" method="POST" style="display:inline;">
                                 @csrf
@@ -72,6 +81,7 @@
                                 <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                             </form>
                         </div>
+                        @endif
                     @else
                         <div class="col-md-4">
                             <span class="text-white"><em>Lecture seule</em></span>
@@ -83,6 +93,7 @@
 
         @if($type === 'contrat')
             <!-- Formulaire d'ajout de rubrique -->
+            @if(auth()->user()->hasPermission('bpus.create'))
             <tr>
                 <td colspan="{{ $type === 'utilitaires' ? '17' : '16' }}">
                     <form action="{{ route('rubriques.store') }}" method="POST">
@@ -99,6 +110,7 @@
                     </form>
                 </td>
             </tr>
+            @endif
         @endif
 
         @foreach ($sousCategorie->rubriques as $rubrique)
@@ -112,9 +124,12 @@
                             <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
                         </div>
                         @if($type === 'contrat')
+                            @if(auth()->user()->hasPermission('bpus.edit'))
                             <div class="col-md-2">
                                 <button class="btn btn-warning form-control btn-sm" onclick="editRubrique('{{ $rubrique->id }}', '{{ $rubrique->nom }}')">Modifier</button>
                             </div>
+                            @endif
+                            @if(auth()->user()->hasPermission('bpus.destroy'))
                             <div class="col-md-2">
                                 <form action="{{ route('rubriques.destroy', $rubrique->id) }}" method="POST" style="display:inline;">
                                     @csrf
@@ -122,6 +137,7 @@
                                     <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </div>
+                            @endif
                         @else
                             <div class="col-md-4">
                                 <span class="text-white"><em>Lecture seule</em></span>
@@ -180,13 +196,17 @@
                     <td>{{ number_format($bpu->pu_ht, 2) }}</td>
                     <td>
                         @if($type === 'contrat')
+                            @if(auth()->user()->hasPermission('bpus.edit'))
                             <a href="{{ route('bpus.edit', $bpu->id) }}" class="btn btn-warning btn-sm">Modifier</a>
+                            @endif
+                            @if(auth()->user()->hasPermission('bpus.destroy'))
                             <form action="{{ route('bpus.destroy', $bpu->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="redirect_to" value="bpu.index">
                                 <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                             </form>
+                            @endif
                         @else
                             <span class="text-muted"><em>Lecture seule</em></span>
                         @endif

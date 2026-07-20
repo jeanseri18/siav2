@@ -64,7 +64,7 @@
                             </label>
                             <input type="password" name="password" id="password" class="app-form-control" required>
                             <div class="app-form-text">Mot de passe sécurisé</div>
-                        </div>
+                        </div> 
                         
                         <div class="app-form-row">
                             <div class="app-form-col">

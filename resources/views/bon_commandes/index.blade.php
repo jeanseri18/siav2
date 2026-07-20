@@ -59,12 +59,16 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('bon-commandes.export.pdf')" />
+                @if(auth()->user()->hasPermission('demande-cotations.show'))
                 <a href="{{ route('demande-cotations.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
                     <i class="fas fa-calculator"></i> Cotations
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('bon-commandes.create'))
                 <a href="{{ route('bon-commandes.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouveau Bon
                 </a>
+                @endif
             </div>
         </div>
 
@@ -159,11 +163,14 @@
                                         </a>
                                     </li>
                                     @if($bonCommande->statut == 'en attente')
+                                    @if(auth()->user()->hasPermission('bon-commandes.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('bon-commandes.edit', $bonCommande) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('bon-commandes.confirm'))
                                     <li>
                                         <form action="{{ route('bon-commandes.confirm', $bonCommande) }}" method="POST">
                                             @csrf
@@ -172,6 +179,8 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('bon-commandes.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('bon-commandes.destroy', $bonCommande) }}" method="POST" class="delete-form">
@@ -182,6 +191,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                     @endif
                                 </ul>
                             </div>

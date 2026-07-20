@@ -10,6 +10,7 @@
     </div>
     
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('caisse.depense.create'))
         <a href="{{ route('caisse.brouillard') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-book"></i>
@@ -19,7 +20,8 @@
                 <p>Consultez l'historique des transactions</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('caisse.depense.create'))
         <a href="{{ route('caisse.demande-liste') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-list-alt"></i>
@@ -29,7 +31,8 @@
                 <p>Gérez vos demandes de dépense</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('caisse.depense.create'))
         <button class="dashboard-card success" onclick="openModal('saisirDepenseModal')">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -39,7 +42,7 @@
                 <p>Enregistrer une nouvelle dépense</p>
             </div>
         </button>
-        
+        @endif
         <button class="dashboard-card warning" onclick="openModal('approvisionnerModal')">
             <div class="card-icon">
                 <i class="fas fa-wallet"></i>
@@ -49,7 +52,7 @@
                 <p>Ajouter des fonds à la caisse</p>
             </div>
         </button>
-        
+        @if(auth()->user()->hasPermission('caisse.depense.create'))
         <button class="dashboard-card secondary" onclick="openModal('demanderDepenseModal')">
             <div class="card-icon">
                 <i class="fas fa-hand-holding-usd"></i>
@@ -59,8 +62,10 @@
                 <p>Faire une demande de dépense</p>
             </div>
         </button>
+        @endif 
 
         @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'admin', 'dg']))
+        @if(auth()->user()->hasPermission('caisse.depense.approuver'))
         <a href="{{ route('caisse.demandesEnAttente') }}" class="dashboard-card secondary">
             <div class="card-icon">
                 <i class="fas fa-check-circle"></i>
@@ -70,6 +75,7 @@
                 <p>Approuver les demandes de dépense en attente</p>
             </div>
         </a>
+        @endif
         @endif
     </div>
 </div>

@@ -19,9 +19,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('facture-contrat.export.pdf')" />
+                @if(auth()->user()->hasPermission('facture-contrat.generate'))
                 <a href="{{ route('dqe.index') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Générer une facture contrat
                 </a>
+                @endif
             </div>
         </div>
         
@@ -74,11 +76,14 @@
                                 <div class="dropdown">
                                     <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        @if(auth()->user()->hasPermission('facture-contrat.show'))
                                         <li>
                                             <a class="dropdown-item" href="{{ route('facture-contrat.show', $facture->id) }}">
                                                 <i class="fas fa-eye me-2"></i>Voir les détails
                                             </a>
                                         </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('facture-contrat.destroy'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('facture-contrat.destroy', $facture->id) }}" method="POST" class="delete-form">
@@ -89,6 +94,7 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </td>

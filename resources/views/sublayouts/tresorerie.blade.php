@@ -10,6 +10,7 @@
     </div>
 
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('module.budget.show'))
         <a href="{{ route('sublayouts_caisse') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-wallet"></i>
@@ -19,7 +20,8 @@
                 <p>Caisse, dépenses, approvisionnements</p>
             </div>
         </a>
-
+        @endif
+        @if(auth()->user()->hasPermission('module.budget.show'))
         <a href="{{ route('sublayouts_banque') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-university"></i>
@@ -29,7 +31,8 @@
                 <p>Gérer les banques et les informations de compte</p>
             </div>
         </a>
-
+        @endif
+        @if(auth()->user()->hasPermission('module.budget.show'))
         <a href="{{ route('bu-budget.index') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-calendar-alt"></i>
@@ -39,6 +42,7 @@
                 <p>Budget annuel (références / paramètres / valeurs)</p>
             </div>
         </a>
+        @endif
     </div>
 </div>
 

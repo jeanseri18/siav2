@@ -20,9 +20,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('stock.export.pdf')" />
+                @if(auth()->user()->hasPermission('stock.create'))
                 <a href="{{ route('stock.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un article
                 </a>
+                @endif
             </div>
         </div>
 
@@ -163,16 +165,21 @@
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('stock.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('stock.edit', $stock->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('transferts.stock_projet'))
                                     <li>
                                         <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#transfertModal" data-stock-id="{{ $stock->id }}" data-article-id="{{ $stock->article_id }}" data-article-name="{{ $stock->article ? $stock->article->nom : 'Article' }}" data-qty-max="{{ (int) $stock->quantite }}">
                                             <i class="fas fa-exchange-alt me-2"></i>Transférer
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('stock.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('stock.destroy', $stock->id) }}" method="POST" class="delete-form">
@@ -183,6 +190,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>
@@ -279,9 +287,11 @@
                 <button type="button" class="app-btn app-btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Annuler
                 </button>
+                @if(auth()->user()->hasPermission('transferts.create'))
                 <button type="button" class="app-btn app-btn-primary" onclick="document.getElementById('transfertForm').submit()">
                     <i class="fas fa-paper-plane me-2"></i>Effectuer le Transfert
                 </button>
+                @endif
             </div>
         </div>
     </div>

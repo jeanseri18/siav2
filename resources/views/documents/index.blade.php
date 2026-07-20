@@ -19,9 +19,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('documents.export.pdf')" />
+                @if(auth()->user()->hasPermission('documents.create'))
                 <a href="{{ route('documents.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un Document
                 </a>
+                @endif
             </div>
         </div>
         
@@ -67,6 +69,7 @@
                                                 <i class="fas fa-eye me-2"></i>Voir le fichier
                                             </a>
                                         </li>
+                                        @if(auth()->user()->hasPermission('documents.destroy'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('documents.destroy', $document->id) }}" method="POST" class="delete-form">
@@ -76,7 +79,7 @@
                                                     <i class="fas fa-trash me-2"></i>Supprimer
                                                 </button>
                                             </form>
-                                        </li>
+                                        </li>@endif
                                     </ul>
                                 </div>
                             </td>

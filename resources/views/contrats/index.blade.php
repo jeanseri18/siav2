@@ -22,9 +22,11 @@
                 <a href="{{ route('contrats.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                @if(auth()->user()->hasPermission('contrats.create'))
                 <a href="{{ route('contrats.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un nouveau contrat
                 </a>
+                @endif
             </div>
         </div>
 
@@ -77,7 +79,9 @@
                                     <span class="text-muted">Non assigné</span>
                                 @endif
                             </td>
+                            
                         <td>
+                            
                             @if($contrat->statut == 'en cours')
                                 <span class="app-badge app-badge-warning app-badge-pill">
                                     <i class="fas fa-spinner me-1"></i> En cours
@@ -109,11 +113,14 @@
                                                 <i class="fas fa-eye me-2"></i>Voir les détails
                                             </a>
                                         </li>
+                                        @if(auth()->user()->hasPermission('contrats.edit'))
                                         <li>
                                             <a class="dropdown-item" href="{{ route('contrats.edit', $contrat->id) }}">
                                                 <i class="fas fa-edit me-2"></i>Modifier
                                             </a>
                                         </li>
+                                        @endif
+                                         @if(auth()->user()->hasPermission('contrats.update-statut'))
                                         <li><h6 class="dropdown-header text-muted small mb-0">Changer le statut</h6></li>
                                         @foreach (['non débuté' => 'Non débuté', 'en cours' => 'En cours', 'terminé' => 'Terminé', 'annulé' => 'Annulé'] as $valeurStatut => $libelleStatut)
                                             @if ($contrat->statut !== $valeurStatut)
@@ -128,6 +135,8 @@
                                                 </li>
                                             @endif
                                         @endforeach
+                                        @endif
+                                         @if(auth()->user()->hasPermission('contrats.destroy'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('contrats.destroy', $contrat->id) }}" method="POST" class="delete-form">
@@ -138,6 +147,7 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </td>

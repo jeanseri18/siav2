@@ -65,7 +65,7 @@
                             <i class="fas fa-info-circle"></i> Aucune ligne de frais de chantier trouvée.
                         </div>
                     @endif
-                    
+                    @if(auth()->user()->hasPermission('frais-chantier.create'))
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4>Lignes des frais de chantier</h4>
                         @if($parent->type === 'réalisé')
@@ -74,6 +74,7 @@
                             </button>
                         @endif
                     </div>
+                    @endif
                     
                     @if(!$parent->fraisChantiers->isEmpty())
                         @if($parent->type === 'réalisé')

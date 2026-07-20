@@ -21,9 +21,11 @@
                 <a href="{{ route('articles.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                @if(auth()->user()->hasPermission('articles.create'))
                 <a href="{{ route('articles.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un article
                 </a>
+                @endif
             </div>
         </div>
 
@@ -154,11 +156,14 @@
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                    @if(auth()->user()->hasPermission('articles.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('articles.edit', $article) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('articles.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('articles.destroy', $article) }}" method="POST" class="delete-form">
@@ -169,6 +174,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

@@ -61,12 +61,16 @@
                 <a href="{{ route('demande-achats.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                 @if(auth()->user()->hasPermission('demande-cotasion.create'))
                 <a href="{{ route('demande-cotations.index') }}" class="app-btn app-btn-outline-primary app-btn-icon">
                     <i class="fas fa-calculator"></i> Demande de cotation
                 </a>
+                @endif
+                @if(auth()->user()->hasPermission('demande-achats.create'))
                 <a href="{{ route('demande-achats.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Nouvelle Demande
                 </a>
+                @endif
             </div>
         </div>
 
@@ -199,11 +203,14 @@
                                         </a>
                                     </li>
                                     @if($demande->statut == 'en attente')
+                                     @if(auth()->user()->hasPermission('demande-achats.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('demande-achats.edit', $demande) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('demande-achats.approuver'))
                                     <li>
                                         <form action="{{ route('demande-achats.approve', $demande) }}" method="POST">
                                             @csrf
@@ -212,6 +219,8 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('demande-achats.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('demande-achats.destroy', $demande) }}" method="POST" class="delete-form">
@@ -223,12 +232,15 @@
                                         </form>
                                     </li>
                                     @endif
+                                    @endif
                                     @if($demande->statut == 'approuvée' && $demande->demande_cotations_count === 0)
+                                    @if(auth()->user()->hasPermission('demande-cotasion.create'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('demande-cotations.create', ['demande_achat_id' => $demande->id]) }}">
                                             <i class="fas fa-file-invoice me-2"></i>Créer demande de cotation
                                         </a>
                                     </li>
+                                    @endif
                                     @endif
                                 </ul>
                             </div>

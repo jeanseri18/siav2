@@ -20,9 +20,11 @@
                 <a href="{{ route('projets.export.pdf') }}" class="app-btn app-btn-outline-danger app-btn-sm" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf me-2"></i>Voir PDF
                 </a>
+                @if(auth()->user()->hasPermission('projets.create'))
                 <a href="{{ route('projets.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un projet
                 </a>
+                @endif
             </div>
         </div>
 
@@ -117,11 +119,15 @@
                                             <i class="fas fa-eye me-2"></i>Voir les détails
                                         </a>
                                     </li>
+                                     @if(auth()->user()->hasPermission('projets.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('projets.edit', $projet) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+
+                                    @if(auth()->user()->hasPermission('projets.update-statut'))
                                     <li><h6 class="dropdown-header text-muted small mb-0">Changer le statut</h6></li>
                                     @foreach (['non débuté' => 'Non débuté', 'en cours' => 'En cours', 'terminé' => 'Terminé', 'annulé' => 'Annulé'] as $valeurStatut => $libelleStatut)
                                         @if ($projet->statut !== $valeurStatut)
@@ -136,6 +142,9 @@
                                             </li>
                                         @endif
                                     @endforeach
+                                    @endif
+
+                                    @if(auth()->user()->hasPermission('projets.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('projets.destroy', $projet) }}" method="POST" class="delete-form">
@@ -146,6 +155,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

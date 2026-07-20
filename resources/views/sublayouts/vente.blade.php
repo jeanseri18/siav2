@@ -10,6 +10,7 @@
     </div>
     
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('ventes.show'))
         <a href="{{ route('ventes.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-shopping-bag"></i>
@@ -20,7 +21,8 @@
             </div>
            
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('ventes.create'))
         <a href="{{ route('ventes.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-circle"></i>
@@ -31,7 +33,8 @@
             </div>
            
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('ventes.report.form'))
         <a href="{{ route('ventes.report.form') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-chart-bar"></i>
@@ -42,7 +45,8 @@
             </div>
 
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('vente.clients.show'))
         <a href="{{ route('clients.index') }}" class="dashboard-card warning">
             <div class="card-icon">
                 <i class="fas fa-users"></i>
@@ -51,7 +55,7 @@
                 <h3>Liste des Clients</h3>
                 <p>Gérer la liste des clients</p>
             </div>
-        </a>
+        </a>@endif
     </div>
 </div>
 

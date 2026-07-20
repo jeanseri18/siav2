@@ -17,11 +17,13 @@
             <h2 class="app-card-title">
                 <i class="fas fa-exchange-alt me-2"></i>Liste des Transferts de Stock
             </h2>
+            @if(auth()->user()->hasPermission('transferts.stock_projet'))
             <div class="app-card-actions">
                 <a href="{{ route('transferts.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Effectuer un transfert
                 </a>
             </div>
+            @endif
         </div>
         
         @if(session('success'))
@@ -132,12 +134,15 @@
                                         Actions
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        @if(auth()->user()->hasPermission('transferts.edit'))
                                         <li>
                                             <a class="dropdown-item" href="{{ route('transferts.edit', $transfert) }}">
                                                 <i class="fas fa-edit me-2"></i>Modifier
                                             </a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
+                                        @endif
+                                        
                                         <li>
                                             <form action="{{ route('transferts.annuler', $transfert) }}" method="POST" class="mb-0">
                                                 @csrf

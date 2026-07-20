@@ -19,11 +19,14 @@
 
 <div class="container-fluid" style="font-size: 12px;">
     <h2 class="mb-4">Bordereaux de prix unitaires</h2>
+    @if(auth()->user()->hasPermission('bpus.create'))
     <button class="btn btn-secondary mb-2" onclick="toggleForm('formCategorie')">Ajouter Catégorie</button>
+    @endif
     <a href="{{ route('bpu.print') }}" class="btn btn-secondary mb-2" target="blank">Afficher le BPU complet</a>
     <a href="{{ route('import.index') }}" class="btn btn-secondary mb-2">Importer un fichier excel</a>
 
     <!-- Formulaire d'ajout de catégorie -->
+    @if(auth()->user()->hasPermission('bpus.create'))
     <form id="formCategorie" action="{{ route('categoriesbpu.store') }}" method="POST" style="display: none;">
         @csrf
         <input type="hidden" name="bpu_utilitaires" value="1">
@@ -33,11 +36,25 @@
                     <input type="text" name="nom" class="form-control" placeholder="Nouvelle catégorie" required>
                 </div>
             </div>
+
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary">Ajouter Catégorie</button>
             </div>
         </div>
     </form>
+    @endif
+
+    <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+        <div class="flex-grow-1" style="min-width: 220px;">
+            <label for="bpuSearchUntil" class="form-label small mb-1">Filtrer par désignation des lignes BPU</label>
+            <input type="search" id="bpuSearchUntil" class="form-control form-control-sm bpu-search-input" data-bpu-search-root="bpuUntilRoot" placeholder="Saisir un extrait de désignation…" autocomplete="off">
+        </div>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Export BPU">
+            <a href="{{ route('bpu.export.excel', ['scope' => 'utilitaires']) }}" class="btn btn-outline-success">Exporter Excel</a>
+            <a href="{{ route('bpu.export.pdf', ['scope' => 'utilitaires']) }}" class="btn btn-outline-danger" target="_blank" rel="noopener noreferrer">Voir PDF</a>
+        </div>
+    </div>
+    <div id="bpuUntilRoot">
 
     <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
         <div class="flex-grow-1" style="min-width: 220px;">
@@ -60,10 +77,13 @@
                         <div class="col-md-8">
                             <h4 class="text-start text-uppercase">{{ $categorie->nom }}</h4>
                         </div>
+                        @if(auth()->user()->hasPermission('bpus.create'))
                         <div class="col">
                             <!-- Boutons Modifier et Supprimer -->
                             <button class="btn btn-primary btn-sm form-control" onclick="editCategorie('{{ $categorie->id }}', '{{ $categorie->nom }}')">Modifier</button>
                         </div>
+                        @endif
+                        @if(auth()->user()->hasPermission('bpus.destroy'))
                         <div class="col">
                             <form action="{{ route('categoriesbpu.destroy', $categorie->id) }}" method="POST" style="display:inline;">
                                 @csrf
@@ -71,11 +91,14 @@
                                 <button type="submit" class="btn btn-danger btn-sm form-control">Supprimer</button>
                             </form>
                         </div>
+                        @endif
                     </div>
                 </td>
             </tr>
 
             <!-- Formulaire d'ajout de sous-catégorie -->
+              @if(auth()->user()->hasPermission('bpus.create'))
+
             <tr>
                 <td colspan="16">
                     <form action="{{ route('souscategoriesbpu.store') }}" method="POST">
@@ -93,7 +116,7 @@
                     </form>
                 </td>
             </tr>
-
+            @endif
             @foreach ($categorie->sousCategories as $sousCategorie)
                 <tr bgcolor="#1F384C" class="text-white" height="40px">
                     <td colspan="16">
@@ -101,9 +124,12 @@
                             <div class="col-md-8">
                                 <h5 class="text-start text-uppercase">{{ $sousCategorie->nom }}</h5>
                             </div>
+                             @if(auth()->user()->hasPermission('bpus.edit'))
                             <div class="col-md-2">
                                 <button class="btn btn-warning form-control btn-sm" onclick="editSousCategorie('{{ $sousCategorie->id }}', '{{ $sousCategorie->nom }}')">Modifier</button>
                             </div>
+                            @endif
+                             @if(auth()->user()->hasPermission('bpus.destroy'))
                             <div class="col-md-2">
                                 <form action="{{ route('souscategoriesbpu.destroy', $sousCategorie->id) }}" method="POST" style="display:inline;">
                                     @csrf
@@ -111,11 +137,13 @@
                                     <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </div>
+                            @endif
                         </div>
                     </td>
                 </tr>
 
                 <!-- Formulaire d'ajout de rubrique -->
+                  @if(auth()->user()->hasPermission('bpus.create'))
                 <tr>
                     <td colspan="16">
                         <form action="{{ route('rubriques.store') }}" method="POST">
@@ -133,6 +161,7 @@
                         </form>
                     </td>
                 </tr>
+                @endif
 
                 @foreach ($sousCategorie->rubriques as $rubrique)
                     @php
@@ -144,9 +173,12 @@
                                 <div class="col-md-8">
                                     <h6 class="text-start text-uppercase">{{ $rubrique->nom }}</h6>
                                 </div>
+                                 @if(auth()->user()->hasPermission('bpus.edit'))
                                 <div class="col-md-2">
                                     <button class="btn btn-warning form-control btn-sm" onclick="editRubrique('{{ $rubrique->id }}', '{{ $rubrique->nom }}')">Modifier</button>
                                 </div>
+                                @endif
+                                 @if(auth()->user()->hasPermission('bpus.destroy'))
                                 <div class="col-md-2">
                                     <form action="{{ route('rubriques.destroy', $rubrique->id) }}" method="POST" style="display:inline;">
                                         @csrf
@@ -154,6 +186,7 @@
                                         <button type="submit" class="btn form-control btn-danger btn-sm">Supprimer</button>
                                     </form>
                                 </div>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -195,13 +228,17 @@
                             <td>{{ number_format($bpu->marge_nette, 2) }}</td>
                             <td>{{ number_format($bpu->pu_ht, 2) }}</td>
                             <td>
+                                @if(auth()->user()->hasPermission('bpus.edit'))
                                 <a href="{{ route('bpus.edit', $bpu->id) }}?from=until" class="btn btn-warning btn-sm">Modifier</a>
+                                @endif
+                                 @if(auth()->user()->hasPermission('bpus.destroy'))
                                 <form action="{{ route('bpus.destroy', $bpu->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" name="redirect_to" value="bpu.indexuntil">
                                     <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -228,7 +265,7 @@
                                     </ul>
                                 </div>
                             @endif
-
+                            @if(auth()->user()->hasPermission('bpus.create'))
                             <form action="{{ route('bpus.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="id_rubrique" value="{{ $rubrique->id }}">
@@ -292,11 +329,13 @@
                                  <span class="text-primary">| PU HT: <strong id="pu_ht_calc">0.00</strong></span>
                              </div>
                          </div>
-                        
+                         
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary">Ajouter une ligne</button>
                         </div>
+                       
                             </form>
+                             @endif
                         </td>
                     </tr>
                 @endforeach

@@ -191,21 +191,21 @@ Route::get('demandes-approvisionnement/{demandeApprovisionnement}/articles', fun
     $lignes = $demandeApprovisionnement->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-approvisionnement.articles');
 
 // Route pour récupérer les articles d'une demande d'achat
 Route::get('demandes-achat/{demandeAchat}/articles', function (DemandeAchat $demandeAchat) {
     $lignes = $demandeAchat->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-achat.articles');
 
 // Route pour récupérer les articles d'une demande de cotation
 Route::get('demandes-cotation/{demandeCotation}/articles', function (DemandeCotation $demandeCotation) {
     $lignes = $demandeCotation->lignes()->with('article')->get();
 
     return response()->json($lignes);
-});
+})->name('demandes-cotation.articles');
 
 // Routes pour les demandes d'approvisionnement
 // Routes pour les demandes d'approvisionnement
@@ -642,7 +642,7 @@ Route::get('fournisseurs/{fournisseur}/edit', [FournisseurController::class, 'ed
 Route::put('fournisseurs/{fournisseur}', [FournisseurController::class, 'update'])->name('fournisseurs.update');
 Route::delete('fournisseurs/{fournisseur}', [FournisseurController::class, 'destroy'])->name('fournisseurs.destroy');
 
-Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
+Route::get('clients', [ClientController::class, 'index'])->name('clients.index'); 
 Route::get('clients/export/pdf', [ClientController::class, 'exportPdf'])->name('clients.export.pdf');
 Route::get('clients/create', [ClientController::class, 'create'])->name('clients.create');
 Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
@@ -934,7 +934,7 @@ Route::get('/articles/search', function (Request $request) {
         });
 
     return response()->json($articles);
-});
+})->name('articles.search');;
 
 // Route pour vérifier les mises à jour
 Route::get('/check-updates', function () {

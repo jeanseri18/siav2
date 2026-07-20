@@ -11,6 +11,7 @@
     </div>
     
     <div class="dashboard-grid">
+        @if(auth()->user()->hasPermission('stock.show'))
         <a href="{{ route('articles.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-warehouse"></i>
@@ -20,7 +21,8 @@
                 <p>Consultez l'état des stocks</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('articles.create'))
         <a href="{{ route('articles.create') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-plus-square"></i>
@@ -30,7 +32,8 @@
                 <p>Ajouter un nouvel article</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('demande-approvisionnements.show'))
         <a href="{{ route('demande-approvisionnements.index') }}" class="dashboard-card warning">
             <div class="card-icon">
                 <i class="fas fa-truck-loading"></i>
@@ -40,7 +43,8 @@
                 <p>Gérer les demandes de réapprovisionnement</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('demande-achats.show'))
         <a href="{{ route('demande-achats.index') }}" class="dashboard-card primary">
             <div class="card-icon">
                 <i class="fas fa-shopping-cart"></i>
@@ -50,7 +54,9 @@
                 <p>Traiter les demandes d'achat</p>
             </div>
         </a>
-        
+        @endif
+
+        @if(auth()->user()->hasPermission('demande-cotations.show'))
         <a href="{{ route('demande-cotations.index') }}" class="dashboard-card secondary">
             <div class="card-icon">
                 <i class="fas fa-calculator"></i>
@@ -60,7 +66,9 @@
                 <p>Gérer les demandes et comparaisons</p>
             </div>
         </a>
-        
+        @endif
+
+        @if(auth()->user()->hasPermission('bon-commandes.show'))
         <a href="{{ route('bon-commandes.index') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-file-invoice"></i>
@@ -70,7 +78,8 @@
                 <p>Consulter et gérer les commandes</p>
             </div>
         </a>
-        
+        @endif
+        @if(auth()->user()->hasPermission('bon-commandes.show'))
         <a href="{{ route('receptions.index') }}" class="dashboard-card success">
             <div class="card-icon">
                 <i class="fas fa-truck"></i>
@@ -80,7 +89,8 @@
                 <p>Gérer les réceptions d'articles livrés</p>
             </div>
         </a>
-
+        @endif
+        @if(auth()->user()->hasPermission('fournisseurs.show'))
         <a href="{{ route('fournisseurs.index') }}" class="dashboard-card info">
             <div class="card-icon">
                 <i class="fas fa-users"></i>
@@ -90,7 +100,7 @@
                 <p>Afficher la liste des fournisseurs</p>
             </div>
         </a>
-
+        @endif
         
     </div>
 </div>

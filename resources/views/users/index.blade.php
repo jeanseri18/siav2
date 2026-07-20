@@ -17,10 +17,13 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('liste.export.pdf', 'users')" />
+                @if(auth()->user()->hasPermission('users.create'))
                 <a href="{{ route('users.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-user-plus"></i> Ajouter un utilisateur
                 </a>
+                @endif
             </div>
+            
         </div>
 
         @if(session('success'))
@@ -80,11 +83,14 @@
                             <div class="dropdown">
                                 <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
+                                    @if(auth()->user()->hasPermission('users.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('users.edit', $user->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('users.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="delete-form">
@@ -95,6 +101,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

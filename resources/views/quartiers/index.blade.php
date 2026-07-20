@@ -18,9 +18,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('liste.export.pdf', 'quartiers')" />
+                @if(auth()->user()->hasPermission('quartiers.create'))
                 <a href="{{ route('quartiers.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un quartier
                 </a>
+                @endif
             </div>
         </div>
 
@@ -77,11 +79,14 @@
                             <div class="dropdown">
                                 <button class="app-btn app-btn-secondary app-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
+                                    @if(auth()->user()->hasPermission('quartiers.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('quartiers.edit', $quartier->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('quartiers.destroy'))
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('quartiers.destroy', $quartier->id) }}" method="POST" class="delete-form">
@@ -92,6 +97,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

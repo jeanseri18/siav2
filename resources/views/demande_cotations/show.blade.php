@@ -285,13 +285,18 @@
                                 <td class="no-print">
                                     <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
                                         @if($fournisseur->devis_fichier)
+                                            @if(auth()->user()->hasPermission('demande-cotations.show'))
                                             <a href="{{ route('demande-cotations.fournisseur-devis', ['demandeCotation' => $demandeCotation, 'fournisseurDemandeCotation' => $fournisseur]) }}" class="app-btn app-btn-outline-primary app-btn-sm" target="_blank" rel="noopener noreferrer" title="{{ $fournisseur->devis_fichier_nom ?? 'Pièce jointe' }}">
                                                 <i class="fas fa-eye me-1"></i> Voir
                                             </a>
+                                            @endif
+                                            @if(auth()->user()->hasPermission('demande-cotations.download'))
                                             <a href="{{ route('demande-cotations.fournisseur-devis', ['demandeCotation' => $demandeCotation, 'fournisseurDemandeCotation' => $fournisseur, 'download' => 1]) }}" class="app-btn app-btn-outline-success app-btn-sm" title="Télécharger la pièce jointe">
                                                 <i class="fas fa-download me-1"></i> Télécharger
                                             </a>
-                                            @if($fournisseur->repondu && $peutMettreAJourPieceJointe)
+                                            @endif
+                                            @if(auth()->user()->hasPermission('demande-cotations.destroy'))
+                                                @if($fournisseur->repondu && $peutMettreAJourPieceJointe)
                                                 <form action="{{ route('demande-cotations.delete-fournisseur-devis', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette pièce jointe ?');">
                                                     @csrf
                                                     @method('DELETE')
@@ -299,13 +304,16 @@
                                                         <i class="fas fa-trash-alt me-1"></i> Supprimer
                                                     </button>
                                                 </form>
+                                                @endif
                                             @endif
                                         @endif
                                         @if($demandeCotation->statut == 'en cours')
                                             @if(!$fournisseur->repondu)
+                                                @if(auth()->user()->hasPermission('demande-cotations.save-fournisseur-response'))
                                                 <button type="button" class="app-btn app-btn-primary app-btn-sm" data-bs-toggle="modal" data-bs-target="#responseModal{{ $fournisseur->id }}">
                                                     <i class="fas fa-reply me-1"></i> Enregistrer réponse
                                                 </button>
+                                                @endif
                                             @else
                                                 @if(!$fournisseur->retenu)
                                                     <form action="{{ route('demande-cotations.select-fournisseur', ['demandeCotation' => $demandeCotation->id, 'fournisseurDemandeCotation' => $fournisseur->id]) }}" method="POST" class="d-inline">
@@ -391,19 +399,23 @@
                     </button>
                     
                     @if($demandeCotation->statut == 'en cours')
+                    @if(auth()->user()->hasPermission('demande-cotations.edit'))
                     <a href="{{ route('demande-cotations.edit', $demandeCotation) }}" class="app-btn app-btn-warning w-100">
                         <i class="fas fa-edit me-2"></i>Modifier
                     </a>
                     @endif
+                    @endif
 
                     @if(in_array($demandeCotation->statut, ['en cours', 'validée'], true))
                     @if(in_array(Auth::user()->role, ['chef_projet', 'conducteur_travaux', 'acheteur', 'admin', 'dg']))
+                    @if(auth()->user()->hasPermission('demande-cotations.terminate'))
                     <form action="{{ route('demande-cotations.terminate', $demandeCotation) }}" method="POST">
                         @csrf
                         <button type="submit" class="app-btn app-btn-success w-100" onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande de cotation?')">
                             <i class="fas fa-check me-2"></i>Terminer
                         </button>
                     </form>
+                    @endif
                     
                     <form action="{{ route('demande-cotations.cancel', $demandeCotation) }}" method="POST">
                         @csrf
@@ -415,15 +427,19 @@
                     @endif
 
                     @if($demandeCotation->statut == 'en cours')
+                    @if(auth()->user()->hasPermission('demande-cotations.destroy'))
                     <button type="button" class="app-btn app-btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="fas fa-trash me-2"></i>Supprimer
                     </button>
                     @endif
+                    @endif
                     
                     @if($demandeCotation->estEligiblePourBonCommande() && $fournisseurRetenu && $demandeCotation->bon_commandes_count === 0)
+                    @if(auth()->user()->hasPermission('commande-bon.create'))
                     <a href="{{ route('bon-commandes.create', ['fournisseur_id' => $fournisseurRetenu->fournisseur_id, 'demande_cotation_id' => $demandeCotation->id]) }}" class="app-btn app-btn-primary w-100">
                         <i class="fas fa-shopping-cart me-2"></i>Créer bon de commande
                     </a>
+                    @endif
                     @endif
                 </div>
             </div>

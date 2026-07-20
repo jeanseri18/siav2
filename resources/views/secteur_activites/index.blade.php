@@ -17,9 +17,11 @@
             </h2>
             <div class="app-card-actions">
                 <x-export-pdf-button :route="route('liste.export.pdf', 'secteur_activites')" />
+                @if(auth()->user()->hasPermission('secteur_activites.create'))
                 <a href="{{ route('secteur_activites.create') }}" class="app-btn app-btn-primary app-btn-icon">
                     <i class="fas fa-plus"></i> Ajouter un secteur
                 </a>
+                @endif
             </div>
         </div>
 
@@ -64,11 +66,14 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu">
+                                    @if(auth()->user()->hasPermission('secteur_activites.edit'))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('secteur_activites.edit', $secteur->id) }}">
                                             <i class="fas fa-edit me-2"></i>Modifier
                                         </a>
                                     </li>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('secteur_activites.destroy'))
                                     <li>
                                         <form action="{{ route('secteur_activites.destroy', $secteur->id) }}" method="POST" class="delete-form">
                                             @csrf
@@ -78,6 +83,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

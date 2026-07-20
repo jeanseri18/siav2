@@ -254,9 +254,11 @@
             <a href="{{ route('projets.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Retour
             </a>
+            @if(auth()->user()->hasPermission('projets.edit'))
             <a href="{{ route('projets.edit', $projet->id) }}" class="btn projet-btn-edit text-white">
                 <i class="fas fa-edit me-2"></i>Modifier le projet
             </a>
+            @endif
         </div>
     </div>
 </div>

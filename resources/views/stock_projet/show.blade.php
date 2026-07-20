@@ -18,9 +18,11 @@
                 <i class="fas fa-box me-2"></i>{{ $stock->article->designation_article }}
             </h3>
             <div class="app-card-actions">
+                @if(auth()->user()->hasPermission('stock.edit'))
                 <a href="{{ route('stock.edit', $stock->id) }}" class="app-btn app-btn-warning">
                     <i class="fas fa-edit me-2"></i>Modifier
                 </a>
+                @endif
                 <a href="{{ route('stock.index') }}" class="app-btn app-btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Retour
                 </a>
@@ -133,15 +135,20 @@
         
         <div class="app-card-footer">
             <div class="app-card-actions">
+                @if(auth()->user()->hasPermission('transferts.stock_projet'))
                 <button type="button" class="app-btn app-btn-primary" data-bs-toggle="modal" data-bs-target="#transfertModal" 
                         onclick="populateTransfertModal({{ $stock->article_id }}, {{ json_encode($stock->article->nom) }}, {{ (int) $stock->quantite }})">
                     <i class="fas fa-exchange-alt me-2"></i>Transférer
                 </button>
-                
+                @endif
+
+                @if(auth()->user()->hasPermission('stock.edit'))
                 <a href="{{ route('stock.edit', $stock->id) }}" class="app-btn app-btn-warning">
                     <i class="fas fa-edit me-2"></i>Modifier
                 </a>
-                
+                @endif
+
+                @if(auth()->user()->hasPermission('stock.edit'))
                 <form action="{{ route('stock.destroy', $stock->id) }}" method="POST" class="d-inline" 
                       onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article du stock ?')">
                     @csrf
@@ -150,6 +157,7 @@
                         <i class="fas fa-trash me-2"></i>Supprimer
                     </button>
                 </form>
+                @endif
             </div>
         </div>
     </div>
